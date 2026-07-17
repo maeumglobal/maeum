@@ -5,7 +5,7 @@ import {
   Settings, Palette, Layers, Folder, Database, Users, Shield,
   CheckCircle2, Plus, Trash2, ArrowUp, ArrowDown, Edit3, Info,
   TrendingUp, DollarSign, Briefcase, FileText, Send, Share2, Award,
-  BookOpen, Globe, Mail, Key
+  BookOpen, Globe, Mail, Key, Compass, Sparkles, GraduationCap, Map
 } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -31,12 +31,37 @@ export default function AdminDashboard() {
   const [leads, setLeads] = useState<any[]>([]);
   const [proposals, setProposals] = useState<any[]>([]);
   const [usersList, setUsersList] = useState<any[]>([]);
+  const [experiences, setExperiences] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [kbeautyExperiences, setKbeautyExperiences] = useState<any[]>([]);
+  const [campuses, setCampuses] = useState<any[]>([]);
+  const [journeys, setJourneys] = useState<any[]>([]);
+  const [experienceFilter, setExperienceFilter] = useState('all');
 
   // CRUD Package/Exchange/Experience States
   const [pkgTitle, setPkgTitle] = useState('');
   const [pkgPrice, setPkgPrice] = useState(0);
-  const [pkgType, setPkgType] = useState('package'); // package, exchange, experience
+  const [pkgType, setPkgType] = useState('package');
   const [pkgDestination, setPkgDestination] = useState('Coreia do Sul');
+
+  // Experience CRUD states
+  const [expTitle, setExpTitle] = useState('');
+  const [expSlug, setExpSlug] = useState('');
+  const [expPrice, setExpPrice] = useState(0);
+  const [expDuration, setExpDuration] = useState(0);
+  const [expCategory, setExpCategory] = useState('');
+  const [expBookingType, setExpBookingType] = useState('direct');
+  const [expLocation, setExpLocation] = useState('');
+  const [expDescription, setExpDescription] = useState('');
+
+  // Category CRUD states
+  const [catName, setCatName] = useState('');
+  const [catSlug, setCatSlug] = useState('');
+
+  // Journey CRUD states
+  const [journeyTitle, setJourneyTitle] = useState('');
+  const [journeyPrice, setJourneyPrice] = useState(0);
+  const [journeyDuration, setJourneyDuration] = useState(0);
 
   // Blog State
   const [blogPosts, setBlogPosts] = useState<any[]>([
@@ -60,6 +85,11 @@ export default function AdminDashboard() {
     setLeads(db.get('crm_leads') || []);
     setProposals(db.get('proposals') || []);
     setUsersList(db.get('users') || []);
+    setExperiences(db.get('experiences') || []);
+    setCategories(db.get('categories') || []);
+    setKbeautyExperiences(db.get('kbeauty_experiences') || []);
+    setCampuses(db.get('exchange_campuses') || []);
+    setJourneys(db.get('journeys') || []);
   };
 
   useEffect(() => {
@@ -182,12 +212,17 @@ export default function AdminDashboard() {
           {[
             { id: 'visual', label: 'Identidade Visual', icon: Palette },
             { id: 'builder', label: 'Page Builder (Blocos)', icon: Layers },
-            { id: 'packages', label: 'Pacotes & Experiências', icon: Database },
-            { id: 'leads', label: 'Leads & E-mail Marketing', icon: Folder },
-            { id: 'blog', label: 'Artigos do Blog', icon: BookOpen },
-            { id: 'settings', label: 'Configurações & SEO', icon: Globe },
-            { id: 'stats', label: 'Estatísticas & CRM', icon: TrendingUp },
-            { id: 'users', label: 'Consultoras & Permissões', icon: Users }
+            { id: 'experiencias', label: 'Experiências Coreia', icon: Compass },
+            { id: 'kbeauty', label: 'K-Beauty', icon: Sparkles },
+            { id: 'categorias', label: 'Categorias', icon: Folder },
+            { id: 'intercambio', label: 'Intercâmbio', icon: GraduationCap },
+            { id: 'jornadas', label: 'Jornadas', icon: Map },
+            { id: 'packages', label: 'Pacotes & CRUD Geral', icon: Database },
+            { id: 'leads', label: 'Leads & E-mail', icon: Folder },
+            { id: 'blog', label: 'Artigos', icon: BookOpen },
+            { id: 'settings', label: 'Config & SEO', icon: Globe },
+            { id: 'stats', label: 'CRM Stats', icon: TrendingUp },
+            { id: 'users', label: 'Usuários', icon: Users }
           ].map((tab) => {
             const Icon = tab.icon;
             return (
@@ -307,6 +342,284 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* TAB: EXPERIÊNCIAS COREIA */}
+          {activeSubTab === 'experiencias' && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="bg-card border border-border rounded-3xl p-6 shadow-sm h-fit">
+                <h3 className="font-heading text-xl font-light text-secondary mb-6 border-b border-border pb-3">Nova Experiência</h3>
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!expTitle || !expPrice) return;
+                  const all = db.get('experiences');
+                  const newExp = {
+                    id: crypto.randomUUID(), slug: expSlug || expTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+                    title: expTitle, subtitle: '', location: expLocation || 'Seul', region: 'Seul', city: 'Seul',
+                    category_slugs: expCategory ? [expCategory] : [],
+                    description: expDescription || 'Nova experiência cadastrada pelo painel.',
+                    highlights: [], included: [],
+                    duration_hours: Number(expDuration) || 2, price_per_person: Number(expPrice),
+                    main_image: 'https://images.unsplash.com/photo-1534270804883-8b1b5e7f2e2b?q=80&w=800',
+                    gallery: [], video_url: '', video_embed: '',
+                    status: 'active', booking_type: expBookingType, available_from: '2026-08-25',
+                    created_at: new Date().toISOString()
+                  };
+                  all.push(newExp);
+                  db.save('experiences', all);
+                  setExpTitle(''); setExpSlug(''); setExpPrice(0); setExpDuration(0); setExpLocation(''); setExpDescription('');
+                  loadData();
+                }} className="flex flex-col gap-4 text-xs text-muted-foreground">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-secondary">Título</label>
+                    <Input required value={expTitle} onChange={e => setExpTitle(e.target.value)} placeholder="Ex: Seul Depois do Pôr do Sol" />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-secondary">Slug (URL)</label>
+                    <Input value={expSlug} onChange={e => setExpSlug(e.target.value)} placeholder="seul-depois-do-por-do-sol" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">Preço (R$)</label>
+                      <Input required type="number" value={expPrice || ''} onChange={e => setExpPrice(Number(e.target.value))} />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">Duração (horas)</label>
+                      <Input type="number" value={expDuration || ''} onChange={e => setExpDuration(Number(e.target.value))} />
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-secondary">Categoria</label>
+                    <select value={expCategory} onChange={e => setExpCategory(e.target.value)} className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm">
+                      <option value="">Selecionar</option>
+                      {categories.map((c: any) => <option key={c.id} value={c.slug}>{c.name}</option>)}
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-secondary">Tipo de Reserva</label>
+                    <select value={expBookingType} onChange={e => setExpBookingType(e.target.value)} className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm">
+                      <option value="direct">Reserva Direta</option>
+                      <option value="request">Solicitar Reserva</option>
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-secondary">Localização</label>
+                    <Input value={expLocation} onChange={e => setExpLocation(e.target.value)} placeholder="Ex: Gangnam, Seul" />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-secondary">Descrição</label>
+                    <textarea value={expDescription} onChange={e => setExpDescription(e.target.value)} className="flex h-20 w-full rounded-md border border-border bg-background px-3 py-2 text-sm resize-none" />
+                  </div>
+                  <Button type="submit" className="bg-primary hover:bg-accent-hover text-white font-bold py-2.5 rounded-xl">
+                    ADICIONAR EXPERIÊNCIA
+                  </Button>
+                </form>
+              </div>
+              <div className="lg:col-span-2 bg-card border border-border rounded-3xl p-6 shadow-sm">
+                <div className="flex items-center justify-between mb-6 border-b border-border pb-3">
+                  <h3 className="font-heading text-xl font-light text-secondary">Experiências Cadastradas ({experiences.length})</h3>
+                  <select value={experienceFilter} onChange={e => setExperienceFilter(e.target.value)} className="text-xs border border-border rounded-lg px-3 py-1.5 bg-background">
+                    <option value="all">Todas</option>
+                    <option value="direct">Reserva Direta</option>
+                    <option value="request">Solicitar Reserva</option>
+                  </select>
+                </div>
+                <div className="flex flex-col gap-3">
+                  {(experienceFilter === 'all' ? experiences : experiences.filter((e: any) => e.booking_type === experienceFilter)).map((exp: any) => (
+                    <div key={exp.id} className="border border-border/80 rounded-xl p-4 bg-muted/20 flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted shrink-0">
+                          <img src={exp.main_image} alt={exp.title} className="w-full h-full object-cover" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-bold text-secondary">{exp.title}</h4>
+                          <span className="text-[10px] text-muted-foreground uppercase">{exp.location} • {exp.duration_hours}h • R$ {exp.price_per_person}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${exp.booking_type === 'direct' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
+                          {exp.booking_type === 'direct' ? 'Reserva Direta' : 'Solicitar'}
+                        </span>
+                        <button onClick={() => { const filtered = experiences.filter((e: any) => e.id !== exp.id); db.save('experiences', filtered); loadData(); }} className="text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded-lg transition-colors">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB: K-BEAUTY */}
+          {activeSubTab === 'kbeauty' && (
+            <div className="bg-card border border-border rounded-3xl p-6 md:p-8 shadow-sm">
+              <h2 className="font-heading text-2xl font-light text-secondary border-b border-border pb-4 mb-6">Gerenciar K-Beauty Experiences</h2>
+              <div className="flex flex-col gap-4">
+                {kbeautyExperiences.map((exp: any) => (
+                  <div key={exp.id} className="border border-border/80 rounded-xl p-4 bg-muted/20 flex items-center justify-between gap-4">
+                    <div>
+                      <h4 className="text-sm font-bold text-secondary">{exp.title}</h4>
+                      <span className="text-[10px] text-muted-foreground uppercase">{exp.location} • R$ {exp.price_per_person}/pessoa</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-[10px] px-2.5 py-1 rounded-full bg-green-50 text-green-700 border border-green-200">Ativo</span>
+                      <button onClick={() => { const filtered = kbeautyExperiences.filter((e: any) => e.id !== exp.id); db.save('kbeauty_experiences', filtered); loadData(); }} className="text-red-500 hover:text-red-700 p-2"><Trash2 className="h-4 w-4" /></button>
+                    </div>
+                  </div>
+                ))}
+                <p className="text-xs text-muted-foreground mt-2">Novas experiências K-Beauty de empresas parceiras serão adicionadas conforme a cliente enviar as informações.</p>
+              </div>
+            </div>
+          )}
+
+          {/* TAB: CATEGORIAS */}
+          {activeSubTab === 'categorias' && (
+            <div className="bg-card border border-border rounded-3xl p-6 md:p-8 shadow-sm">
+              <h2 className="font-heading text-2xl font-light text-secondary border-b border-border pb-4 mb-6">Categorias de Experiências</h2>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="bg-muted/10 border border-border rounded-2xl p-6 h-fit text-xs flex flex-col gap-4">
+                  <h3 className="font-bold text-secondary uppercase tracking-wider">Nova Categoria</h3>
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!catName) return;
+                    const all = db.get('categories');
+                    const newCat = { id: crypto.randomUUID(), slug: catSlug || catName.toLowerCase().replace(/[^a-z0-9]+/g, '-'), name: catName, destination: 'Coreia do Sul', active: true, sort_order: all.length };
+                    all.push(newCat);
+                    db.save('categories', all);
+                    setCatName(''); setCatSlug('');
+                    loadData();
+                  }} className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">Nome</label>
+                      <Input required value={catName} onChange={e => setCatName(e.target.value)} placeholder="Ex: História e Cultura" />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">Slug</label>
+                      <Input value={catSlug} onChange={e => setCatSlug(e.target.value)} placeholder="historia-e-cultura" />
+                    </div>
+                    <Button type="submit" className="bg-primary hover:bg-accent-hover text-white font-bold py-2 rounded-xl">ADICIONAR</Button>
+                  </form>
+                </div>
+                <div className="lg:col-span-2 flex flex-col gap-3">
+                  {categories.map((cat: any) => (
+                    <div key={cat.id} className="border border-border/80 rounded-xl p-4 bg-muted/20 flex items-center justify-between gap-4 text-xs">
+                      <div>
+                        <h4 className="font-bold text-secondary">{cat.name}</h4>
+                        <span className="text-[10px] text-muted-foreground">/{cat.slug} • Ordem: {cat.sort_order}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className={`px-2 py-0.5 rounded-full ${cat.active ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                          {cat.active ? 'Ativa' : 'Inativa'}
+                        </span>
+                        <button onClick={() => { const filtered = categories.filter((c: any) => c.id !== cat.id); db.save('categories', filtered); loadData(); }} className="text-red-500 hover:text-red-700 p-2"><Trash2 className="h-4 w-4" /></button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB: INTERCÂMBIO */}
+          {activeSubTab === 'intercambio' && (
+            <div className="bg-card border border-border rounded-3xl p-6 md:p-8 shadow-sm">
+              <h2 className="font-heading text-2xl font-light text-secondary border-b border-border pb-4 mb-6">Gerenciar Intercâmbio — Lexis Korea</h2>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div>
+                  <h3 className="text-xs font-bold text-secondary uppercase tracking-wider mb-4">Campus Cadastrados</h3>
+                  {campuses.map((campus: any) => (
+                    <div key={campus.id} className="border border-border/80 rounded-xl p-4 bg-muted/20 mb-3 flex items-center justify-between gap-4 text-xs">
+                      <div>
+                        <h4 className="font-bold text-secondary">{campus.name}</h4>
+                        <span className="text-[10px] text-muted-foreground">{campus.location}</span>
+                      </div>
+                      <span className="text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-200">Ativo</span>
+                    </div>
+                  ))}
+                </div>
+                <div>
+                  <h3 className="text-xs font-bold text-secondary uppercase tracking-wider mb-4">Programas</h3>
+                  {(db.get('exchange_programs') || []).map((prog: any) => (
+                    <div key={prog.id} className="border border-border/80 rounded-xl p-4 bg-muted/20 mb-3 text-xs">
+                      <div className="flex justify-between items-center">
+                        <h4 className="font-bold text-secondary">{prog.name}</h4>
+                        <span className="text-[10px] text-muted-foreground">{prog.classes_per_week} aulas/semana</span>
+                      </div>
+                      <div className="mt-2 text-[10px] text-muted-foreground">
+                        {prog.pricing_tiers.map((tier: any, i: number) => (
+                          <span key={i} className="mr-3">{tier.range} sem: KRW {tier.price_per_week.toLocaleString()}/sem</span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB: JORNADAS */}
+          {activeSubTab === 'jornadas' && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="bg-card border border-border rounded-3xl p-6 shadow-sm h-fit">
+                <h3 className="font-heading text-xl font-light text-secondary mb-6 border-b border-border pb-3">Nova Jornada</h3>
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!journeyTitle || !journeyPrice) return;
+                  const all = db.get('journeys');
+                  const newJourney = {
+                    id: crypto.randomUUID(), slug: journeyTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+                    title: journeyTitle, subtitle: '', concept: '', destinations: ['Seul'],
+                    duration_days: Number(journeyDuration) || 10, total_spots: 15,
+                    accommodation: 'Hotel 4 estrelas', price_per_person: Number(journeyPrice), price_currency: 'BRL',
+                    main_image: 'https://images.unsplash.com/photo-1540959733332-eab4deceeaf7?q=80&w=800',
+                    gallery: [], video_url: '', video_embed: '',
+                    included: [], not_included: [], itinerary: [], highlights: [],
+                    payment_options: { pix: true, boleto_parcelas: 48, credit_card_parcelas: 24, credit_card_juros_parcelas: '25-48', credit_card_juros_taxa: 0.05 },
+                    status: 'active', category: 'premium', created_at: new Date().toISOString()
+                  };
+                  all.push(newJourney);
+                  db.save('journeys', all);
+                  setJourneyTitle(''); setJourneyPrice(0); setJourneyDuration(0);
+                  loadData();
+                }} className="flex flex-col gap-4 text-xs text-muted-foreground">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-secondary">Título</label>
+                    <Input required value={journeyTitle} onChange={e => setJourneyTitle(e.target.value)} placeholder="Ex: Cheotnun — A Magia da Primeira Neve" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">Preço (R$)</label>
+                      <Input required type="number" value={journeyPrice || ''} onChange={e => setJourneyPrice(Number(e.target.value))} />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">Duração (dias)</label>
+                      <Input type="number" value={journeyDuration || ''} onChange={e => setJourneyDuration(Number(e.target.value))} />
+                    </div>
+                  </div>
+                  <Button type="submit" className="bg-primary hover:bg-accent-hover text-white font-bold py-2.5 rounded-xl">CRIAR JORNADA</Button>
+                </form>
+              </div>
+              <div className="lg:col-span-2 bg-card border border-border rounded-3xl p-6 shadow-sm">
+                <h3 className="font-heading text-xl font-light text-secondary mb-6 border-b border-border pb-3">Jornadas Cadastradas ({journeys.length})</h3>
+                <div className="flex flex-col gap-3">
+                  {journeys.map((jour: any) => (
+                    <div key={jour.id} className="border border-border/80 rounded-xl p-4 bg-muted/20 flex items-center justify-between gap-4">
+                      <div>
+                        <h4 className="text-sm font-bold text-secondary">{jour.title}</h4>
+                        <span className="text-[10px] text-muted-foreground uppercase">{jour.duration_days} dias • R$ {jour.price_per_person.toLocaleString()}/pessoa</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className={`text-[10px] px-2.5 py-1 rounded-full border ${jour.category === 'army' ? 'bg-purple-50 text-purple-700 border-purple-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
+                          {jour.category === 'army' ? 'ARMY' : 'Premium'}
+                        </span>
+                        <button onClick={() => { const filtered = journeys.filter((j: any) => j.id !== jour.id); db.save('journeys', filtered); loadData(); }} className="text-red-500 hover:text-red-700 p-2"><Trash2 className="h-4 w-4" /></button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}

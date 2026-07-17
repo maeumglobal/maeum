@@ -58,10 +58,11 @@ export default function Header() {
   };
 
   const navItems = [
+    { label: 'Coreia do Sul', href: '/coreia-do-sul' },
     { label: 'Destinos', href: '/destinos' },
-    { label: 'Pacotes', href: '/pacotes' },
-    { label: 'Intercâmbios', href: '/intercambios' },
-    { label: 'Experiências', href: '/experiencias' },
+    { label: 'Experiências', href: '/coreia-do-sul/experiencias' },
+    { label: 'Intercâmbio', href: '/coreia-do-sul/intercambio' },
+    { label: 'Jornadas', href: '/coreia-do-sul/jornadas' },
     { label: 'Journal', href: '/journal' },
     { label: 'Contato', href: '/contato' }
   ];

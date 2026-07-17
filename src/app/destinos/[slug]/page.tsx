@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { MapPin, Calendar, Compass, ArrowRight, ArrowLeft } from 'lucide-react';
+import { MapPin, Calendar, Compass, ArrowRight, ArrowLeft, Sparkles, GraduationCap, Map } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { db } from '@/lib/db';
@@ -90,6 +90,45 @@ export default function DestinoDetailPage() {
                 </div>
               </div>
             )}
+            {slug === 'coreia-do-sul' && (
+              <div className="mt-8 bg-muted/20 rounded-3xl p-8 border border-border">
+                <h3 className="font-heading text-xl font-light text-secondary uppercase tracking-wider mb-6">Explorar Coreia do Sul</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Link href="/coreia-do-sul/experiencias" className="flex items-center gap-4 bg-card border border-border rounded-2xl p-5 hover:shadow-md hover:border-primary/30 transition-all group">
+                    <span className="p-3 bg-primary/10 rounded-xl text-primary"><Compass className="h-6 w-6" /></span>
+                    <div>
+                      <h4 className="font-bold text-sm text-secondary group-hover:text-primary transition-colors">Experiências</h4>
+                      <p className="text-[10px] text-muted-foreground">Explore experiências individuais</p>
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-primary ml-auto shrink-0" />
+                  </Link>
+                  <Link href="/coreia-do-sul/k-beauty" className="flex items-center gap-4 bg-card border border-border rounded-2xl p-5 hover:shadow-md hover:border-primary/30 transition-all group">
+                    <span className="p-3 bg-primary/10 rounded-xl text-primary"><Sparkles className="h-6 w-6" /></span>
+                    <div>
+                      <h4 className="font-bold text-sm text-secondary group-hover:text-primary transition-colors">K-Beauty</h4>
+                      <p className="text-[10px] text-muted-foreground">Beleza e cuidados coreanos</p>
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-primary ml-auto shrink-0" />
+                  </Link>
+                  <Link href="/coreia-do-sul/intercambio" className="flex items-center gap-4 bg-card border border-border rounded-2xl p-5 hover:shadow-md hover:border-primary/30 transition-all group">
+                    <span className="p-3 bg-primary/10 rounded-xl text-primary"><GraduationCap className="h-6 w-6" /></span>
+                    <div>
+                      <h4 className="font-bold text-sm text-secondary group-hover:text-primary transition-colors">Intercâmbio</h4>
+                      <p className="text-[10px] text-muted-foreground">Lexis Korea — programas de coreano</p>
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-primary ml-auto shrink-0" />
+                  </Link>
+                  <Link href="/coreia-do-sul/jornadas" className="flex items-center gap-4 bg-card border border-border rounded-2xl p-5 hover:shadow-md hover:border-primary/30 transition-all group">
+                    <span className="p-3 bg-primary/10 rounded-xl text-primary"><Map className="h-6 w-6" /></span>
+                    <div>
+                      <h4 className="font-bold text-sm text-secondary group-hover:text-primary transition-colors">Jornadas</h4>
+                      <p className="text-[10px] text-muted-foreground">Viagens em grupo exclusivas</p>
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-primary ml-auto shrink-0" />
+                  </Link>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Sidebar - Localização / Informações do destino */}
@@ -128,6 +167,15 @@ export default function DestinoDetailPage() {
                   Ver Vídeo Destacado
                 </a>
               </div>
+            )}
+
+            {slug === 'coreia-do-sul' && (
+              <Link href="/coreia-do-sul" className="mt-2 block">
+                <button className="w-full flex items-center justify-center gap-2 bg-secondary hover:bg-secondary/80 text-white transition-all text-xs font-bold py-3.5 rounded-xl uppercase tracking-wider shadow-sm">
+                  <Compass className="h-4 w-4" />
+                  EXPLORAR COREIA DO SUL
+                </button>
+              </Link>
             )}
           </div>
         </section>

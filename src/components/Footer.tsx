@@ -43,7 +43,29 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Column 2 - Destinos */}
+        {/* Column 2 - Coreia do Sul */}
+        <div className="flex flex-col gap-4">
+          <h3 className="text-[10px] font-bold uppercase tracking-wider text-primary">Coreia do Sul</h3>
+          <ul className="flex flex-col gap-2.5 text-gray-400">
+            <li><Link href="/coreia-do-sul" className="hover:text-primary transition-colors">Visão geral</Link></li>
+            <li><Link href="/coreia-do-sul/experiencias" className="hover:text-primary transition-colors">Experiências</Link></li>
+            <li><Link href="/coreia-do-sul/k-beauty" className="hover:text-primary transition-colors">K-Beauty</Link></li>
+            <li><Link href="/coreia-do-sul/intercambio" className="hover:text-primary transition-colors">Intercâmbio</Link></li>
+          </ul>
+        </div>
+
+        {/* Column 3 - Jornadas */}
+        <div className="flex flex-col gap-4">
+          <h3 className="text-[10px] font-bold uppercase tracking-wider text-primary">Jornadas</h3>
+          <ul className="flex flex-col gap-2.5 text-gray-400">
+            <li><Link href="/coreia-do-sul/jornadas" className="hover:text-primary transition-colors">Próximas saídas</Link></li>
+            <li><Link href="/coreia-do-sul/jornadas" className="hover:text-primary transition-colors">Cheotnun</Link></li>
+            <li><Link href="/coreia-do-sul/jornadas" className="hover:text-primary transition-colors">Projeto ARMY</Link></li>
+            <li><Link href="/coreia-do-sul/jornadas" className="hover:text-primary transition-colors">Caravana de Verão</Link></li>
+          </ul>
+        </div>
+
+        {/* Column 4 - Destinos */}
         <div className="flex flex-col gap-4">
           <h3 className="text-[10px] font-bold uppercase tracking-wider text-primary">Destinos</h3>
           <ul className="flex flex-col gap-2.5 text-gray-400">
@@ -53,39 +75,7 @@ export default function Footer() {
           </ul>
         </div>
 
-        {/* Column 3 - Experiências */}
-        <div className="flex flex-col gap-4">
-          <h3 className="text-[10px] font-bold uppercase tracking-wider text-primary">Experiências</h3>
-          <ul className="flex flex-col gap-2.5 text-gray-400">
-            <li><Link href="/experiencias" className="hover:text-primary transition-colors">Todas as experiências</Link></li>
-            <li><Link href="/experiencias" className="hover:text-primary transition-colors">Experiências exclusivas</Link></li>
-            <li><Link href="/experiencias" className="hover:text-primary transition-colors">Experiências de beleza</Link></li>
-            <li><Link href="/experiencias" className="hover:text-primary transition-colors">Gastronomia</Link></li>
-          </ul>
-        </div>
-
-        {/* Column 4 - Intercâmbio */}
-        <div className="flex flex-col gap-4">
-          <h3 className="text-[10px] font-bold uppercase tracking-wider text-primary">Intercâmbio</h3>
-          <ul className="flex flex-col gap-2.5 text-gray-400">
-            <li><Link href="/intercambios" className="hover:text-primary transition-colors">Intercâmbio na Coreia</Link></li>
-            <li><Link href="/intercambios" className="hover:text-primary transition-colors">Lexis Korea</Link></li>
-            <li><Link href="/intercambios" className="hover:text-primary transition-colors">Programas</Link></li>
-            <li><Link href="/intercambios" className="hover:text-primary transition-colors">Depoimentos</Link></li>
-          </ul>
-        </div>
-
-        {/* Column 5 - Pacotes */}
-        <div className="flex flex-col gap-4">
-          <h3 className="text-[10px] font-bold uppercase tracking-wider text-primary">Pacotes</h3>
-          <ul className="flex flex-col gap-2.5 text-gray-400">
-            <li><Link href="/pacotes" className="hover:text-primary transition-colors">Próximas saídas</Link></li>
-            <li><Link href="/pacotes" className="hover:text-primary transition-colors">Pacotes completos</Link></li>
-            <li><Link href="/pacotes" className="hover:text-primary transition-colors">Grupos acompanhados</Link></li>
-          </ul>
-        </div>
-
-        {/* Column 6 - Journal */}
+        {/* Column 5 - Journal */}
         <div className="flex flex-col gap-4">
           <h3 className="text-[10px] font-bold uppercase tracking-wider text-primary">Journal</h3>
           <ul className="flex flex-col gap-2.5 text-gray-400">

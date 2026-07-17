@@ -214,6 +214,184 @@ INSERT INTO maeum_system_settings (key, value) VALUES
 }'::jsonb);
 
 -- =========================================================================
+-- NEW TABLES: Experiences, K-Beauty, Exchange, Journeys for Coreia do Sul
+-- =========================================================================
+
+CREATE TABLE maeum_categories (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    slug VARCHAR(255) UNIQUE NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    destination VARCHAR(100) NOT NULL DEFAULT 'Coreia do Sul',
+    active BOOLEAN DEFAULT TRUE,
+    sort_order INT NOT NULL DEFAULT 0
+);
+
+CREATE TABLE maeum_experiences (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    slug VARCHAR(255) UNIQUE NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    subtitle TEXT,
+    location VARCHAR(255),
+    region VARCHAR(100),
+    city VARCHAR(100),
+    category_slugs TEXT[] DEFAULT '{}',
+    description TEXT,
+    highlights TEXT[] DEFAULT '{}',
+    included TEXT[] DEFAULT '{}',
+    duration_hours NUMERIC(5,1),
+    price_per_person NUMERIC(10,2) NOT NULL,
+    main_image TEXT,
+    gallery TEXT[] DEFAULT '{}',
+    video_url TEXT,
+    video_embed TEXT,
+    status VARCHAR(50) DEFAULT 'active',
+    booking_type VARCHAR(50) DEFAULT 'direct',
+    available_from DATE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE maeum_kbeauty_partners (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE maeum_kbeauty_experiences (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    slug VARCHAR(255) UNIQUE NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    subtitle TEXT,
+    location VARCHAR(255),
+    region VARCHAR(100),
+    city VARCHAR(100),
+    partner_id UUID REFERENCES maeum_kbeauty_partners(id) ON DELETE SET NULL,
+    description TEXT,
+    highlights TEXT[] DEFAULT '{}',
+    included TEXT[] DEFAULT '{}',
+    duration_hours NUMERIC(5,1),
+    price_per_person NUMERIC(10,2) NOT NULL,
+    main_image TEXT,
+    gallery TEXT[] DEFAULT '{}',
+    video_url TEXT,
+    video_embed TEXT,
+    status VARCHAR(50) DEFAULT 'active',
+    booking_type VARCHAR(50) DEFAULT 'request',
+    available_from DATE,
+    is_partner_experience BOOLEAN DEFAULT FALSE,
+    is_included_in_journey BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE maeum_exchange_institutions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    slug VARCHAR(255) UNIQUE NOT NULL,
+    description TEXT,
+    country VARCHAR(100) NOT NULL DEFAULT 'Coreia do Sul',
+    website TEXT,
+    logo_url TEXT,
+    active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE maeum_exchange_campuses (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    institution_id UUID REFERENCES maeum_exchange_institutions(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    city VARCHAR(100),
+    location TEXT,
+    description TEXT,
+    main_image TEXT,
+    active BOOLEAN DEFAULT TRUE
+);
+
+CREATE TABLE maeum_exchange_programs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    institution_id UUID REFERENCES maeum_exchange_institutions(id) ON DELETE CASCADE,
+    campus_id UUID REFERENCES maeum_exchange_campuses(id) ON DELETE SET NULL,
+    name VARCHAR(255) NOT NULL,
+    slug VARCHAR(255) UNIQUE NOT NULL,
+    description TEXT,
+    duration_weeks_min INT DEFAULT 1,
+    duration_weeks_max INT DEFAULT 52,
+    classes_per_week INT DEFAULT 15,
+    level_required VARCHAR(100) DEFAULT 'Todos os níveis',
+    pricing_tiers JSONB NOT NULL DEFAULT '[]'::jsonb,
+    includes_enrollment_fee BOOLEAN DEFAULT FALSE,
+    enrollment_fee NUMERIC(10,2) DEFAULT 0,
+    enrollment_fee_currency VARCHAR(10) DEFAULT 'KRW',
+    includes_material BOOLEAN DEFAULT FALSE,
+    material_fee NUMERIC(10,2) DEFAULT 0,
+    material_fee_currency VARCHAR(10) DEFAULT 'KRW',
+    cultural_activities BOOLEAN DEFAULT FALSE,
+    active BOOLEAN DEFAULT TRUE
+);
+
+CREATE TABLE maeum_journeys (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    slug VARCHAR(255) UNIQUE NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    subtitle TEXT,
+    concept TEXT,
+    destinations TEXT[] DEFAULT '{}',
+    duration_days INT NOT NULL,
+    total_spots INT DEFAULT 15,
+    accommodation VARCHAR(255),
+    price_per_person NUMERIC(10,2) NOT NULL,
+    price_currency VARCHAR(10) DEFAULT 'BRL',
+    main_image TEXT,
+    gallery TEXT[] DEFAULT '{}',
+    video_url TEXT,
+    video_embed TEXT,
+    included TEXT[] DEFAULT '{}',
+    not_included TEXT[] DEFAULT '{}',
+    itinerary JSONB NOT NULL DEFAULT '[]'::jsonb,
+    highlights JSONB NOT NULL DEFAULT '[]'::jsonb,
+    categories JSONB DEFAULT '[]'::jsonb,
+    payment_options JSONB DEFAULT '{}'::jsonb,
+    status VARCHAR(50) DEFAULT 'active',
+    category VARCHAR(50) DEFAULT 'premium',
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE maeum_journey_departures (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    journey_id UUID REFERENCES maeum_journeys(id) ON DELETE CASCADE,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    total_spots INT NOT NULL,
+    available_spots INT NOT NULL,
+    status VARCHAR(50) DEFAULT 'available',
+    notes TEXT,
+    price_adjustment NUMERIC(10,2) DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE maeum_experience_availability (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    experience_id UUID REFERENCES maeum_experiences(id) ON DELETE CASCADE,
+    date DATE NOT NULL,
+    start_time TIME,
+    end_time TIME,
+    max_participants INT DEFAULT 10,
+    available_spots INT DEFAULT 10,
+    status VARCHAR(50) DEFAULT 'available',
+    notes TEXT
+);
+
+-- Indexes for new tables
+CREATE INDEX idx_maeum_experiences_slug ON maeum_experiences(slug);
+CREATE INDEX idx_maeum_kbeauty_experiences_slug ON maeum_kbeauty_experiences(slug);
+CREATE INDEX idx_maeum_exchange_programs_slug ON maeum_exchange_programs(slug);
+CREATE INDEX idx_maeum_journeys_slug ON maeum_journeys(slug);
+CREATE INDEX idx_maeum_journey_departures_journey ON maeum_journey_departures(journey_id);
+CREATE INDEX idx_maeum_experience_availability_experience ON maeum_experience_availability(experience_id);
+CREATE INDEX idx_maeum_exchange_campuses_institution ON maeum_exchange_campuses(institution_id);
+CREATE INDEX idx_maeum_exchange_programs_institution ON maeum_exchange_programs(institution_id);
+
+-- =========================================================================
 -- MAEUM INDEXES FOR QUERY OPTIMIZATION (NEW)
 -- =========================================================================
 CREATE INDEX idx_maeum_packages_destination ON maeum_packages(destination_id);
