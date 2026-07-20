@@ -17,42 +17,42 @@ export default function DashboardMetrics({ metrics: apiMetrics }: { metrics?: Me
   const metrics = [
     {
       title: 'Faturamento Total',
-      value: apiMetrics?.revenue.value 
-        ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(apiMetrics.revenue.value) 
+      value: apiMetrics?.revenue?.value 
+        ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(apiMetrics?.revenue?.value) 
         : 'R$ 0,00',
-      change: `${apiMetrics?.revenue.change > 0 ? '+' : ''}${apiMetrics?.revenue.change.toFixed(1)}%`,
-      changeType: (apiMetrics?.revenue.change || 0) >= 0 ? 'positive' : 'negative',
+      change: `${(apiMetrics?.revenue?.change || 0) > 0 ? '+' : ''}${(apiMetrics?.revenue?.change || 0).toFixed(1)}%`,
+      changeType: (apiMetrics?.revenue?.change || 0) >= 0 ? 'positive' : 'negative',
       icon: CircleDollarSign,
       hasTooltip: true,
     },
     {
       title: 'Reservas Confirmadas',
-      value: apiMetrics?.bookings.value?.toString() || '0',
-      change: `${apiMetrics?.bookings.change > 0 ? '+' : ''}${apiMetrics?.bookings.change.toFixed(1)}%`,
-      changeType: (apiMetrics?.bookings.change || 0) >= 0 ? 'positive' : 'negative',
+      value: apiMetrics?.bookings?.value?.toString() || '0',
+      change: `${(apiMetrics?.bookings?.change || 0) > 0 ? '+' : ''}${(apiMetrics?.bookings?.change || 0).toFixed(1)}%`,
+      changeType: (apiMetrics?.bookings?.change || 0) >= 0 ? 'positive' : 'negative',
       icon: Gem,
     },
     {
       title: 'Novas Consultas',
-      value: apiMetrics?.leads.value?.toString() || '0',
-      change: `${apiMetrics?.leads.change > 0 ? '+' : ''}${apiMetrics?.leads.change.toFixed(1)}%`,
-      changeType: (apiMetrics?.leads.change || 0) >= 0 ? 'positive' : 'negative',
+      value: apiMetrics?.leads?.value?.toString() || '0',
+      change: `${(apiMetrics?.leads?.change || 0) > 0 ? '+' : ''}${(apiMetrics?.leads?.change || 0).toFixed(1)}%`,
+      changeType: (apiMetrics?.leads?.change || 0) >= 0 ? 'positive' : 'negative',
       icon: Users,
     },
     {
       title: 'Taxa de Conversão',
-      value: `${apiMetrics?.conversion.value?.toFixed(1) || '0'}%`,
-      change: `${apiMetrics?.conversion.change > 0 ? '+' : ''}${apiMetrics?.conversion.change.toFixed(1)}%`,
-      changeType: (apiMetrics?.conversion.change || 0) >= 0 ? 'positive' : 'negative',
+      value: `${apiMetrics?.conversion?.value?.toFixed(1) || '0'}%`,
+      change: `${(apiMetrics?.conversion?.change || 0) > 0 ? '+' : ''}${(apiMetrics?.conversion?.change || 0).toFixed(1)}%`,
+      changeType: (apiMetrics?.conversion?.change || 0) >= 0 ? 'positive' : 'negative',
       icon: Percent,
     },
     {
       title: 'Ticket Médio',
-      value: apiMetrics?.ticket.value 
-        ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(apiMetrics.ticket.value) 
+      value: apiMetrics?.ticket?.value 
+        ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(apiMetrics?.ticket?.value) 
         : 'R$ 0,00',
-      change: `${apiMetrics?.ticket.change > 0 ? '+' : ''}${apiMetrics?.ticket.change.toFixed(1)}%`,
-      changeType: (apiMetrics?.ticket.change || 0) >= 0 ? 'positive' : 'negative',
+      change: `${(apiMetrics?.ticket?.change || 0) > 0 ? '+' : ''}${(apiMetrics?.ticket?.change || 0).toFixed(1)}%`,
+      changeType: (apiMetrics?.ticket?.change || 0) >= 0 ? 'positive' : 'negative',
       icon: Ticket,
     }
   ];
