@@ -204,7 +204,7 @@ export default function Home() {
 
         <div className="relative z-10 px-8 max-w-7xl mx-auto text-white flex flex-col items-start gap-6 w-full mt-24">
           <span className="text-xs uppercase tracking-widest text-accent font-bold">
-            MAEUM GLOBAL
+            MaeumGlobal
           </span>
           
           <h1 className="font-heading text-4xl sm:text-6xl font-light tracking-wide leading-tight text-left text-white max-w-2xl">
@@ -213,7 +213,7 @@ export default function Home() {
           </h1>
           
           <p className="text-sm sm:text-base text-gray-300 max-w-xl font-light text-left leading-relaxed">
-            Cada roteiro da Maeum Global é desenvolvido para quem busca experiências autênticas, grupos exclusivos e uma imersão completa na cultura coreana.
+            O aplicativo MaeumGlobal é uma plataforma oficial de gestão de turismo de luxo, intercâmbio e consultoria. Faça login para gerenciar suas reservas, roteiros personalizados e vivenciar imersões premium na Coreia do Sul e no mundo.
           </p>
           
           <div className="flex flex-col gap-1 mt-2">
