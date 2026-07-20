@@ -17,6 +17,7 @@ import { db } from '@/lib/db';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import AdminHeader from '@/components/admin/AdminHeader';
 import AdminDashboardHome from '@/components/admin/dashboard/AdminDashboardHome';
+import AdminLeadsHome from '@/components/admin/leads/AdminLeadsHome';
 
 export default function AdminDashboard() {
   const [activeSubTab, setActiveSubTab] = useState('dashboard_home');
@@ -226,6 +227,7 @@ export default function AdminDashboard() {
         
         <main className="flex-1 overflow-y-auto p-4 md:p-8 no-scrollbar min-w-0 w-full">
           {activeSubTab === 'dashboard_home' && <AdminDashboardHome />}
+          {activeSubTab === 'leads' && <AdminLeadsHome />}
           
           <div className="min-h-[400px]">
           {/* TAB: VISUAL IDENTITY */}
