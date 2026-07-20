@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Mail, Lock, User, AlertCircle, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -56,7 +57,7 @@ export default function LoginPage() {
       <div className="flex-1 grid place-items-center px-4 py-12">
         <div className="w-full max-w-md bg-card border border-border rounded-3xl p-8 shadow-lg">
           <div className="text-center mb-8">
-            <h1 className="font-heading text-3xl font-bold tracking-widest text-primary uppercase">MAEUM</h1>
+            <h1 className="font-heading text-3xl font-bold tracking-widest text-primary uppercase">MaeumGlobal</h1>
             <p className="text-xs text-muted-foreground mt-1 font-semibold tracking-wider uppercase">Portal de Administração</p>
           </div>
 
@@ -139,8 +140,12 @@ export default function LoginPage() {
         </div>
       </div>
 
-      <footer className="text-center py-6 text-[10px] text-muted-foreground border-t border-border">
-        &copy; {new Date().getFullYear()} Maeum Global Travel. Todos os direitos reservados.
+      <footer className="flex flex-col items-center justify-center gap-2 py-6 text-[10px] text-muted-foreground border-t border-border">
+        <div className="flex gap-4">
+          <Link href="/politica-de-privacidade" className="hover:text-primary transition-colors">Política de Privacidade</Link>
+          <Link href="/termos-de-uso" className="hover:text-primary transition-colors">Termos de Uso</Link>
+        </div>
+        <div>&copy; {new Date().getFullYear()} MaeumGlobal. Todos os direitos reservados.</div>
       </footer>
     </div>
   );

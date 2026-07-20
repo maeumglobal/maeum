@@ -201,7 +201,7 @@ export default function ReembolsoPage() {
                   <strong>Doença ou acidente:</strong> Com apresentação de atestado médico, analisamos condições especiais mesmo dentro do período de 15 dias.
                 </p>
                 <p>
-                  <strong>Problemas documentais:</strong> Vistos negados por motivos não atribuíveis à MAEUM GLOBAL seguem a tabela padrão.
+                  <strong>Problemas documentais:</strong> Vistos negados por motivos não atribuíveis à MaeumGlobal seguem a tabela padrão.
                 </p>
                 <p>
                   <strong>Força maior:</strong> Situações extraordinárias (pandemia, desastres naturais, conflitos) serão analisadas caso a caso.

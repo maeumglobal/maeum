@@ -193,7 +193,7 @@ export default function Home() {
         <div className="absolute inset-0 z-0">
           <Image
             src="/images/atendimento-especializado-viagem-coreia-do-sul-maeum-global-v2.webp"
-            alt="Atendimento especializado para viagens na Coreia do Sul - Maeum Global"
+            alt="Atendimento especializado para viagens na Coreia do Sul - MaeumGlobal"
             fill
             className="object-cover object-center"
             priority

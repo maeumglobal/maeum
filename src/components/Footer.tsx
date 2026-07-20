@@ -98,7 +98,7 @@ export default function Footer() {
       </div>
 
       <div className="mx-auto max-w-7xl border-t border-gray-800 mt-12 pt-6 flex flex-col sm:flex-row items-center justify-between text-[10px] text-gray-500 gap-4">
-        <p>&copy; {new Date().getFullYear()} Maeum Global Agency. Todos os direitos reservados.</p>
+        <p>&copy; {new Date().getFullYear()} MaeumGlobal Agency. Todos os direitos reservados.</p>
         <div className="flex items-center gap-1">
           <span>Orgulhosamente desenvolvido por</span>
           <a className="font-semibold text-gray-200 hover:text-primary transition-colors duration-200" href="https://www.voltris.com.br" target="_blank" rel="noreferrer">Voltris</a>

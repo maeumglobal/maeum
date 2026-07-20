@@ -20,7 +20,7 @@ export default function TermosUsoPage() {
     {
       icon: Shield,
       title: '2. Nossos Serviços',
-      content: `A MAEUM GLOBAL oferece:
+      content: `A MaeumGlobal oferece:
       
       • Planejamento e organização de viagens personalizadas para a Ásia
       • Roteiros turísticos customizados
@@ -68,12 +68,12 @@ export default function TermosUsoPage() {
       • Comunicar necessidades especiais ou restrições
       • Contratar seguro viagem (obrigatório para intercâmbios)
       
-      A MAEUM GLOBAL não se responsabiliza por problemas decorrentes do descumprimento.`
+      A MaeumGlobal não se responsabiliza por problemas decorrentes do descumprimento.`
     },
     {
       icon: Shield,
       title: '6. Limitação de Responsabilidade',
-      content: `A MAEUM GLOBAL atua como intermediária entre cliente e fornecedores (hotéis, companhias aéreas, 
+      content: `A MaeumGlobal atua como intermediária entre cliente e fornecedores (hotéis, companhias aéreas, 
       prestadores de serviços). Não nos responsabilizamos por:
       
       • Alterações unilaterais feitas por fornecedores
@@ -89,7 +89,7 @@ export default function TermosUsoPage() {
       icon: FileText,
       title: '7. Propriedade Intelectual',
       content: `Todo o conteúdo do site (textos, imagens, logotipos, vídeos, roteiros) é de propriedade 
-      da MAEUM GLOBAL e protegido por leis de direitos autorais.
+      da MaeumGlobal e protegido por leis de direitos autorais.
       
       É proibida a reprodução, distribuição ou uso comercial sem autorização prévia por escrito.
       
