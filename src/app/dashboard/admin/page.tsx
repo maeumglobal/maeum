@@ -18,6 +18,7 @@ import AdminSidebar from '@/components/admin/AdminSidebar';
 import AdminHeader from '@/components/admin/AdminHeader';
 import AdminDashboardHome from '@/components/admin/dashboard/AdminDashboardHome';
 import AdminLeadsHome from '@/components/admin/leads/AdminLeadsHome';
+import AdminPackagesHome from '@/components/admin/packages/AdminPackagesHome';
 
 export default function AdminDashboard() {
   const [activeSubTab, setActiveSubTab] = useState('dashboard_home');
@@ -45,11 +46,7 @@ export default function AdminDashboard() {
   const [journeys, setJourneys] = useState<any[]>([]);
   const [experienceFilter, setExperienceFilter] = useState('all');
 
-  // CRUD Package/Exchange/Experience States
-  const [pkgTitle, setPkgTitle] = useState('');
-  const [pkgPrice, setPkgPrice] = useState(0);
-  const [pkgType, setPkgType] = useState('package');
-  const [pkgDestination, setPkgDestination] = useState('Coreia do Sul');
+
 
   // Experience CRUD states
   const [expTitle, setExpTitle] = useState('');
@@ -154,43 +151,7 @@ export default function AdminDashboard() {
     db.save('cms_blocks', updated);
   };
 
-  // CRUD Create Item
-  const handleCreatePackage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!pkgTitle || !pkgPrice) return;
 
-    const allPkgs = db.get('packages');
-    const newPkg = {
-      id: crypto.randomUUID(),
-      title: pkgTitle,
-      slug: pkgTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-      price: Number(pkgPrice),
-      duration: '10 Dias',
-      destination: pkgDestination,
-      type: pkgType, // package, exchange, experience
-      description: `Novo ${pkgType === 'package' ? 'Pacote' : pkgType === 'exchange' ? 'Intercâmbio' : 'Experiência'} premium cadastrado pelo painel administrativo.`,
-      gallery: ['https://images.unsplash.com/photo-1538481199705-c710c4e965fc?q=80&w=800'],
-      included: ['Hospedagem 5 estrelas', 'Traslados privativos'],
-      not_included: ['Voos internacionais'],
-      status: 'active'
-    };
-
-    allPkgs.push(newPkg);
-    db.save('packages', allPkgs);
-    setPkgTitle('');
-    setPkgPrice(0);
-    loadData();
-    toast(`${pkgType === 'package' ? 'Pacote' : pkgType === 'exchange' ? 'Intercâmbio' : 'Experiência'} criado com sucesso!`);
-  };
-
-  // CRUD Delete Item
-  const handleDeletePackage = (id: string) => {
-    const allPkgs = db.get('packages');
-    const filtered = allPkgs.filter((p: any) => p.id !== id);
-    db.save('packages', filtered);
-    loadData();
-    toast('Item removido com sucesso!');
-  };
 
   // Create Blog Post
   const handleCreatePost = (e: React.FormEvent) => {
@@ -615,65 +576,7 @@ export default function AdminDashboard() {
 
           {/* TAB: CRUD PACKAGES, EXCHANGES, EXPERIENCES */}
           {activeSubTab === 'packages' && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Form */}
-              <div className="bg-card border border-border rounded-3xl p-6 shadow-sm h-fit">
-                <h3 className="font-heading text-xl font-light text-secondary mb-6 border-b border-border pb-3">Novo Item</h3>
-                <form onSubmit={handleCreatePackage} className="flex flex-col gap-4 text-xs text-muted-foreground">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-secondary">Título do Item</label>
-                    <Input required value={pkgTitle} onChange={e => setPkgTitle(e.target.value)} placeholder="Ex: Intercâmbio de Skincare em Seul" />
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-secondary">Tipo</label>
-                    <select value={pkgType} onChange={e => setPkgType(e.target.value)} className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-secondary">
-                      <option value="package">Pacote Turístico</option>
-                      <option value="exchange">Intercâmbio de Estudos</option>
-                      <option value="experience">Experiência Temática</option>
-                    </select>
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-secondary">Destino</label>
-                    <select value={pkgDestination} onChange={e => setPkgDestination(e.target.value)} className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-secondary">
-                      <option value="Coreia do Sul">Coreia do Sul</option>
-                      <option value="Japão">Japão</option>
-                      <option value="Vietnã">Vietnã</option>
-                    </select>
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-secondary">Preço (USD)</label>
-                    <Input required type="number" value={pkgPrice || ''} onChange={e => setPkgPrice(Number(e.target.value))} placeholder="0.00" />
-                  </div>
-                  <Button type="submit" className="bg-primary hover:bg-accent-hover text-white font-bold py-2.5 rounded-xl">
-                    ADICIONAR ITEM
-                  </Button>
-                </form>
-              </div>
-
-              {/* List */}
-              <div className="lg:col-span-2 bg-card border border-border rounded-3xl p-6 shadow-sm">
-                <h3 className="font-heading text-xl font-light text-secondary mb-6 border-b border-border pb-3">Itens Cadastrados</h3>
-                <div className="flex flex-col gap-3">
-                  {packages.map((pkg) => (
-                    <div key={pkg.id} className="border border-border/80 rounded-xl p-4 bg-muted/20 flex items-center justify-between gap-4">
-                      <div>
-                        <h4 className="text-sm font-bold text-secondary">{pkg.title}</h4>
-                        <span className="text-[10px] text-muted-foreground uppercase">{pkg.destination} • Tipo: {pkg.type === 'package' ? 'Pacote' : pkg.type === 'exchange' ? 'Intercâmbio' : 'Experiência'}</span>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <span className="text-sm font-bold text-primary">US$ {pkg.price.toLocaleString()}</span>
-                        <button
-                          onClick={() => handleDeletePackage(pkg.id)}
-                          className="text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded-lg transition-colors"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <AdminPackagesHome />
           )}
 
           {/* TAB: LEADS & NEWSLETTERS */}
