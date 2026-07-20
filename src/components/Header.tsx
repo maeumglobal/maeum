@@ -1,11 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Menu, X, User, LogOut, LayoutDashboard } from 'lucide-react';
-import { authService } from '@/lib/supabaseAuth';
-import AuthModal from './AuthModal';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 
@@ -13,48 +12,18 @@ export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user: currentUser, logout } = useAuth();
 
-  // Auth State
-  const [currentUser, setCurrentUser] = useState<any>(null);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
-
-  const updateSession = () => {
-    const user = authService.getCurrentUser();
-    setCurrentUser(user);
-  };
-
-  useEffect(() => {
-    updateSession();
-    // Periodically update to catch tab changes
-    const interval = setInterval(updateSession, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleLogout = async () => {
-    await authService.signOut();
-    setCurrentUser(null);
+  const handleLogout = () => {
+    logout();
     router.push('/');
   };
 
-  const handleAuthSuccess = () => {
-    updateSession();
-    const user = authService.getCurrentUser();
-    if (user) {
-      if (user.role === 'super_admin' || user.role === 'admin') {
-        router.push('/dashboard/admin');
-      } else if (user.role === 'consultora') {
-        router.push('/dashboard/consultora');
-      } else {
-        router.push('/dashboard/cliente');
-      }
-    }
-  };
-
-  const openAuth = (mode: 'login' | 'register') => {
-    setAuthModalMode(mode);
-    setIsAuthModalOpen(true);
-    setMobileMenuOpen(false);
+  const getDashboardLink = () => {
+    if (!currentUser) return '/login';
+    if (currentUser.role === 'super_admin' || currentUser.role === 'admin') return '/dashboard/admin';
+    if (currentUser.role === 'consultora') return '/dashboard/consultora';
+    return '/dashboard/cliente';
   };
 
   const navItems = [
@@ -137,18 +106,18 @@ export default function Header() {
             </div>
           ) : (
             <div className="flex items-center gap-2.5">
-              <button
-                onClick={() => openAuth('login')}
+              <Link
+                href="/login"
                 className="text-xs font-semibold text-foreground/80 hover:text-primary px-3 py-1.5 transition-colors"
               >
                 Entrar
-              </button>
-              <button
-                onClick={() => openAuth('register')}
+              </Link>
+              <Link
+                href="/login"
                 className="bg-primary hover:bg-accent-hover text-white text-xs font-semibold px-4 py-2 rounded-full shadow-sm transition-transform hover:scale-105"
               >
                 Cadastrar
-              </button>
+              </Link>
             </div>
           )}
 
@@ -195,13 +164,7 @@ export default function Header() {
                 Sessão: {currentUser.name} ({currentUser.role})
               </div>
               <Link
-                href={
-                  currentUser.role === 'super_admin' || currentUser.role === 'admin'
-                    ? '/dashboard/admin'
-                    : currentUser.role === 'consultora'
-                    ? '/dashboard/consultora'
-                    : '/dashboard/cliente'
-                }
+                href={getDashboardLink()}
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center gap-2 text-sm text-foreground/80 py-1"
               >
@@ -218,18 +181,18 @@ export default function Header() {
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => openAuth('login')}
-                className="border border-border hover:bg-muted text-secondary font-bold text-xs py-2.5 rounded-xl transition-all"
+              <Link
+                href="/login"
+                className="text-center border border-border hover:bg-muted text-secondary font-bold text-xs py-2.5 rounded-xl transition-all"
               >
                 Entrar
-              </button>
-              <button
-                onClick={() => openAuth('register')}
-                className="bg-primary hover:bg-accent-hover text-white font-bold text-xs py-2.5 rounded-xl transition-all"
+              </Link>
+              <Link
+                href="/login"
+                className="text-center bg-primary hover:bg-accent-hover text-white font-bold text-xs py-2.5 rounded-xl transition-all"
               >
                 Cadastrar
-              </button>
+              </Link>
             </div>
           )}
 
@@ -241,13 +204,6 @@ export default function Header() {
         </div>
       )}
 
-      {/* Auth Modal */}
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        onSuccess={handleAuthSuccess}
-        defaultMode={authModalMode}
-      />
     </header>
   );
 }

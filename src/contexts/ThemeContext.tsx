@@ -32,13 +32,13 @@ interface ThemeContextType {
 
 const DEFAULT_THEME: ThemeSettings = {
   colors: {
-    primary: '#C8A27C',
-    secondary: '#1C1C1C',
-    accent: '#B8860B',
-    accentHover: '#8B6508',
-    text: '#1C1C1C',
-    background: '#FAF9F6',
-    card: '#FFFFFF'
+    primary: '#4A1F2D',
+    secondary: '#F3E8DC',
+    accent: '#C6A86A',
+    accentHover: '#A88B50',
+    text: '#F3E8DC',
+    background: '#1A0F14',
+    card: '#2A161D'
   },
   typography: {
     titleFont: 'Cormorant Garamond',
@@ -72,7 +72,7 @@ export function ThemeProvider({ children, initialTheme }: { children: React.Reac
 
   useEffect(() => {
     // Try to load custom theme from localStorage first if client side
-    const saved = localStorage.getItem('maeum_theme');
+    const saved = localStorage.getItem('maeum_theme_v2');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -94,7 +94,7 @@ export function ThemeProvider({ children, initialTheme }: { children: React.Reac
         colors: { ...prev.colors, ...newTheme.colors },
         typography: { ...prev.typography, ...newTheme.typography }
       } as ThemeSettings;
-      localStorage.setItem('maeum_theme', JSON.stringify(updated));
+      localStorage.setItem('maeum_theme_v2', JSON.stringify(updated));
       applyTheme(updated);
       return updated;
     });

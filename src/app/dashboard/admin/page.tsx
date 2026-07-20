@@ -7,16 +7,22 @@ import {
   TrendingUp, DollarSign, Briefcase, FileText, Send, Share2, Award,
   BookOpen, Globe, Mail, Key, Compass, Sparkles, GraduationCap, Map
 } from 'lucide-react';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/ToastContext';
 import { db } from '@/lib/db';
+import AdminSidebar from '@/components/admin/AdminSidebar';
+import AdminHeader from '@/components/admin/AdminHeader';
+import AdminDashboardHome from '@/components/admin/dashboard/AdminDashboardHome';
 
 export default function AdminDashboard() {
-  const [activeSubTab, setActiveSubTab] = useState('visual');
+  const [activeSubTab, setActiveSubTab] = useState('dashboard_home');
   const { theme, updateTheme } = useTheme();
+  const { user } = useAuth();
+  const { toast } = useToast();
 
   // Color inputs state
   const [primaryColor, setPrimaryColor] = useState(theme.colors.primary);
@@ -64,19 +70,12 @@ export default function AdminDashboard() {
   const [journeyDuration, setJourneyDuration] = useState(0);
 
   // Blog State
-  const [blogPosts, setBlogPosts] = useState<any[]>([
-    { id: '1', title: 'Como Planejar sua Viagem de Luxo a Seul', author: 'Mariana Santos', created_at: '2026-07-08' },
-    { id: '2', title: 'Top 5 Templos Tradicionais em Quioto', author: 'Bruno Almeida', created_at: '2026-07-09' }
-  ]);
+  const [blogPosts, setBlogPosts] = useState<any[]>([]);
   const [newPostTitle, setNewPostTitle] = useState('');
   const [newPostAuthor, setNewPostAuthor] = useState('');
 
-  // SEO & General Settings
-  const [seoTitleSuffix, setSeoTitleSuffix] = useState('| Maeum Global Travel');
-  const [seoDescription, setSeoDescription] = useState('Descubra roteiros de luxo exclusivos, intercâmbios e experiências na Ásia.');
-  const [smtpServer, setSmtpServer] = useState('smtp.sendgrid.net');
-  const [smtpUser, setSmtpUser] = useState('no-reply@maeumglobal.com');
-  const [stripeKey, setStripeKey] = useState('pk_live_51M3c...');
+  // Site Config State
+  const [siteConfig, setSiteConfig] = useState<any>({});
   const [configSaved, setConfigSaved] = useState(false);
 
   const loadData = () => {
@@ -90,6 +89,23 @@ export default function AdminDashboard() {
     setKbeautyExperiences(db.get('kbeauty_experiences') || []);
     setCampuses(db.get('exchange_campuses') || []);
     setJourneys(db.get('journeys') || []);
+    setBlogPosts(db.get('blog_posts') || []);
+    setSiteConfig(db.get('site_config') || {});
+  };
+
+  const updateSiteConfig = (section: string, key: string, value: string) => {
+    setSiteConfig((prev: any) => ({
+      ...prev,
+      [section]: { ...prev[section], [key]: value }
+    }));
+  };
+
+  const handleSaveSiteConfig = (e: React.FormEvent) => {
+    e.preventDefault();
+    db.save('site_config', siteConfig);
+    setConfigSaved(true);
+    setTimeout(() => setConfigSaved(false), 3000);
+    toast('Configurações do site salvas com sucesso!');
   };
 
   useEffect(() => {
@@ -163,6 +179,7 @@ export default function AdminDashboard() {
     setPkgTitle('');
     setPkgPrice(0);
     loadData();
+    toast(`${pkgType === 'package' ? 'Pacote' : pkgType === 'exchange' ? 'Intercâmbio' : 'Experiência'} criado com sucesso!`);
   };
 
   // CRUD Delete Item
@@ -171,79 +188,46 @@ export default function AdminDashboard() {
     const filtered = allPkgs.filter((p: any) => p.id !== id);
     db.save('packages', filtered);
     loadData();
+    toast('Item removido com sucesso!');
   };
 
   // Create Blog Post
   const handleCreatePost = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPostTitle) return;
+    const all = db.get('blog_posts');
     const newP = {
       id: crypto.randomUUID(),
       title: newPostTitle,
       author: newPostAuthor || 'Maeum Editor',
       created_at: new Date().toISOString().split('T')[0]
     };
-    setBlogPosts([...blogPosts, newP]);
+    all.push(newP);
+    db.save('blog_posts', all);
     setNewPostTitle('');
     setNewPostAuthor('');
+    loadData();
+    toast('Artigo publicado com sucesso!');
   };
 
   const handleDeletePost = (id: string) => {
-    setBlogPosts(blogPosts.filter(p => p.id !== id));
+    const filtered = blogPosts.filter(p => p.id !== id);
+    db.save('blog_posts', filtered);
+    loadData();
+    toast('Artigo removido.');
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
-      <Header />
+    <div className="admin-dashboard flex h-screen w-screen bg-[var(--admin-bg)] overflow-hidden font-sans">
+      <AdminSidebar activeTab={activeSubTab} onTabChange={setActiveSubTab} />
 
-      <main className="flex-1 max-w-7xl mx-auto w-full py-12 px-4 md:px-8">
-        <div className="flex items-center gap-4 border-b border-border pb-6 mb-8">
-          <span className="p-3 bg-primary/10 rounded-2xl">
-            <Settings className="h-6 w-6 text-primary" />
-          </span>
-          <div>
-            <span className="text-xs font-semibold text-primary uppercase tracking-wider">CMS & CRM Enterprise</span>
-            <h1 className="font-heading text-3xl font-light text-secondary uppercase">Painel de Controle Maeum Global</h1>
-          </div>
-        </div>
-
-        {/* Tab Selection Area */}
-        <div className="flex gap-4 border-b border-border mb-8 overflow-x-auto pb-2">
-          {[
-            { id: 'visual', label: 'Identidade Visual', icon: Palette },
-            { id: 'builder', label: 'Page Builder (Blocos)', icon: Layers },
-            { id: 'experiencias', label: 'Experiências Coreia', icon: Compass },
-            { id: 'kbeauty', label: 'K-Beauty', icon: Sparkles },
-            { id: 'categorias', label: 'Categorias', icon: Folder },
-            { id: 'intercambio', label: 'Intercâmbio', icon: GraduationCap },
-            { id: 'jornadas', label: 'Jornadas', icon: Map },
-            { id: 'packages', label: 'Pacotes & CRUD Geral', icon: Database },
-            { id: 'leads', label: 'Leads & E-mail', icon: Folder },
-            { id: 'blog', label: 'Artigos', icon: BookOpen },
-            { id: 'settings', label: 'Config & SEO', icon: Globe },
-            { id: 'stats', label: 'CRM Stats', icon: TrendingUp },
-            { id: 'users', label: 'Usuários', icon: Users }
-          ].map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveSubTab(tab.id)}
-                className={`flex items-center gap-2 px-5 py-3 text-xs font-semibold uppercase tracking-wider border-b-2 transition-all min-w-max ${
-                  activeSubTab === tab.id
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-muted-foreground hover:text-secondary'
-                }`}
-              >
-                <Icon className="h-4 w-4" />
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Content Area */}
-        <div className="min-h-[400px]">
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+        <AdminHeader />
+        
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 no-scrollbar min-w-0 w-full">
+          {activeSubTab === 'dashboard_home' && <AdminDashboardHome />}
+          
+          <div className="min-h-[400px]">
           {/* TAB: VISUAL IDENTITY */}
           {activeSubTab === 'visual' && (
             <div className="bg-card border border-border rounded-3xl p-6 md:p-8 shadow-sm">
@@ -371,6 +355,7 @@ export default function AdminDashboard() {
                   db.save('experiences', all);
                   setExpTitle(''); setExpSlug(''); setExpPrice(0); setExpDuration(0); setExpLocation(''); setExpDescription('');
                   loadData();
+                  toast('Experiência adicionada com sucesso!');
                 }} className="flex flex-col gap-4 text-xs text-muted-foreground">
                   <div className="flex flex-col gap-1.5">
                     <label className="text-xs font-semibold text-secondary">Título</label>
@@ -442,7 +427,7 @@ export default function AdminDashboard() {
                         <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${exp.booking_type === 'direct' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
                           {exp.booking_type === 'direct' ? 'Reserva Direta' : 'Solicitar'}
                         </span>
-                        <button onClick={() => { const filtered = experiences.filter((e: any) => e.id !== exp.id); db.save('experiences', filtered); loadData(); }} className="text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded-lg transition-colors">
+                        <button onClick={() => { const filtered = experiences.filter((e: any) => e.id !== exp.id); db.save('experiences', filtered); loadData(); toast('Experiência removida.'); }} className="text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded-lg transition-colors">
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
@@ -466,7 +451,7 @@ export default function AdminDashboard() {
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="text-[10px] px-2.5 py-1 rounded-full bg-green-50 text-green-700 border border-green-200">Ativo</span>
-                      <button onClick={() => { const filtered = kbeautyExperiences.filter((e: any) => e.id !== exp.id); db.save('kbeauty_experiences', filtered); loadData(); }} className="text-red-500 hover:text-red-700 p-2"><Trash2 className="h-4 w-4" /></button>
+                      <button onClick={() => { const filtered = kbeautyExperiences.filter((e: any) => e.id !== exp.id); db.save('kbeauty_experiences', filtered); loadData(); toast('Experiência K-Beauty removida.'); }} className="text-red-500 hover:text-red-700 p-2"><Trash2 className="h-4 w-4" /></button>
                     </div>
                   </div>
                 ))}
@@ -491,6 +476,7 @@ export default function AdminDashboard() {
                     db.save('categories', all);
                     setCatName(''); setCatSlug('');
                     loadData();
+                    toast('Categoria adicionada!');
                   }} className="flex flex-col gap-4">
                     <div className="flex flex-col gap-1.5">
                       <label className="text-xs font-semibold text-secondary">Nome</label>
@@ -514,7 +500,7 @@ export default function AdminDashboard() {
                         <span className={`px-2 py-0.5 rounded-full ${cat.active ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
                           {cat.active ? 'Ativa' : 'Inativa'}
                         </span>
-                        <button onClick={() => { const filtered = categories.filter((c: any) => c.id !== cat.id); db.save('categories', filtered); loadData(); }} className="text-red-500 hover:text-red-700 p-2"><Trash2 className="h-4 w-4" /></button>
+                        <button onClick={() => { const filtered = categories.filter((c: any) => c.id !== cat.id); db.save('categories', filtered); loadData(); toast('Categoria removida.'); }} className="text-red-500 hover:text-red-700 p-2"><Trash2 className="h-4 w-4" /></button>
                       </div>
                     </div>
                   ))}
@@ -584,6 +570,7 @@ export default function AdminDashboard() {
                   db.save('journeys', all);
                   setJourneyTitle(''); setJourneyPrice(0); setJourneyDuration(0);
                   loadData();
+                  toast('Jornada criada com sucesso!');
                 }} className="flex flex-col gap-4 text-xs text-muted-foreground">
                   <div className="flex flex-col gap-1.5">
                     <label className="text-xs font-semibold text-secondary">Título</label>
@@ -615,7 +602,7 @@ export default function AdminDashboard() {
                         <span className={`text-[10px] px-2.5 py-1 rounded-full border ${jour.category === 'army' ? 'bg-purple-50 text-purple-700 border-purple-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
                           {jour.category === 'army' ? 'ARMY' : 'Premium'}
                         </span>
-                        <button onClick={() => { const filtered = journeys.filter((j: any) => j.id !== jour.id); db.save('journeys', filtered); loadData(); }} className="text-red-500 hover:text-red-700 p-2"><Trash2 className="h-4 w-4" /></button>
+                        <button onClick={() => { const filtered = journeys.filter((j: any) => j.id !== jour.id); db.save('journeys', filtered); loadData(); toast('Jornada removida.'); }} className="text-red-500 hover:text-red-700 p-2"><Trash2 className="h-4 w-4" /></button>
                       </div>
                     </div>
                   ))}
@@ -775,74 +762,509 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {/* TAB: GENERAL SETTINGS, SMTP & SEO */}
-          {activeSubTab === 'settings' && (
+          {/* TAB: SITE CONFIG (Brand, Contact, Social, SEO, Legal) */}
+          {activeSubTab === 'siteconfig' && (
             <div className="bg-card border border-border rounded-3xl p-6 md:p-8 shadow-sm">
-              <h2 className="font-heading text-2xl font-light text-secondary border-b border-border pb-4 mb-6">Configuração do Sistema, SMTP & SEO</h2>
-              
+              <h2 className="font-heading text-2xl font-light text-secondary border-b border-border pb-4 mb-6">Configurações Completas do Site</h2>
+
               {configSaved && (
                 <div className="bg-green-50 border border-green-200 text-green-800 text-xs rounded-xl p-3.5 mb-6">
-                  ✓ Configurações de SEO, APIs e SMTP salvas com sucesso!
+                  ✓ Configurações salvas com sucesso!
                 </div>
               )}
 
-              <form onSubmit={(e) => {
-                e.preventDefault();
-                setConfigSaved(true);
-                setTimeout(() => setConfigSaved(false), 3000);
-              }} className="grid grid-cols-1 md:grid-cols-2 gap-8 text-xs text-muted-foreground">
-                <div className="flex flex-col gap-5">
-                  <h3 className="text-xs font-bold text-secondary uppercase tracking-wider flex items-center gap-1.5 border-b border-border pb-2">
-                    <Globe className="h-4.5 w-4.5 text-primary" />
-                    Configurações de SEO & Sitemap
-                  </h3>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-secondary">Sufixo de Títulos SEO</label>
-                    <Input value={seoTitleSuffix} onChange={e => setSeoTitleSuffix(e.target.value)} />
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-secondary">Meta Descrição Padrão</label>
-                    <Input value={seoDescription} onChange={e => setSeoDescription(e.target.value)} />
+              <form onSubmit={handleSaveSiteConfig} className="flex flex-col gap-8 text-xs text-muted-foreground">
+
+                {/* Brand Info */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="flex flex-col gap-5">
+                    <h3 className="text-xs font-bold text-secondary uppercase tracking-wider flex items-center gap-1.5 border-b border-border pb-2">
+                      <Settings className="h-4.5 w-4.5 text-primary" />
+                      Informações da Marca
+                    </h3>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">Nome do Site</label>
+                      <Input value={siteConfig?.brand?.name || ''} onChange={e => updateSiteConfig('brand', 'name', e.target.value)} />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">Tagline</label>
+                      <Input value={siteConfig?.brand?.tagline || ''} onChange={e => updateSiteConfig('brand', 'tagline', e.target.value)} />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">URL do Logo (Header)</label>
+                      <Input value={siteConfig?.brand?.logo_url || ''} onChange={e => updateSiteConfig('brand', 'logo_url', e.target.value)} />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">Favicon URL</label>
+                      <Input value={siteConfig?.brand?.favicon_url || ''} onChange={e => updateSiteConfig('brand', 'favicon_url', e.target.value)} />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">Footer Logo URL</label>
+                      <Input value={siteConfig?.brand?.footer_logo_url || ''} onChange={e => updateSiteConfig('brand', 'footer_logo_url', e.target.value)} />
+                    </div>
                   </div>
 
-                  <h3 className="text-xs font-bold text-secondary uppercase tracking-wider flex items-center gap-1.5 border-b border-border pb-2 mt-4">
-                    <Mail className="h-4.5 w-4.5 text-primary" />
-                    Servidor SMTP de Notificações
-                  </h3>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-secondary">Host SMTP</label>
-                    <Input value={smtpServer} onChange={e => setSmtpServer(e.target.value)} />
+                  {/* Contact */}
+                  <div className="flex flex-col gap-5">
+                    <h3 className="text-xs font-bold text-secondary uppercase tracking-wider flex items-center gap-1.5 border-b border-border pb-2">
+                      <Mail className="h-4.5 w-4.5 text-primary" />
+                      Informações de Contato
+                    </h3>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">E-mail Principal</label>
+                      <Input value={siteConfig?.contact?.email || ''} onChange={e => updateSiteConfig('contact', 'email', e.target.value)} />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">E-mail de Vendas</label>
+                      <Input value={siteConfig?.contact?.sales_email || ''} onChange={e => updateSiteConfig('contact', 'sales_email', e.target.value)} />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">Telefone</label>
+                      <Input value={siteConfig?.contact?.phone || ''} onChange={e => updateSiteConfig('contact', 'phone', e.target.value)} />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">WhatsApp</label>
+                      <Input value={siteConfig?.contact?.whatsapp || ''} onChange={e => updateSiteConfig('contact', 'whatsapp', e.target.value)} />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">Endereço (Sede)</label>
+                      <Input value={siteConfig?.contact?.address || ''} onChange={e => updateSiteConfig('contact', 'address', e.target.value)} />
+                    </div>
                   </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-secondary">Usuário SMTP</label>
-                    <Input value={smtpUser} onChange={e => setSmtpUser(e.target.value)} />
+
+                  {/* Social */}
+                  <div className="flex flex-col gap-5">
+                    <h3 className="text-xs font-bold text-secondary uppercase tracking-wider flex items-center gap-1.5 border-b border-border pb-2">
+                      <Share2 className="h-4.5 w-4.5 text-primary" />
+                      Redes Sociais
+                    </h3>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">Instagram</label>
+                      <Input value={siteConfig?.social?.instagram || ''} onChange={e => updateSiteConfig('social', 'instagram', e.target.value)} />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">Facebook</label>
+                      <Input value={siteConfig?.social?.facebook || ''} onChange={e => updateSiteConfig('social', 'facebook', e.target.value)} />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">YouTube</label>
+                      <Input value={siteConfig?.social?.youtube || ''} onChange={e => updateSiteConfig('social', 'youtube', e.target.value)} />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">LinkedIn</label>
+                      <Input value={siteConfig?.social?.linkedin || ''} onChange={e => updateSiteConfig('social', 'linkedin', e.target.value)} />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">TikTok</label>
+                      <Input value={siteConfig?.social?.tiktok || ''} onChange={e => updateSiteConfig('social', 'tiktok', e.target.value)} />
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-5">
-                  <h3 className="text-xs font-bold text-secondary uppercase tracking-wider flex items-center gap-1.5 border-b border-border pb-2">
-                    <Key className="h-4.5 w-4.5 text-primary" />
-                    Integrações de APIs & Gateways
-                  </h3>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-secondary">Stripe API Public Key</label>
-                    <Input value={stripeKey} onChange={e => setStripeKey(e.target.value)} />
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-secondary">Google Analytics ID</label>
-                    <Input placeholder="G-XXXXXXXXXX" />
+                {/* SEO & SMTP & Integrations */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-border">
+                  <div className="flex flex-col gap-5">
+                    <h3 className="text-xs font-bold text-secondary uppercase tracking-wider flex items-center gap-1.5 border-b border-border pb-2">
+                      <Globe className="h-4.5 w-4.5 text-primary" />
+                      SEO & Analytics
+                    </h3>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">Sufixo de Títulos</label>
+                      <Input value={siteConfig?.seo?.title_suffix || ''} onChange={e => updateSiteConfig('seo', 'title_suffix', e.target.value)} />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">Meta Descrição Padrão</label>
+                      <textarea className="w-full border border-border rounded-xl p-3 text-xs bg-white resize-none h-20" value={siteConfig?.seo?.meta_description || ''} onChange={e => updateSiteConfig('seo', 'meta_description', e.target.value)} />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">Google Analytics ID</label>
+                      <Input value={siteConfig?.seo?.google_analytics || ''} onChange={e => updateSiteConfig('seo', 'google_analytics', e.target.value)} placeholder="G-XXXXXXXXXX" />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">Google Tag Manager ID</label>
+                      <Input value={siteConfig?.seo?.google_tag_manager || ''} onChange={e => updateSiteConfig('seo', 'google_tag_manager', e.target.value)} placeholder="GTM-XXXXXXX" />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">Meta Pixel ID</label>
+                      <Input value={siteConfig?.seo?.meta_pixel || ''} onChange={e => updateSiteConfig('seo', 'meta_pixel', e.target.value)} placeholder="1234567890" />
+                    </div>
                   </div>
 
-                  <div className="mt-8 pt-4 border-t border-border flex flex-col gap-2">
-                    <Button type="submit" className="bg-primary hover:bg-accent-hover text-white font-bold py-2.5 rounded-xl">
-                      SALVAR CONFIGURAÇÕES
+                  <div className="flex flex-col gap-5">
+                    <h3 className="text-xs font-bold text-secondary uppercase tracking-wider flex items-center gap-1.5 border-b border-border pb-2">
+                      <Send className="h-4.5 w-4.5 text-primary" />
+                      SMTP & Notificações
+                    </h3>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">Host SMTP</label>
+                      <Input value={siteConfig?.smtp?.host || ''} onChange={e => updateSiteConfig('smtp', 'host', e.target.value)} />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">Porta SMTP</label>
+                      <Input value={siteConfig?.smtp?.port?.toString() || '587'} onChange={e => updateSiteConfig('smtp', 'port', e.target.value)} />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">Usuário SMTP</label>
+                      <Input value={siteConfig?.smtp?.user || ''} onChange={e => updateSiteConfig('smtp', 'user', e.target.value)} />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">Senha SMTP</label>
+                      <Input type="password" value={siteConfig?.smtp?.password || ''} onChange={e => updateSiteConfig('smtp', 'password', e.target.value)} placeholder="••••••••" />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">E-mail de Notificação (admin)</label>
+                      <Input value={siteConfig?.smtp?.admin_email || ''} onChange={e => updateSiteConfig('smtp', 'admin_email', e.target.value)} />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-5">
+                    <h3 className="text-xs font-bold text-secondary uppercase tracking-wider flex items-center gap-1.5 border-b border-border pb-2">
+                      <Key className="h-4.5 w-4.5 text-primary" />
+                      Integrações & APIs
+                    </h3>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">Stripe API Public Key</label>
+                      <Input value={siteConfig?.integrations?.stripe_pk || ''} onChange={e => updateSiteConfig('integrations', 'stripe_pk', e.target.value)} />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">Stripe API Secret Key</label>
+                      <Input type="password" value={siteConfig?.integrations?.stripe_sk || ''} onChange={e => updateSiteConfig('integrations', 'stripe_sk', e.target.value)} placeholder="sk_live_..." />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">SendGrid API Key</label>
+                      <Input type="password" value={siteConfig?.integrations?.sendgrid_key || ''} onChange={e => updateSiteConfig('integrations', 'sendgrid_key', e.target.value)} placeholder="SG.xxxxx" />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">Recaptcha Site Key</label>
+                      <Input value={siteConfig?.integrations?.recaptcha_key || ''} onChange={e => updateSiteConfig('integrations', 'recaptcha_key', e.target.value)} placeholder="6Lc..." />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">Mapbox Token (Mapas)</label>
+                      <Input value={siteConfig?.integrations?.mapbox_token || ''} onChange={e => updateSiteConfig('integrations', 'mapbox_token', e.target.value)} placeholder="pk.ey..." />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Legal */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-border">
+                  <div className="flex flex-col gap-5">
+                    <h3 className="text-xs font-bold text-secondary uppercase tracking-wider flex items-center gap-1.5 border-b border-border pb-2">
+                      <Shield className="h-4.5 w-4.5 text-primary" />
+                      Informações Legais
+                    </h3>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">CNPJ</label>
+                      <Input value={siteConfig?.legal?.cnpj || ''} onChange={e => updateSiteConfig('legal', 'cnpj', e.target.value)} />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">Razão Social</label>
+                      <Input value={siteConfig?.legal?.company_name || ''} onChange={e => updateSiteConfig('legal', 'company_name', e.target.value)} />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">Política de Privacidade (URL)</label>
+                      <Input value={siteConfig?.legal?.privacy_url || ''} onChange={e => updateSiteConfig('legal', 'privacy_url', e.target.value)} />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-secondary">Termos de Uso (URL)</label>
+                      <Input value={siteConfig?.legal?.terms_url || ''} onChange={e => updateSiteConfig('legal', 'terms_url', e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="md:col-span-2 flex items-end justify-end gap-2 pt-4">
+                    <Button type="submit" className="bg-primary hover:bg-accent-hover text-white font-bold py-2.5 rounded-xl px-8">
+                      SALVAR TODAS AS CONFIGURAÇÕES
                     </Button>
-                    <Button variant="outline" type="button" onClick={() => alert('¡Generando copia de seguridad de la base de datos!')} className="border-border text-secondary hover:bg-muted/10 py-2.5 rounded-xl">
-                      DESCARREGAR BACKUP COMPLETO (SQL/JSON)
+                    <Button variant="outline" type="button" onClick={() => toast('Backup exportado com sucesso!')} className="border-border text-secondary hover:bg-muted/10 py-2.5 rounded-xl">
+                      DOWNLOAD BACKUP
                     </Button>
                   </div>
                 </div>
               </form>
+            </div>
+          )}
+
+          {/* TAB: NAVIGATION MANAGER */}
+          {activeSubTab === 'navigation' && (
+            <div className="bg-card border border-border rounded-3xl p-6 md:p-8 shadow-sm">
+              <h2 className="font-heading text-2xl font-light text-secondary border-b border-border pb-4 mb-6">Gerenciador de Navegação</h2>
+              <p className="text-xs text-muted-foreground mb-6">Personalize os menus do site: adicione, remova ou reordene itens.</p>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Header Navigation */}
+                <div className="border border-border rounded-2xl p-5">
+                  <h3 className="text-xs font-bold text-secondary uppercase tracking-wider mb-4">Menu do Header (Principal)</h3>
+                  <div className="flex flex-col gap-2">
+                    {[
+                      { label: 'Início', href: '/' },
+                      { label: 'Destinos', href: '/destinos' },
+                      { label: 'Coreia do Sul', href: '/coreia-do-sul' },
+                      { label: 'Jornadas', href: '/coreia-do-sul/jornadas' },
+                      { label: 'Intercâmbio', href: '/coreia-do-sul/intercambio' },
+                      { label: 'Blog', href: '/blog' },
+                      { label: 'Contato', href: '/contato' }
+                    ].map((item, idx) => (
+                      <div key={idx} className="flex items-center justify-between border border-border/60 rounded-lg p-3 bg-muted/10">
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground text-[10px] font-mono w-6">{idx + 1}</span>
+                          <span className="text-xs font-semibold text-secondary">{item.label}</span>
+                          <span className="text-[10px] text-muted-foreground font-mono">{item.href}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <button className="p-1 text-muted-foreground hover:text-secondary"><ArrowUp className="h-3.5 w-3.5" /></button>
+                          <button className="p-1 text-muted-foreground hover:text-secondary"><ArrowDown className="h-3.5 w-3.5" /></button>
+                          <button className="p-1 text-red-400 hover:text-red-600"><Trash2 className="h-3.5 w-3.5" /></button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-border flex gap-2">
+                    <Input placeholder="Rótulo do menu" className="text-xs h-9" />
+                    <Input placeholder="/link" className="text-xs h-9 flex-1" />
+                    <Button size="sm" className="bg-primary hover:bg-accent-hover text-white h-9 px-3 rounded-lg text-xs">+</Button>
+                  </div>
+                </div>
+
+                {/* Footer Navigation */}
+                <div className="border border-border rounded-2xl p-5">
+                  <h3 className="text-xs font-bold text-secondary uppercase tracking-wider mb-4">Menu do Footer</h3>
+                  <div className="flex flex-col gap-2">
+                    {[
+                      { label: 'Sobre Nós', href: '/sobre' },
+                      { label: 'Coreia do Sul', href: '/coreia-do-sul' },
+                      { label: 'Experiências', href: '/coreia-do-sul/experiencias' },
+                      { label: 'K-Beauty', href: '/coreia-do-sul/k-beauty' },
+                      { label: 'Jornadas em Grupo', href: '/coreia-do-sul/jornadas' },
+                      { label: 'Intercâmbio', href: '/coreia-do-sul/intercambio' },
+                      { label: 'Blog', href: '/blog' },
+                      { label: 'Contato', href: '/contato' },
+                      { label: 'Política de Privacidade', href: '/privacidade' }
+                    ].map((item, idx) => (
+                      <div key={idx} className="flex items-center justify-between border border-border/60 rounded-lg p-3 bg-muted/10">
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground text-[10px] font-mono w-6">{idx + 1}</span>
+                          <span className="text-xs font-semibold text-secondary">{item.label}</span>
+                          <span className="text-[10px] text-muted-foreground font-mono">{item.href}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <button className="p-1 text-muted-foreground hover:text-secondary"><ArrowUp className="h-3.5 w-3.5" /></button>
+                          <button className="p-1 text-muted-foreground hover:text-secondary"><ArrowDown className="h-3.5 w-3.5" /></button>
+                          <button className="p-1 text-red-400 hover:text-red-600"><Trash2 className="h-3.5 w-3.5" /></button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB: CMS PAGES */}
+          {activeSubTab === 'cmspages' && (
+            <div className="bg-card border border-border rounded-3xl p-6 md:p-8 shadow-sm">
+              <div className="flex items-center justify-between border-b border-border pb-4 mb-6">
+                <h2 className="font-heading text-2xl font-light text-secondary">Páginas CMS</h2>
+                <Button className="bg-primary hover:bg-accent-hover text-white text-xs rounded-xl h-9 px-4">
+                  <Plus className="h-4 w-4 mr-1" /> Nova Página
+                </Button>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                {[
+                  { title: 'Sobre Nós', slug: 'sobre', status: 'published', updated: '15/07/2026' },
+                  { title: 'Política de Privacidade', slug: 'privacidade', status: 'published', updated: '10/07/2026' },
+                  { title: 'Termos de Uso', slug: 'termos', status: 'published', updated: '10/07/2026' },
+                  { title: 'Contato', slug: 'contato', status: 'published', updated: '08/07/2026' },
+                  { title: 'FAQ', slug: 'faq', status: 'draft', updated: '12/07/2026' }
+                ].map((page, idx) => (
+                  <div key={idx} className="border border-border/80 rounded-xl p-4 bg-muted/20 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <FileText className="h-5 w-5 text-primary" />
+                      <div>
+                        <h4 className="text-sm font-bold text-secondary">{page.title}</h4>
+                        <span className="text-[10px] text-muted-foreground font-mono">/{page.slug} • Atualizado: {page.updated}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className={`text-[10px] px-2.5 py-1 rounded-full font-bold uppercase ${page.status === 'published' ? 'text-green-700 bg-green-50 border border-green-200' : 'text-amber-700 bg-amber-50 border border-amber-200'}`}>
+                        {page.status === 'published' ? 'Publicado' : 'Rascunho'}
+                      </span>
+                      <button className="p-1.5 text-muted-foreground hover:text-secondary"><Edit3 className="h-4 w-4" /></button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-8 bg-muted/10 border border-border rounded-2xl p-6">
+                <h3 className="text-xs font-bold text-secondary uppercase tracking-wider mb-4">Criar Nova Página CMS</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-secondary">Título da Página</label>
+                    <Input placeholder="Ex: Equipe Maeum" className="text-xs h-9" />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-secondary">Slug (URL)</label>
+                    <Input placeholder="equipe" className="text-xs h-9" />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-secondary">Status</label>
+                    <select className="border border-border rounded-xl p-2 text-xs bg-white h-9">
+                      <option>Rascunho</option>
+                      <option>Publicado</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1.5 mt-4">
+                  <label className="text-xs font-semibold text-secondary">Conteúdo (Markdown / HTML)</label>
+                  <textarea className="w-full border border-border rounded-xl p-3 text-xs bg-white resize-none h-32" placeholder="Digite o conteúdo da página..." />
+                </div>
+                <Button className="mt-4 bg-primary hover:bg-accent-hover text-white text-xs rounded-xl h-9 px-6">
+                  CRIAR PÁGINA
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* TAB: TESTIMONIALS */}
+          {activeSubTab === 'testimonials' && (
+            <div className="bg-card border border-border rounded-3xl p-6 md:p-8 shadow-sm">
+              <div className="flex items-center justify-between border-b border-border pb-4 mb-6">
+                <h2 className="font-heading text-2xl font-light text-secondary">Depoimentos</h2>
+                <Button className="bg-primary hover:bg-accent-hover text-white text-xs rounded-xl h-9 px-4">
+                  <Plus className="h-4 w-4 mr-1" /> Novo Depoimento
+                </Button>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                {[
+                  { name: 'Ana Beatriz', destination: 'Coreia do Sul - 2026', text: 'A Maeum tornou meu intercâmbio inesquecível. Cada detalhe foi pensado com carinho e profissionalismo. Recomendo de olhos fechados!', rating: 5, status: 'approved' },
+                  { name: 'Lucas Mendes', destination: 'Experiência K-Beauty', text: 'O roteiro de beleza coreana superou todas as expectativas. Clínicas incríveis e acompanhamento impecável.', rating: 5, status: 'approved' },
+                  { name: 'Carla Oliveira', destination: 'Jornada Essência da Coreia', text: 'Viajar em grupo com a Maeum foi uma experiência transformadora. Cultura, gastronomia e conexões verdadeiras.', rating: 4, status: 'pending' },
+                  { name: 'Rafael Costa', destination: 'Intercâmbio Lexis Korea', text: 'Escolhi a Lexis Korea através da Maeum e foi a melhor decisão. O suporte antes, durante e depois é sensacional.', rating: 5, status: 'approved' }
+                ].map((t, idx) => (
+                  <div key={idx} className="border border-border/80 rounded-xl p-4 bg-muted/20 flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="text-sm font-bold text-secondary">{t.name}</h4>
+                        <span className="text-[10px] text-muted-foreground">{t.destination}</span>
+                        <div className="flex items-center">
+                          {Array.from({ length: t.rating }).map((_, i) => (
+                            <span key={i} className="text-yellow-500 text-xs">★</span>
+                          ))}
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground leading-relaxed">&ldquo;{t.text}&rdquo;</p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className={`text-[10px] px-2.5 py-1 rounded-full font-bold uppercase ${t.status === 'approved' ? 'text-green-700 bg-green-50 border border-green-200' : 'text-amber-700 bg-amber-50 border border-amber-200'}`}>
+                        {t.status === 'approved' ? 'Aprovado' : 'Pendente'}
+                      </span>
+                      <button className="p-1.5 text-muted-foreground hover:text-green-600"><CheckCircle2 className="h-4 w-4" /></button>
+                      <button className="p-1.5 text-muted-foreground hover:text-red-600"><Trash2 className="h-4 w-4" /></button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-6 bg-muted/10 border border-border rounded-2xl p-6">
+                <h3 className="text-xs font-bold text-secondary uppercase tracking-wider mb-4">Adicionar Depoimento</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-secondary">Nome do Cliente</label>
+                    <Input placeholder="Nome completo" className="text-xs h-9" />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-secondary">Destino / Experiência</label>
+                    <Input placeholder="Ex: Jornada Essência da Coreia" className="text-xs h-9" />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-secondary">Avaliação (1-5)</label>
+                    <select className="border border-border rounded-xl p-2 text-xs bg-white h-9">
+                      <option>5</option>
+                      <option>4</option>
+                      <option>3</option>
+                      <option>2</option>
+                      <option>1</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1.5 mt-4">
+                  <label className="text-xs font-semibold text-secondary">Depoimento</label>
+                  <textarea className="w-full border border-border rounded-xl p-3 text-xs bg-white resize-none h-24" placeholder="Escreva o depoimento do cliente..." />
+                </div>
+                <Button className="mt-4 bg-primary hover:bg-accent-hover text-white text-xs rounded-xl h-9 px-6">
+                  ADICIONAR DEPOIMENTO
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* TAB: FAQ */}
+          {activeSubTab === 'faq' && (
+            <div className="bg-card border border-border rounded-3xl p-6 md:p-8 shadow-sm">
+              <div className="flex items-center justify-between border-b border-border pb-4 mb-6">
+                <h2 className="font-heading text-2xl font-light text-secondary">Perguntas Frequentes (FAQ)</h2>
+                <Button className="bg-primary hover:bg-accent-hover text-white text-xs rounded-xl h-9 px-4">
+                  <Plus className="h-4 w-4 mr-1" /> Nova Pergunta
+                </Button>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                {[
+                  { question: 'Quanto tempo antes devo reservar minha viagem?', answer: 'Recomendamos reservar com pelo menos 3 meses de antecedência para garantir disponibilidade e melhores tarifas.', category: 'Geral', order: 1 },
+                  { question: 'A Maeum oferece suporte durante a viagem?', answer: 'Sim! Oferecemos suporte 24/7 via WhatsApp para todos os viajantes durante toda a experiência.', category: 'Geral', order: 2 },
+                  { question: 'Quais documentos preciso para viajar para a Coreia do Sul?', answer: 'Brasileiros necessitam de passaporte com validade mínima de 6 meses e visto K-ETA para turismo.', category: 'Coreia do Sul', order: 3 },
+                  { question: 'Os programas de intercâmbio incluem acomodação?', answer: 'Sim, todos os programas de intercâmbio incluem acomodação, seguro saúde e suporte local.', category: 'Intercâmbio', order: 4 },
+                  { question: 'Como funcionam os pagamentos?', answer: 'Aceitamos PIX, transferência bancária e cartões internacionais. Parcelamos em até 12x.', category: 'Pagamentos', order: 5 },
+                  { question: 'Posso personalizar um roteiro?', answer: 'Sim, todos os nossos roteiros são 100% personalizáveis de acordo com seus interesses e orçamento.', category: 'Geral', order: 6 }
+                ].map((faq, idx) => (
+                  <div key={idx} className="border border-border/80 rounded-xl p-4 bg-muted/20">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[10px] text-muted-foreground font-mono">#{faq.order}</span>
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-bold uppercase">{faq.category}</span>
+                        </div>
+                        <h4 className="text-sm font-bold text-secondary">{faq.question}</h4>
+                        <p className="text-xs text-muted-foreground leading-relaxed mt-1">{faq.answer}</p>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button className="p-1.5 text-muted-foreground hover:text-secondary"><Edit3 className="h-4 w-4" /></button>
+                        <button className="p-1.5 text-red-400 hover:text-red-600"><Trash2 className="h-4 w-4" /></button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-6 bg-muted/10 border border-border rounded-2xl p-6">
+                <h3 className="text-xs font-bold text-secondary uppercase tracking-wider mb-4">Nova Pergunta Frequente</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-secondary">Pergunta</label>
+                    <Input placeholder="Digite a pergunta" className="text-xs h-9" />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-secondary">Categoria</label>
+                    <select className="border border-border rounded-xl p-2 text-xs bg-white h-9">
+                      <option>Geral</option>
+                      <option>Coreia do Sul</option>
+                      <option>Intercâmbio</option>
+                      <option>Pagamentos</option>
+                      <option>Jornadas</option>
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-secondary">Ordem</label>
+                    <Input type="number" placeholder="1" className="text-xs h-9" />
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1.5 mt-4">
+                  <label className="text-xs font-semibold text-secondary">Resposta</label>
+                  <textarea className="w-full border border-border rounded-xl p-3 text-xs bg-white resize-none h-24" placeholder="Digite a resposta detalhada..." />
+                </div>
+                <Button className="mt-4 bg-primary hover:bg-accent-hover text-white text-xs rounded-xl h-9 px-6">
+                  ADICIONAR FAQ
+                </Button>
+              </div>
             </div>
           )}
 
@@ -918,10 +1340,9 @@ export default function AdminDashboard() {
               </div>
             </div>
           )}
-        </div>
-      </main>
-
-      <Footer />
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

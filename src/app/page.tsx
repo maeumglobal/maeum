@@ -6,7 +6,7 @@ import Link from 'next/link';
 import {
   Play, Download, ArrowRight, Video, FileText, CheckCircle2, ChevronRight,
   MessageSquare, Globe, Compass, GraduationCap, Sparkles, Utensils, BookOpen,
-  Calendar, MapPin, Tv
+  Calendar, MapPin, Tv, Users, Award
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from '@/components/Header';
@@ -188,35 +188,67 @@ export default function Home() {
       <Header />
 
       {/* Hero Section */}
-      <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden bg-zinc-950">
+      <section className="relative min-h-[80vh] flex flex-col justify-center overflow-hidden bg-zinc-950">
         {/* Background Image with overlay */}
         <div className="absolute inset-0 z-0">
           <Image
-            src="/images/banner.png"
-            alt="MAEUM Banner"
+            src="/images/atendimento-especializado-viagem-coreia-do-sul-maeum-global-v2.webp"
+            alt="Atendimento especializado para viagens na Coreia do Sul - Maeum Global"
             fill
-            className="object-cover object-center scale-105 filter brightness-[0.4]"
+            className="object-cover object-center"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/45 to-black/75" />
+          {/* Gradient to make text readable on the left */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#1A0F14] via-[#1A0F14]/80 to-transparent sm:w-2/3" />
         </div>
 
-        <div className="relative z-10 text-center px-4 max-w-4xl mx-auto text-white flex flex-col items-center gap-6">
-          <span className="text-xs uppercase tracking-widest text-primary font-bold bg-primary/20 backdrop-blur border border-primary/45 rounded-full px-4 py-1.5 animate-pulse">
-            JOURNAL MAEUM
+        <div className="relative z-10 px-8 max-w-7xl mx-auto text-white flex flex-col items-start gap-6 w-full mt-24">
+          <span className="text-xs uppercase tracking-widest text-accent font-bold">
+            MAEUM GLOBAL
           </span>
-          <h1 className="font-heading text-4xl sm:text-6xl font-light tracking-wide leading-tight uppercase">
-            Descubra a Ásia <br className="hidden sm:inline" />
-            antes mesmo de embarcar.
+          
+          <h1 className="font-heading text-4xl sm:text-6xl font-light tracking-wide leading-tight text-left text-white max-w-2xl">
+            Descubra uma <br />
+            Coreia que <span className="italic text-accent">poucos <br className="hidden sm:inline" />brasileiros conhecem.</span>
           </h1>
-          <p className="text-sm sm:text-base text-gray-200 max-w-xl font-light">
-            Histórias, dicas e experiências reais para transformar sua viagem.
+          
+          <p className="text-sm sm:text-base text-gray-300 max-w-xl font-light text-left leading-relaxed">
+            Cada roteiro da Maeum Global é desenvolvido para quem busca experiências autênticas, grupos exclusivos e uma imersão completa na cultura coreana.
           </p>
+          
+          <div className="flex flex-col gap-1 mt-2">
+            <span className="font-bold text-white text-base">Não vendemos excursões.</span>
+            <span className="font-bold text-white text-base">Criamos jornadas.</span>
+          </div>
+          
           <div className="flex flex-col sm:flex-row gap-4 mt-6">
-            <button className="flex items-center justify-center gap-2.5 bg-primary hover:bg-accent-hover text-white font-semibold text-xs py-3 px-8 rounded-full shadow-lg transition-all group uppercase tracking-wider">
-              <Play className="h-4 w-4 fill-white group-hover:scale-110 transition-transform" />
-              ASSISTIR AO VÍDEO INSTITUCIONAL
+            <button className="flex items-center justify-center gap-2.5 bg-accent hover:bg-accent-hover text-zinc-950 font-bold text-xs py-3.5 px-8 rounded-xl shadow-lg transition-all group uppercase tracking-wider">
+              CONHECER JORNADAS
+              <ArrowRight className="h-4 w-4 text-zinc-950 group-hover:translate-x-1 transition-transform ml-1" />
             </button>
+            <button className="flex items-center justify-center gap-2.5 bg-transparent border border-accent text-accent hover:bg-accent/10 font-bold text-xs py-3.5 px-8 rounded-xl transition-all group uppercase tracking-wider">
+              SOLICITAR PLANEJAMENTO
+            </button>
+          </div>
+
+          {/* Features at the bottom of the banner */}
+          <div className="flex flex-wrap items-center gap-8 mt-12 pt-8 border-t border-white/10 w-full max-w-3xl">
+            <div className="flex flex-col items-center gap-3">
+              <Sparkles className="h-6 w-6 text-accent" strokeWidth={1.5} />
+              <span className="text-[10px] sm:text-xs text-gray-300 font-semibold tracking-wide text-center">Destino Exclusivo</span>
+            </div>
+            <div className="flex flex-col items-center gap-3">
+              <Users className="h-6 w-6 text-accent" strokeWidth={1.5} />
+              <span className="text-[10px] sm:text-xs text-gray-300 font-semibold tracking-wide text-center">Grupos Limitados<br/>(Até 12 viajantes)</span>
+            </div>
+            <div className="flex flex-col items-center gap-3">
+              <Calendar className="h-6 w-6 text-accent" strokeWidth={1.5} />
+              <span className="text-[10px] sm:text-xs text-gray-300 font-semibold tracking-wide text-center">Saídas Programadas</span>
+            </div>
+            <div className="flex flex-col items-center gap-3">
+              <Award className="h-6 w-6 text-accent" strokeWidth={1.5} />
+              <span className="text-[10px] sm:text-xs text-gray-300 font-semibold tracking-wide text-center">Curadoria Premium</span>
+            </div>
           </div>
         </div>
       </section>

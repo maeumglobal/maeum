@@ -1,7 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Phone, Mail, MapPin, CheckCircle2 } from 'lucide-react';
+import Image from 'next/image';
+import { 
+  Phone, Mail, MapPin, CheckCircle2, MessageSquare, Calendar, 
+  MessageCircle, Clock, ShieldCheck, Users, Heart 
+} from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Input } from '@/components/ui/input';
@@ -33,14 +37,94 @@ export default function ContatoPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
-      <main className="flex-1 py-16 px-4 md:px-8 max-w-7xl mx-auto w-full">
-        <div className="max-w-2xl mb-12">
-          <span className="text-xs uppercase tracking-widest text-primary font-bold">MAEUM GLOBAL</span>
-          <h1 className="font-heading text-4xl sm:text-5xl font-light text-secondary mt-2">Fale Conosco</h1>
-          <p className="text-sm text-muted-foreground mt-3 leading-relaxed">
-            Estamos prontos para planejar sua próxima grande jornada pela Ásia. Entre em contato por WhatsApp, e-mail ou preencha o formulário abaixo.
-          </p>
+      
+      {/* Hero Banner Section */}
+      <section className="relative w-full overflow-hidden bg-zinc-950 pb-16">
+        <div className="absolute inset-0 z-0 h-[85%]">
+          <Image
+            src="/images/consultoras-maeum-global-contato-planejamento.webp"
+            alt="Consultoras Maeum Global conversando sobre planejamento de viagem"
+            fill
+            className="object-cover object-center filter brightness-[0.7]"
+            priority
+          />
+          {/* Gradient to darken the left side and bottom for text readability */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#1A0F14] via-[#1A0F14]/90 to-transparent sm:w-2/3" />
+          <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-zinc-950 to-transparent" />
         </div>
+
+        <div className="relative z-10 px-8 max-w-7xl mx-auto w-full pt-32 sm:pt-40">
+          <span className="text-xs uppercase tracking-widest text-accent font-bold">
+            ESTAMOS AQUI PARA VOCÊ
+          </span>
+          <h1 className="font-heading text-4xl sm:text-6xl font-light tracking-wide leading-tight text-left text-white mt-4">
+            Converse com <br className="hidden sm:inline" />
+            nossa equipe.
+            <br />
+            <span className="italic text-accent">Seu sonho, nosso propósito.</span>
+          </h1>
+          <p className="text-sm sm:text-base text-gray-300 max-w-xl font-light text-left leading-relaxed mt-6">
+            Tire dúvidas, conheça melhor nossos pacotes, solicite seu planejamento ou apenas venha conversar. Nossa equipe está sempre pronta para te acolher e transformar sua viagem para a Coreia em realidade.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 mt-8">
+            <button className="flex items-center justify-center gap-2.5 bg-accent hover:bg-accent-hover text-zinc-950 font-bold text-xs py-4 px-8 rounded-xl shadow-lg transition-all group uppercase tracking-wider">
+              INICIAR CONVERSA AGORA
+              <MessageSquare className="h-4 w-4 text-zinc-950 group-hover:scale-110 transition-transform ml-1" />
+            </button>
+            <button className="flex items-center justify-center gap-2.5 bg-transparent border border-accent text-accent hover:bg-accent/10 font-bold text-xs py-4 px-8 rounded-xl transition-all group uppercase tracking-wider">
+              SOLICITAR PLANEJAMENTO
+              <Calendar className="h-4 w-4 text-accent group-hover:scale-110 transition-transform ml-1" />
+            </button>
+          </div>
+        </div>
+
+        {/* Features Row inside the dark section below the image */}
+        <div className="relative z-10 px-8 max-w-7xl mx-auto w-full mt-24">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-8 border border-white/10 rounded-2xl p-8 bg-black/40 backdrop-blur-sm">
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-3">
+                <MessageCircle className="h-6 w-6 text-accent" strokeWidth={1.5} />
+                <h4 className="text-[10px] sm:text-xs text-accent font-bold uppercase tracking-wider leading-snug">Atendimento <br/>em Português</h4>
+              </div>
+              <p className="text-[11px] text-gray-400 pl-9">Equipe brasileira na Coreia e no Brasil.</p>
+            </div>
+            
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-3">
+                <Clock className="h-6 w-6 text-accent" strokeWidth={1.5} />
+                <h4 className="text-[10px] sm:text-xs text-accent font-bold uppercase tracking-wider leading-snug">Resposta <br/>Rápida</h4>
+              </div>
+              <p className="text-[11px] text-gray-400 pl-9">Agilidade para tornar seus planos realidade.</p>
+            </div>
+            
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-3">
+                <ShieldCheck className="h-6 w-6 text-accent" strokeWidth={1.5} />
+                <h4 className="text-[10px] sm:text-xs text-accent font-bold uppercase tracking-wider leading-snug">Segurança</h4>
+              </div>
+              <p className="text-[11px] text-gray-400 pl-9">Suporte completo antes, durante e após sua viagem.</p>
+            </div>
+            
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-3">
+                <Users className="h-6 w-6 text-accent" strokeWidth={1.5} />
+                <h4 className="text-[10px] sm:text-xs text-accent font-bold uppercase tracking-wider leading-snug">Consultoras <br/>Especializadas</h4>
+              </div>
+              <p className="text-[11px] text-gray-400 pl-9">Consultoras apaixonadas pela Coreia.</p>
+            </div>
+            
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-3">
+                <Heart className="h-6 w-6 text-accent" strokeWidth={1.5} />
+                <h4 className="text-[10px] sm:text-xs text-accent font-bold uppercase tracking-wider leading-snug">Atendimento <br/>Humano</h4>
+              </div>
+              <p className="text-[11px] text-gray-400 pl-9">Conversas reais para decisões seguras.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <main className="flex-1 py-16 px-4 md:px-8 max-w-7xl mx-auto w-full">
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
           {/* Left - Contact info & Map */}

@@ -51,14 +51,14 @@
 
 :root {
   /* Dynamic Design Tokens from CMS */
-  --primary-color: #C8A27C;
-  --secondary-color: #1C1C1C;
-  --accent-color: #B8860B;
-  --accent-hover: #8B6508;
-  --text-color: #1C1C1C;
-  --background-color: #FAF9F6;
-  --card-color: #FFFFFF;
-  --border-color: #E2E8F0;
+  --primary-color: #4A1F2D;
+  --secondary-color: #F3E8DC;
+  --accent-color: #C6A86A;
+  --accent-hover: #A88B50;
+  --text-color: #F3E8DC;
+  --background-color: #1A0F14;
+  --card-color: #2A161D;
+  --border-color: #3A232E;
 
   --card-foreground: var(--text-color);
   --popover: var(--background-color);
@@ -131,4 +131,33 @@
   html {
     @apply font-sans;
   }
+}
+/* Admin Dashboard Specific Theme */
+.admin-dashboard {
+  --admin-bg: #110508;
+  --admin-card: #1C0A10;
+  --admin-border: #3A1B28;
+  --admin-primary: #D4AF37;
+  --admin-primary-hover: #F2CC5B;
+  --admin-text-main: #FDF8F9;
+  --admin-text-muted: #A18D95;
+  --admin-accent-green: #10B981;
+  --admin-accent-green-bg: rgba(16, 185, 129, 0.1);
+  --admin-accent-red: #EF4444;
+  --admin-accent-red-bg: rgba(239, 68, 68, 0.1);
+  
+  --admin-chart-purple: #8B5CF6;
+  --admin-chart-orange: #F97316;
+  --admin-chart-yellow: #EAB308;
+  --admin-chart-cyan: #06B6D4;
+  --admin-chart-pink: #EC4899;
+}
+
+/* Hide scrollbars but allow scrolling */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

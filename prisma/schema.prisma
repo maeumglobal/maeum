@@ -1,0 +1,157 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  role      String   @default("customer") // super_admin, admin, consultora, customer
+  avatarUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  assignedLeads Lead[]         @relation("ConsultantLeads")
+  chats         Chat[]         @relation("ConsultantChats")
+  proposals     Proposal[]     @relation("ConsultantProposals")
+  notifications Notification[] @relation("UserNotifications")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  linkUrl   String?
+  createdAt DateTime @default(now())
+
+  user      User     @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Lead {
+  id            String   @id @default(uuid())
+  name          String
+  email         String
+  phone         String?
+  destination   String?
+  budget        Float?
+  status        String   @default("lead") // lead, contact, proposal, negotiation, approval, payment, trip_preparation, trip_completed
+  notes         String?
+  consultantId  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  consultant    User?    @relation("ConsultantLeads", fields: [consultantId], references: [id])
+}
+
+model Chat {
+  id           String    @id @default(uuid())
+  consultantId String
+  customerId   String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  consultant   User      @relation("ConsultantChats", fields: [consultantId], references: [id])
+  messages     ChatMessage[]
+}
+
+model ChatMessage {
+  id        String   @id @default(uuid())
+  chatId    String
+  senderId  String
+  content   String
+  createdAt DateTime @default(now())
+
+  chat      Chat     @relation(fields: [chatId], references: [id])
+}
+
+model Proposal {
+  id           String   @id @default(uuid())
+  title        String
+  totalValue   Float
+  status       String   @default("pending") // pending, approved, paid, rejected
+  consultantId String
+  customerId   String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  consultant   User     @relation("ConsultantProposals", fields: [consultantId], references: [id])
+  items        ProposalItem[]
+}
+
+model ProposalItem {
+  id         String   @id @default(uuid())
+  proposalId String
+  name       String
+  type       String   // package, extra, flight, etc
+  price      Float
+  details    String?
+
+  proposal   Proposal @relation(fields: [proposalId], references: [id])
+}
+
+model Package {
+  id          String   @id @default(uuid())
+  title       String
+  slug        String   @unique
+  destination String?
+  price       Float
+  description String?
+  status      String   @default("active") // active, draft, archived
+  gallery     String // JSON array as string
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Booking {
+  id          String   @id @default(uuid())
+  clientId    String
+  packageId   String?
+  proposalId  String?
+  status      String   @default("confirmed") // pending, confirmed, cancelled, completed
+  startDate   DateTime?
+  endDate     DateTime?
+  totalPrice  Float?
+  createdAt   DateTime @default(now())
+
+  payments    Payment[]
+}
+
+model Payment {
+  id              String   @id @default(uuid())
+  bookingId       String
+  clientId        String?
+  stripeSessionId String?  @unique
+  amount          Float
+  status          String   @default("pending") // pending, paid, failed, refunded
+  paymentMethod   String?  // credit_card, pix, boleto
+  createdAt       DateTime @default(now())
+  paidAt          DateTime?
+
+  booking         Booking  @relation(fields: [bookingId], references: [id])
+}
+
+model Partner {
+  id           String   @id @default(uuid())
+  name         String
+  category     String?
+  contactEmail String?
+  status       String   @default("active")
+}
+
+model Experience {
+  id             String   @id @default(uuid())
+  partnerId      String?
+  title          String
+  pricePerPerson Float?
+  status         String   @default("active")
+}
