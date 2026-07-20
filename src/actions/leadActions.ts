@@ -30,7 +30,7 @@ export async function createLead(data: {
     const newLead = await prisma.lead.create({
       data: {
         name: data.name,
-        email: data.email || null,
+        email: data.email || '',
         phone: data.phone || null,
         destination: data.destination || null,
         budget: data.budget || null,
