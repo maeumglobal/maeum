@@ -5,7 +5,7 @@ import { ChevronDown, ArrowRight } from 'lucide-react';
 
 export default function PaymentLinkGenerator() {
   return (
-    <div className="bg-[var(--admin-card)] border border-[var(--admin-border)] rounded-xl p-6 flex flex-col h-[300px]">
+    <div className="bg-[var(--admin-card)] border border-[var(--admin-border)] rounded-xl p-6 flex flex-col h-full min-h-[300px]">
       <h3 className="text-[var(--admin-text-main)] text-sm font-medium mb-1">Criar Link de Pagamento</h3>
       <p className="text-[var(--admin-text-muted)] text-[11px] mb-6">Gere um link seguro da Stripe para enviar ao cliente.</p>
 

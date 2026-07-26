@@ -27,12 +27,12 @@ export default function Header() {
   };
 
   const navItems = [
-    { label: 'Coreia do Sul', href: '/coreia-do-sul' },
+    { label: 'Home', href: '/' },
     { label: 'Destinos', href: '/destinos' },
-    { label: 'Experiências', href: '/coreia-do-sul/experiencias' },
+    { label: 'Experiências', href: '/experiencias' },
     { label: 'Intercâmbio', href: '/coreia-do-sul/intercambio' },
-    { label: 'Jornadas', href: '/coreia-do-sul/jornadas' },
-    { label: 'Journal', href: '/journal' },
+    { label: 'Pacotes', href: '/pacotes' },
+    { label: 'Sobre Nós', href: '/sobre' },
     { label: 'Contato', href: '/contato' }
   ];
 
@@ -78,10 +78,10 @@ export default function Header() {
           {currentUser ? (
             <div className="relative group">
               <button className="flex items-center gap-1.5 px-4 py-1.5 border border-border rounded-full text-xs hover:bg-muted transition-all">
-                <User className="h-3.5 w-3.5 text-primary" />
+                <User className="h-3.5 w-3.5 text-accent" />
                 <span className="max-w-[100px] truncate">{currentUser.name}</span>
               </button>
-              <div className="absolute right-0 top-full mt-1.5 w-10 rounded-md border border-border bg-card p-1 shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-150">
+              <div className="absolute right-0 top-full mt-1.5 w-48 rounded-md border border-border bg-card p-1 shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-150">
                 <Link
                   href={
                     currentUser.role === 'super_admin' || currentUser.role === 'admin'
@@ -92,7 +92,7 @@ export default function Header() {
                   }
                   className="w-full text-left px-3 py-2 text-xs rounded hover:bg-primary/5 hover:text-primary transition-colors flex items-center gap-2 text-foreground/80"
                 >
-                  <LayoutDashboard className="h-4 w-4 text-primary" />
+                  <LayoutDashboard className="h-4 w-4 text-accent" />
                   <span>Meu Painel</span>
                 </Link>
                 <button
@@ -168,7 +168,7 @@ export default function Header() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center gap-2 text-sm text-foreground/80 py-1"
               >
-                <LayoutDashboard className="h-4 w-4 text-primary" />
+                <LayoutDashboard className="h-4 w-4 text-accent" />
                 Meu Painel
               </Link>
               <button

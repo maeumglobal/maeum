@@ -226,7 +226,7 @@ export default function ConsultoraDashboard() {
                                       updateLeadStatus(lead.id, WORKFLOW_STAGES[nextIdx].id);
                                     }
                                   }}
-                                  className="text-primary hover:text-accent-hover"
+                                  className="text-accent hover:text-accent-hover"
                                 >
                                   <ChevronRight className="h-4 w-4" />
                                 </button>
@@ -245,7 +245,7 @@ export default function ConsultoraDashboard() {
             {activeTab === 'builder' && (
               <div className="bg-card border border-border rounded-3xl p-6 md:p-8 shadow-sm">
                 <h2 className="font-heading text-2xl font-light text-secondary border-b border-border pb-4 mb-6 flex items-center gap-2">
-                  <Plus className="h-5 w-5 text-primary" />
+                  <Plus className="h-5 w-5 text-accent" />
                   Construtor de Proposta Dinâmica (Airbnb Style)
                 </h2>
 

@@ -137,13 +137,13 @@ export default function ExperienceDetailPage() {
               <div className="flex flex-wrap items-center gap-4 mt-5 text-xs text-muted-foreground">
                 {experience.location && (
                   <div className="flex items-center gap-1.5">
-                    <MapPin className="h-4 w-4 text-primary" />
+                    <MapPin className="h-4 w-4 text-accent" />
                     <span className="font-medium text-secondary">{experience.location}</span>
                   </div>
                 )}
                 {experience.duration_hours && (
                   <div className="flex items-center gap-1.5">
-                    <Clock className="h-4 w-4 text-primary" />
+                    <Clock className="h-4 w-4 text-accent" />
                     <span className="font-medium text-secondary">{experience.duration_hours}h</span>
                   </div>
                 )}
@@ -176,7 +176,7 @@ export default function ExperienceDetailPage() {
                   {experience.highlights.map((item: string, idx: number) => (
                     <li key={idx} className="flex items-start gap-3 text-sm text-muted-foreground">
                       <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                        <Star className="h-3 w-3 text-primary" />
+                        <Star className="h-3 w-3 text-accent" />
                       </span>
                       {item}
                     </li>
@@ -207,7 +207,7 @@ export default function ExperienceDetailPage() {
                 <div>
                   <h2 className="font-heading text-2xl font-light text-secondary mb-4">Localização</h2>
                   <div className="flex items-start gap-3 text-sm text-muted-foreground">
-                    <MapPin className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                    <MapPin className="h-5 w-5 text-accent shrink-0 mt-0.5" />
                     <div>
                       <p className="font-medium text-secondary">{experience.location}</p>
                       {experience.region && <p className="text-xs mt-0.5">{experience.region}</p>}
@@ -250,7 +250,7 @@ export default function ExperienceDetailPage() {
               ) : (
                 <div className="relative aspect-video rounded-2xl overflow-hidden bg-muted flex flex-col items-center justify-center gap-4 border border-dashed border-border group cursor-pointer hover:bg-muted/80 transition-colors">
                   <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                    <svg className="h-7 w-7 text-primary ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-7 w-7 text-accent ml-0.5" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M8 5v14l11-7z" />
                     </svg>
                   </div>

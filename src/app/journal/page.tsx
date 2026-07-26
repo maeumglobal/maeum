@@ -61,7 +61,7 @@ export default function JournalPage() {
                 </div>
                 <div className="p-6">
                   <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-semibold mb-2">
-                    <Clock className="h-3.5 w-3.5 text-primary" />
+                    <Clock className="h-3.5 w-3.5 text-accent" />
                     <span>{post.date}</span>
                     <span>•</span>
                     <span>Por {post.author}</span>

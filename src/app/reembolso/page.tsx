@@ -73,7 +73,7 @@ export default function ReembolsoPage() {
         
         <div className="relative z-10 max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-primary/20 backdrop-blur border border-primary/45 rounded-full px-4 py-2 mb-6">
-            <DollarSign className="h-4 w-4 text-primary" />
+            <DollarSign className="h-4 w-4 text-accent" />
             <span className="text-xs uppercase tracking-widest text-primary font-bold">
               Cancelamento & Reembolso
             </span>
@@ -175,7 +175,7 @@ export default function ReembolsoPage() {
           <div className="space-y-6">
             <div className="bg-card border border-border/60 rounded-2xl p-6 md:p-8">
               <h3 className="font-heading text-lg font-semibold text-secondary mb-4 flex items-center gap-2">
-                <FileText className="h-5 w-5 text-primary" />
+                <FileText className="h-5 w-5 text-accent" />
                 Prazos de Processamento
               </h3>
               <div className="text-sm text-muted-foreground leading-relaxed space-y-3">
@@ -193,7 +193,7 @@ export default function ReembolsoPage() {
 
             <div className="bg-card border border-border/60 rounded-2xl p-6 md:p-8">
               <h3 className="font-heading text-lg font-semibold text-secondary mb-4 flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-primary" />
+                <Calendar className="h-5 w-5 text-accent" />
                 Casos Especiais
               </h3>
               <div className="text-sm text-muted-foreground leading-relaxed space-y-3">
@@ -211,7 +211,7 @@ export default function ReembolsoPage() {
 
             <div className="bg-card border border-border/60 rounded-2xl p-6 md:p-8">
               <h3 className="font-heading text-lg font-semibold text-secondary mb-4 flex items-center gap-2">
-                <AlertCircle className="h-5 w-5 text-primary" />
+                <AlertCircle className="h-5 w-5 text-accent" />
                 Taxas Não Reembolsáveis
               </h3>
               <div className="text-sm text-muted-foreground leading-relaxed space-y-3">
@@ -252,7 +252,7 @@ export default function ReembolsoPage() {
               href="mailto:financeiro@maeumglobal.com.br"
               className="bg-card border border-border/60 rounded-xl p-6 flex items-center justify-center gap-3 hover:shadow-md transition-all group"
             >
-              <Mail className="h-5 w-5 text-primary group-hover:scale-110 transition-transform" />
+              <Mail className="h-5 w-5 text-accent group-hover:scale-110 transition-transform" />
               <span className="text-sm font-semibold text-secondary">financeiro@maeumglobal.com.br</span>
             </a>
             
@@ -262,7 +262,7 @@ export default function ReembolsoPage() {
               rel="noreferrer"
               className="bg-card border border-border/60 rounded-xl p-6 flex items-center justify-center gap-3 hover:shadow-md transition-all group"
             >
-              <Phone className="h-5 w-5 text-primary group-hover:scale-110 transition-transform" />
+              <Phone className="h-5 w-5 text-accent group-hover:scale-110 transition-transform" />
               <span className="text-sm font-semibold text-secondary">+55 (41) 98709-4799</span>
             </a>
           </div>

@@ -63,7 +63,7 @@ export default function DestinosPage() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                   <span className="absolute bottom-4 left-4 text-white font-heading text-xl font-medium flex items-center gap-1.5">
-                    <MapPin className="h-4 w-4 text-primary fill-primary" />
+                    <MapPin className="h-4 w-4 text-accent fill-accent" />
                     {dest.name}
                   </span>
                 </div>

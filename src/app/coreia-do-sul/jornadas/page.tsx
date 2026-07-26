@@ -151,24 +151,24 @@ export default function JornadasPage() {
                         {journey.title}
                       </h3>
                       <div className="flex items-center gap-2 mt-2 text-[11px] text-muted-foreground">
-                        <Map className="h-3.5 w-3.5 text-primary" />
+                        <Map className="h-3.5 w-3.5 text-accent" />
                         <span>{journey.destinations.join(', ')}</span>
                       </div>
                       <div className="flex items-center gap-4 mt-3 text-[11px] text-muted-foreground">
                         <span className="flex items-center gap-1">
-                          <Clock className="h-3.5 w-3.5 text-primary" />
+                          <Clock className="h-3.5 w-3.5 text-accent" />
                           {journey.duration_days} dias
                         </span>
                         {journey.nextDeparture && (
                           <span className="flex items-center gap-1">
-                            <Calendar className="h-3.5 w-3.5 text-primary" />
+                            <Calendar className="h-3.5 w-3.5 text-accent" />
                             {formatDate(journey.nextDeparture.start_date)}
                           </span>
                         )}
                       </div>
                       {journey.nextDeparture && (
                         <div className="flex items-center gap-1 mt-2 text-[11px] text-muted-foreground">
-                          <Users className="h-3.5 w-3.5 text-primary" />
+                          <Users className="h-3.5 w-3.5 text-accent" />
                           <span>{journey.nextDeparture.available_spots} vagas disponíveis</span>
                         </div>
                       )}

@@ -154,7 +154,7 @@ export default function CoreiaDoSulPage() {
                     <div className={`absolute inset-0 bg-gradient-to-br ${cat.color} opacity-0 group-hover:opacity-5 transition-opacity duration-500`} />
                     <div className="p-8 flex flex-col items-center text-center gap-5 flex-1">
                       <div className="p-4 rounded-2xl bg-muted/50 group-hover:bg-primary/10 group-hover:scale-110 transition-all duration-500">
-                        <Icon className="h-8 w-8 text-primary group-hover:text-[#B8860B] transition-colors duration-500" />
+                        <Icon className="h-8 w-8 text-accent group-hover:text-[#B8860B] transition-colors duration-500" />
                       </div>
                       <h3 className="font-heading text-xl font-medium text-secondary group-hover:text-primary transition-colors duration-300">
                         {cat.title}
@@ -211,8 +211,9 @@ export default function CoreiaDoSulPage() {
                 >
                   <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-[100%] -mr-8 -mt-8 group-hover:bg-primary/10 transition-colors duration-500" />
                   <div className="relative z-10">
-                    <div className="p-3 rounded-xl bg-primary/10 w-fit mb-4 group-hover:bg-primary/20 transition-colors duration-500">
-                      <Icon className="h-5 w-5 text-primary" />
+                      <div className="p-3 rounded-xl bg-primary/10 w-fit mb-4 group-hover:bg-primary/20 transition-colors duration-500">
+                        <Icon className="h-5 w-5 text-accent" />
+
                     </div>
                     <h3 className="font-heading text-lg font-medium text-secondary mb-2">{item.title}</h3>
                     <p className="text-xs text-muted-foreground leading-relaxed">{item.description}</p>

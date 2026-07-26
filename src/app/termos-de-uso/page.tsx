@@ -146,7 +146,7 @@ export default function TermosUsoPage() {
         
         <div className="relative z-10 max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-primary/20 backdrop-blur border border-primary/45 rounded-full px-4 py-2 mb-6">
-            <FileText className="h-4 w-4 text-primary" />
+            <FileText className="h-4 w-4 text-accent" />
             <span className="text-xs uppercase tracking-widest text-primary font-bold">
               Termos e Condições
             </span>
@@ -168,7 +168,7 @@ export default function TermosUsoPage() {
         <div className="max-w-4xl mx-auto">
           <div className="bg-muted/30 border border-border/60 rounded-xl p-6 flex flex-col md:flex-row items-center gap-6">
             <div className="p-3 bg-primary/10 rounded-full">
-              <AlertCircle className="h-6 w-6 text-primary" />
+              <AlertCircle className="h-6 w-6 text-accent" />
             </div>
             <div className="flex-1 text-center md:text-left">
               <h3 className="text-sm font-semibold text-secondary mb-1">
@@ -203,7 +203,7 @@ export default function TermosUsoPage() {
                 >
                   <div className="flex items-start gap-4">
                     <div className="p-2.5 bg-primary/10 rounded-xl shrink-0">
-                      <Icon className="h-5 w-5 text-primary" />
+                      <Icon className="h-5 w-5 text-accent" />
                     </div>
                     <div className="flex-1">
                       <h2 className="font-heading text-xl font-semibold text-secondary mb-4">

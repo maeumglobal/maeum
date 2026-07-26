@@ -112,19 +112,19 @@ export default function KBeautyPage() {
                 <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
                   {kbeautyExp.location && (
                     <div className="flex items-center gap-1.5">
-                      <MapPin className="h-4 w-4 text-primary" />
+                      <MapPin className="h-4 w-4 text-accent" />
                       <span>{kbeautyExp.location}</span>
                     </div>
                   )}
                   {kbeautyExp.duration_hours && (
                     <div className="flex items-center gap-1.5">
-                      <Clock className="h-4 w-4 text-primary" />
+                      <Clock className="h-4 w-4 text-accent" />
                       <span>{kbeautyExp.duration_hours}h</span>
                     </div>
                   )}
                   {kbeautyExp.price_per_person && (
                     <div className="flex items-center gap-1.5">
-                      <Sparkles className="h-4 w-4 text-primary" />
+                      <Sparkles className="h-4 w-4 text-accent" />
                       <span>US$ {kbeautyExp.price_per_person} / pessoa</span>
                     </div>
                   )}
@@ -142,7 +142,7 @@ export default function KBeautyPage() {
                     <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                       {kbeautyExp.included.map((item: string, idx: number) => (
                         <li key={idx} className="flex items-start gap-2 text-[11px] text-muted-foreground">
-                          <Check className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
+                          <Check className="h-3.5 w-3.5 text-accent shrink-0 mt-0.5" />
                           <span>{item}</span>
                         </li>
                       ))}
@@ -169,7 +169,7 @@ export default function KBeautyPage() {
           </div>
 
           <div className="bg-card border border-border rounded-3xl p-8 md:p-12 text-center">
-            <Star className="h-8 w-8 text-primary/40 mx-auto mb-4" />
+            <Star className="h-8 w-8 text-accent/40 mx-auto mb-4" />
             <p className="text-sm text-muted-foreground font-light leading-relaxed max-w-2xl mx-auto">
               Em breve: experiências K-Beauty por empresas parceiras selecionadas.
             </p>

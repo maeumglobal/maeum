@@ -170,7 +170,7 @@ export default function ClienteDashboard() {
             </div>
           </div>
           <div className="bg-primary/10 border border-primary/20 rounded-xl px-4 py-2 flex items-center gap-2">
-            <MapPin className="h-4 w-4 text-primary" />
+            <MapPin className="h-4 w-4 text-accent" />
             <span className="text-xs font-semibold text-secondary">Próxima Viagem: Seul, Coreia do Sul</span>
           </div>
         </div>
@@ -220,7 +220,7 @@ export default function ClienteDashboard() {
                 {trip ? (
                   <div className="bg-card border border-border rounded-3xl p-6 md:p-8 shadow-sm">
                     <h2 className="font-heading text-2xl font-light text-secondary mb-6 flex items-center gap-2">
-                      <Calendar className="h-5 w-5 text-primary" />
+                      <Calendar className="h-5 w-5 text-accent" />
                       {trip.title}
                     </h2>
                     
@@ -431,7 +431,7 @@ export default function ClienteDashboard() {
                     documents.map((doc) => (
                       <div key={doc.id} className="border border-border/80 rounded-xl p-4 bg-muted/20 flex items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
-                          <FileText className="h-8 w-8 text-primary" />
+                          <FileText className="h-8 w-8 text-accent" />
                           <div>
                             <h4 className="text-sm font-bold text-secondary">{doc.file_name}</h4>
                             <span className="text-[10px] text-muted-foreground uppercase">{doc.category} • {(doc.file_size / 1024 / 1024).toFixed(2)} MB</span>

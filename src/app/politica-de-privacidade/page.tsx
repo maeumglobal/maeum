@@ -136,7 +136,7 @@ export default function PoliticaPrivacidadePage() {
         
         <div className="relative z-10 max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-primary/20 backdrop-blur border border-primary/45 rounded-full px-4 py-2 mb-6">
-            <Shield className="h-4 w-4 text-primary" />
+            <Shield className="h-4 w-4 text-accent" />
             <span className="text-xs uppercase tracking-widest text-primary font-bold">
               Privacidade & Proteção de Dados
             </span>
@@ -160,7 +160,7 @@ export default function PoliticaPrivacidadePage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
             <div className="bg-card border border-border/60 rounded-xl p-5 flex flex-col items-center text-center">
               <div className="p-3 bg-primary/10 rounded-full mb-3">
-                <User className="h-5 w-5 text-primary" />
+                <User className="h-5 w-5 text-accent" />
               </div>
               <h3 className="text-xs font-semibold text-secondary mb-1">Seus Dados</h3>
               <p className="text-[10px] text-muted-foreground">Protegidos e utilizados apenas para melhorar sua experiência</p>
@@ -168,7 +168,7 @@ export default function PoliticaPrivacidadePage() {
             
             <div className="bg-card border border-border/60 rounded-xl p-5 flex flex-col items-center text-center">
               <div className="p-3 bg-primary/10 rounded-full mb-3">
-                <Cookie className="h-5 w-5 text-primary" />
+                <Cookie className="h-5 w-5 text-accent" />
               </div>
               <h3 className="text-xs font-semibold text-secondary mb-1">Cookies</h3>
               <p className="text-[10px] text-muted-foreground">Você tem controle total sobre suas preferências</p>
@@ -176,7 +176,7 @@ export default function PoliticaPrivacidadePage() {
             
             <div className="bg-card border border-border/60 rounded-xl p-5 flex flex-col items-center text-center">
               <div className="p-3 bg-primary/10 rounded-full mb-3">
-                <Mail className="h-5 w-5 text-primary" />
+                <Mail className="h-5 w-5 text-accent" />
               </div>
               <h3 className="text-xs font-semibold text-secondary mb-1">Contato</h3>
               <p className="text-[10px] text-muted-foreground">Dúvidas? privacidade@maeumglobal.com.br</p>
@@ -192,7 +192,7 @@ export default function PoliticaPrivacidadePage() {
               >
                 <div className="flex items-start gap-4">
                   <div className="p-2 bg-primary/10 rounded-lg shrink-0">
-                    <Check className="h-4 w-4 text-primary" />
+                    <Check className="h-4 w-4 text-accent" />
                   </div>
                   <div className="flex-1">
                     <h2 className="font-heading text-xl font-semibold text-secondary mb-4">

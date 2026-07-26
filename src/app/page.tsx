@@ -188,7 +188,7 @@ export default function Home() {
       <Header />
 
       {/* Hero Section */}
-      <section className="relative min-h-[80vh] flex flex-col justify-center overflow-hidden bg-zinc-950">
+      <section className="relative min-h-[80vh] flex flex-col justify-center overflow-hidden bg-background">
         {/* Background Image with overlay */}
         <div className="absolute inset-0 z-0">
           <Image
@@ -232,7 +232,7 @@ export default function Home() {
           </div>
 
           {/* Features at the bottom of the banner */}
-          <div className="flex flex-wrap items-center gap-8 mt-12 pt-8 border-t border-white/10 w-full max-w-3xl">
+          <div className="flex flex-wrap items-center justify-center gap-8 mt-12 pt-8 border-t border-white/10 w-full max-w-3xl mx-auto">
             <div className="flex flex-col items-center gap-3">
               <Sparkles className="h-6 w-6 text-accent" strokeWidth={1.5} />
               <span className="text-[10px] sm:text-xs text-gray-300 font-semibold tracking-wide text-center">Destino Exclusivo</span>
@@ -253,8 +253,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Category Filter Bar with Icons matching reference */}
-      <section className="bg-background border-b border-border py-6 px-4 sticky top-[60px] z-40 overflow-x-auto scrollbar-none shadow-sm">
+      {/* Category Filter Bar */}
+      <section className="bg-[#1A0F14] border-b border-[#3A232E] py-6 px-4 sticky top-[60px] z-40 overflow-x-auto scrollbar-none shadow-sm">
         <div className="max-w-7xl mx-auto flex items-center justify-start md:justify-center gap-6 min-w-max">
           {CATEGORIES_WITH_ICONS.map((cat) => {
             const Icon = cat.icon;
@@ -265,11 +265,11 @@ export default function Home() {
                 onClick={() => setActiveCategory(cat.name)}
                 className={`flex flex-col items-center gap-2 text-[10px] font-bold tracking-wider uppercase transition-all pb-1 border-b-2 ${
                   isActive
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-muted-foreground hover:text-secondary'
+                    ? 'border-[#C8A27C] text-[#C8A27C]'
+                    : 'border-transparent text-gray-500 hover:text-[#C8A27C]'
                 }`}
               >
-                <span className={`p-2 rounded-xl transition-all ${isActive ? 'bg-primary/10 text-primary' : 'bg-muted/30 text-muted-foreground'}`}>
+                <span className={`p-2 rounded-xl transition-all ${isActive ? 'bg-[#C8A27C]/10 text-[#C8A27C]' : 'bg-[#2A161D] text-gray-400'}`}>
                   <Icon className="h-4.5 w-4.5" />
                 </span>
                 {cat.name}
@@ -341,14 +341,14 @@ export default function Home() {
       </section>
 
       {/* Bastidores da Maeum */}
-      <section className="py-16 px-4 md:px-8 bg-muted/30">
+      <section className="py-16 px-4 md:px-8 bg-[#1A0F14] border-t border-[#3A232E]">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h2 className="font-heading text-3xl font-light text-secondary">Bastidores da Maeum</h2>
-              <p className="text-sm text-muted-foreground mt-1">Acompanhe de perto como preparamos cada detalhe para você viver experiências inesquecíveis.</p>
+              <h2 className="font-heading text-3xl font-light text-[#F3E8DC]">Bastidores da Maeum</h2>
+              <p className="text-sm text-gray-400 mt-1">Acompanhe de perto como preparamos cada detalhe para você viver experiências inesquecíveis.</p>
             </div>
-            <button className="flex items-center gap-1.5 text-xs font-bold text-primary hover:text-accent-hover transition-colors uppercase tracking-wider">
+            <button className="flex items-center gap-1.5 text-xs font-bold text-[#C8A27C] hover:text-[#B8906C] transition-colors uppercase tracking-wider">
               VER TODOS OS BASTIDORES →
             </button>
           </div>
@@ -404,12 +404,12 @@ export default function Home() {
         </div>
       </section>
 
-      {/* YouTube Videos Section matching reference exactly */}
-      <section className="py-16 px-4 md:px-8 bg-muted/10 border-t border-border">
+      {/* YouTube Videos Section */}
+      <section className="py-16 px-4 md:px-8 bg-[#1A0F14] border-t border-[#3A232E]">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-2">
-              <span className="p-2 bg-red-600 rounded-full text-white">
+              <span className="p-2 bg-accent rounded-full text-white">
                 <Play className="h-4 w-4 fill-white ml-0.5" />
               </span>
               <h2 className="font-heading text-3xl font-light text-secondary">Últimos vídeos no YouTube</h2>
@@ -429,7 +429,7 @@ export default function Home() {
                     {vid.time}
                   </span>
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/35">
-                    <span className="bg-red-600 text-white p-2 rounded-full">
+                    <span className="bg-accent text-white p-2 rounded-full">
                       <Play className="h-4 w-4 fill-white ml-0.5" />
                     </span>
                   </div>
@@ -446,9 +446,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Floating Card Newsletter matching reference exactly */}
-      <section className="py-16 px-4 md:px-8 bg-background max-w-7xl mx-auto w-full">
-        <div className="relative bg-secondary rounded-3xl p-8 md:p-12 shadow-2xl overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
+      {/* Floating Card Newsletter */}
+      <section className="py-16 px-4 md:px-8 bg-[#1A0F14] max-w-7xl mx-auto w-full">
+        <div className="relative bg-[#2A161D] border border-[#3A232E] rounded-3xl p-8 md:p-12 shadow-2xl overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
           {/* Background Travel Image */}
           <div className="absolute inset-0 z-0 opacity-15">
             <Image
@@ -456,12 +456,12 @@ export default function Home() {
               alt="Travel background"
               fill
               unoptimized
-              className="object-cover object-center"
+              className="object-cover object-center mix-blend-overlay"
             />
           </div>
 
           <div className="relative z-10 max-w-md text-white">
-            <h2 className="font-heading text-3xl font-light text-primary uppercase tracking-wide">Receba conteúdos exclusivos da Ásia</h2>
+            <h2 className="font-heading text-3xl font-light text-[#C8A27C] uppercase tracking-wide">Receba conteúdos exclusivos da Ásia</h2>
             <p className="text-xs text-gray-400 mt-2">
               Dicas, roteiros, novidades e muito mais direto no seu e-mail de forma 100% gratuita.
             </p>
@@ -493,9 +493,9 @@ export default function Home() {
                   value={newsletterEmail}
                   onChange={e => setNewsletterEmail(e.target.value)}
                   placeholder="Seu melhor e-mail"
-                  className="bg-black/50 border-gray-800 rounded-xl text-white placeholder-gray-500 text-xs h-11"
+                  className="bg-[#1A0F14] border-[#3A232E] rounded-xl text-[#F3E8DC] placeholder-gray-500 text-xs h-11"
                 />
-                <Button type="submit" className="bg-primary hover:bg-accent-hover text-white rounded-xl font-bold px-6 h-11 text-xs shrink-0">
+                <Button type="submit" className="bg-[#C8A27C] hover:bg-[#B8906C] text-[#1A0F14] rounded-xl font-bold px-6 h-11 text-xs shrink-0">
                   QUERO RECEBER
                 </Button>
               </form>

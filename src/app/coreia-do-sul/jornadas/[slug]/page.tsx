@@ -157,11 +157,11 @@ export default function JornadaDetailPage() {
                 )}
                 <div className="flex flex-wrap items-center gap-4 mt-5 text-xs text-white/70">
                   <span className="flex items-center gap-1.5">
-                    <MapPin className="h-4 w-4 text-primary" />
+                    <MapPin className="h-4 w-4 text-accent" />
                     {journey.destinations.join(', ')}
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <Clock className="h-4 w-4 text-primary" />
+                    <Clock className="h-4 w-4 text-accent" />
                     {journey.duration_days} dias
                   </span>
                 </div>
@@ -332,7 +332,7 @@ export default function JornadaDetailPage() {
                         <ul className="space-y-2">
                           {cat.included.map((item: string, i: number) => (
                             <li key={i} className="flex items-start gap-2 text-[11px] text-muted-foreground">
-                              <Check className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
+                              <Check className="h-3.5 w-3.5 text-accent shrink-0 mt-0.5" />
                               {item}
                             </li>
                           ))}
@@ -447,11 +447,11 @@ export default function JornadaDetailPage() {
                       Próxima saída disponível
                     </div>
                     <div className="flex items-center gap-2 text-sm text-secondary font-medium">
-                      <Calendar className="h-4 w-4 text-primary" />
+                      <Calendar className="h-4 w-4 text-accent" />
                       <span>{formatDate(nextAvailableDeparture.start_date)}</span>
                     </div>
                     <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                      <Users className="h-3.5 w-3.5 text-primary" />
+                      <Users className="h-3.5 w-3.5 text-accent" />
                       <span>{nextAvailableDeparture.available_spots} vagas restantes</span>
                     </div>
                   </div>

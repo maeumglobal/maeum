@@ -322,12 +322,12 @@ export default function CoreiaExperienciasPage() {
 
                           <div className="mt-auto pt-4 space-y-2">
                             <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                              <MapPin className="h-3.5 w-3.5 text-primary/70 shrink-0" />
+                              <MapPin className="h-3.5 w-3.5 text-accent/70 shrink-0" />
                               <span>{exp.location}</span>
                             </div>
 
                             <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                              <Clock className="h-3.5 w-3.5 text-primary/70 shrink-0" />
+                              <Clock className="h-3.5 w-3.5 text-accent/70 shrink-0" />
                               <span>{exp.duration_hours < 2 ? `${exp.duration_hours}h` : `${Math.floor(exp.duration_hours)}h`}</span>
                             </div>
                           </div>

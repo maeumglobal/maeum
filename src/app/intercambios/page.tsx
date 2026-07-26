@@ -49,7 +49,7 @@ export default function IntercambiosPage() {
               </div>
               <div className="p-6 flex-1 flex flex-col justify-between">
                 <div>
-                  <div className="flex items-center gap-2 text-[10px] text-primary font-bold uppercase tracking-wider mb-2">
+                  <div className="flex items-center gap-2 text-[10px] text-accent font-bold uppercase tracking-wider mb-2">
                     <GraduationCap className="h-4 w-4" />
                     <span>{item.institution}</span>
                   </div>

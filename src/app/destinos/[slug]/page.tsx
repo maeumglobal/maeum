@@ -95,36 +95,36 @@ export default function DestinoDetailPage() {
                 <h3 className="font-heading text-xl font-light text-secondary uppercase tracking-wider mb-6">Explorar Coreia do Sul</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Link href="/coreia-do-sul/experiencias" className="flex items-center gap-4 bg-card border border-border rounded-2xl p-5 hover:shadow-md hover:border-primary/30 transition-all group">
-                    <span className="p-3 bg-primary/10 rounded-xl text-primary"><Compass className="h-6 w-6" /></span>
+                    <span className="p-3 bg-primary/10 rounded-xl text-accent"><Compass className="h-6 w-6" /></span>
                     <div>
                       <h4 className="font-bold text-sm text-secondary group-hover:text-primary transition-colors">Experiências</h4>
                       <p className="text-[10px] text-muted-foreground">Explore experiências individuais</p>
                     </div>
-                    <ArrowRight className="h-4 w-4 text-primary ml-auto shrink-0" />
+                    <ArrowRight className="h-4 w-4 text-accent ml-auto shrink-0" />
                   </Link>
                   <Link href="/coreia-do-sul/k-beauty" className="flex items-center gap-4 bg-card border border-border rounded-2xl p-5 hover:shadow-md hover:border-primary/30 transition-all group">
-                    <span className="p-3 bg-primary/10 rounded-xl text-primary"><Sparkles className="h-6 w-6" /></span>
+                    <span className="p-3 bg-primary/10 rounded-xl text-accent"><Sparkles className="h-6 w-6" /></span>
                     <div>
                       <h4 className="font-bold text-sm text-secondary group-hover:text-primary transition-colors">K-Beauty</h4>
                       <p className="text-[10px] text-muted-foreground">Beleza e cuidados coreanos</p>
                     </div>
-                    <ArrowRight className="h-4 w-4 text-primary ml-auto shrink-0" />
+                    <ArrowRight className="h-4 w-4 text-accent ml-auto shrink-0" />
                   </Link>
                   <Link href="/coreia-do-sul/intercambio" className="flex items-center gap-4 bg-card border border-border rounded-2xl p-5 hover:shadow-md hover:border-primary/30 transition-all group">
-                    <span className="p-3 bg-primary/10 rounded-xl text-primary"><GraduationCap className="h-6 w-6" /></span>
+                    <span className="p-3 bg-primary/10 rounded-xl text-accent"><GraduationCap className="h-6 w-6" /></span>
                     <div>
                       <h4 className="font-bold text-sm text-secondary group-hover:text-primary transition-colors">Intercâmbio</h4>
                       <p className="text-[10px] text-muted-foreground">Lexis Korea — programas de coreano</p>
                     </div>
-                    <ArrowRight className="h-4 w-4 text-primary ml-auto shrink-0" />
+                    <ArrowRight className="h-4 w-4 text-accent ml-auto shrink-0" />
                   </Link>
                   <Link href="/coreia-do-sul/jornadas" className="flex items-center gap-4 bg-card border border-border rounded-2xl p-5 hover:shadow-md hover:border-primary/30 transition-all group">
-                    <span className="p-3 bg-primary/10 rounded-xl text-primary"><Map className="h-6 w-6" /></span>
+                    <span className="p-3 bg-primary/10 rounded-xl text-accent"><Map className="h-6 w-6" /></span>
                     <div>
                       <h4 className="font-bold text-sm text-secondary group-hover:text-primary transition-colors">Jornadas</h4>
                       <p className="text-[10px] text-muted-foreground">Viagens em grupo exclusivas</p>
                     </div>
-                    <ArrowRight className="h-4 w-4 text-primary ml-auto shrink-0" />
+                    <ArrowRight className="h-4 w-4 text-accent ml-auto shrink-0" />
                   </Link>
                 </div>
               </div>
@@ -209,7 +209,7 @@ export default function DestinoDetailPage() {
                         {pkg.description}
                       </p>
                       <div className="flex items-center gap-2 mt-4 text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
-                        <Calendar className="h-3.5 w-3.5 text-primary" />
+                        <Calendar className="h-3.5 w-3.5 text-accent" />
                         <span>{pkg.duration || '10 Dias'}</span>
                       </div>
                     </div>

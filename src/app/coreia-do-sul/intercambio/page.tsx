@@ -118,11 +118,11 @@ export default function LexisKoreaIntercambioPage() {
               </p>
               <div className="flex flex-wrap gap-6 mt-2">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <GraduationCap className="h-4 w-4 text-primary" />
+                  <GraduationCap className="h-4 w-4 text-accent" />
                   <span>20 aulas/semana (Intensivo) | 15 aulas/semana (Standard)</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <MapPin className="h-4 w-4 text-primary" />
+                  <MapPin className="h-4 w-4 text-accent" />
                   <span>3 campi: Seul (2) & Busan</span>
                 </div>
               </div>
@@ -177,7 +177,7 @@ export default function LexisKoreaIntercambioPage() {
                   <div className="p-5 flex-1 flex flex-col">
                     <h3 className="font-heading text-xl font-bold text-secondary group-hover:text-primary transition-colors">{campus.name}</h3>
                     <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground mt-1">
-                      <MapPin className="h-3 w-3 text-primary" />
+                      <MapPin className="h-3 w-3 text-accent" />
                       <span>{campus.location}</span>
                     </div>
                     <p className="text-xs text-muted-foreground mt-3 leading-relaxed font-light flex-1">
@@ -231,21 +231,21 @@ export default function LexisKoreaIntercambioPage() {
               {/* Left - Description */}
               <div className="lg:col-span-3 flex flex-col gap-6">
                 <div className="flex items-center gap-3">
-                  <BookOpen className="h-5 w-5 text-primary" />
+                  <BookOpen className="h-5 w-5 text-accent" />
                   <h3 className="font-heading text-2xl font-light text-secondary">{program.name}</h3>
                 </div>
                 <p className="text-sm text-muted-foreground leading-relaxed font-light">{program.description}</p>
                 <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
                   <div className="flex items-center gap-1.5">
-                    <Clock className="h-4 w-4 text-primary" />
+                    <Clock className="h-4 w-4 text-accent" />
                     <span>{program.classes_per_week} aulas/semana</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <Building className="h-4 w-4 text-primary" />
+                    <Building className="h-4 w-4 text-accent" />
                     <span>Duração: {program.duration_weeks_min} a {program.duration_weeks_max} semanas</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <GraduationCap className="h-4 w-4 text-primary" />
+                    <GraduationCap className="h-4 w-4 text-accent" />
                     <span>{program.level_required}</span>
                   </div>
                 </div>
@@ -253,7 +253,7 @@ export default function LexisKoreaIntercambioPage() {
                 {/* Cultural Activities */}
                 {program.cultural_activities && (
                   <div className="bg-primary/5 border border-primary/10 rounded-2xl p-5 flex items-start gap-3">
-                    <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                    <Info className="h-5 w-5 text-accent shrink-0 mt-0.5" />
                     <div>
                       <span className="text-xs font-bold text-secondary">Atividades Culturais Inclusas</span>
                       <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
@@ -326,15 +326,15 @@ export default function LexisKoreaIntercambioPage() {
               </p>
               <div className="flex flex-col gap-3 mt-8">
                 <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                  <Check className="h-4 w-4 text-primary shrink-0" />
+                  <Check className="h-4 w-4 text-accent shrink-0" />
                   <span>Orientação personalizada gratuita</span>
                 </div>
                 <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                  <Check className="h-4 w-4 text-primary shrink-0" />
+                  <Check className="h-4 w-4 text-accent shrink-0" />
                   <span>Suporte em português do início ao fim</span>
                 </div>
                 <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                  <Check className="h-4 w-4 text-primary shrink-0" />
+                  <Check className="h-4 w-4 text-accent shrink-0" />
                   <span>Auxílio com matrícula, visto e hospedagem</span>
                 </div>
               </div>

@@ -39,11 +39,11 @@ export default function CookieBanner() {
           {/* Content */}
           <div className="flex items-start gap-4 flex-1">
             <div className="p-2.5 bg-primary/10 rounded-full shrink-0">
-              <Cookie className="h-5 w-5 text-primary" />
+              <Cookie className="h-5 w-5 text-accent" />
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
-                <Shield className="h-4 w-4 text-primary" />
+                <Shield className="h-4 w-4 text-accent" />
                 <h3 className="font-heading text-sm font-semibold text-secondary">
                   Privacidade e Cookies
                 </h3>
