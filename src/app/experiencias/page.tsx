@@ -169,10 +169,10 @@ export default function ExperienciasPage() {
 
           <div className="lg:w-1/2 relative h-[500px] w-full rounded-sm overflow-hidden border border-[#3D2620]">
             <Image 
-              src="https://images.unsplash.com/photo-1540959733332-eab4deceeaf7?q=80&w=800" 
+              src="/images/atendimento-especializado-viagem-coreia-do-sul-maeum-global-v2.webp" 
               alt="Korean Experience" 
               fill 
-              className="object-cover" 
+              className="object-cover object-center brightness-[0.80]" 
             />
             <div className="absolute inset-0 bg-gradient-to-l from-transparent to-[#0F0A08]/50" />
           </div>

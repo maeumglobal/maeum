@@ -46,7 +46,7 @@ export default function ContatoPage() {
 
           <div className="lg:w-[55%] relative h-[400px] sm:h-[500px] w-full mt-10 lg:mt-0">
              <div className="absolute inset-0 rounded-sm overflow-hidden border border-[#3D2620]">
-                <Image src="https://images.unsplash.com/photo-1573164574572-cb89e39749b4?q=80&w=800" alt="Consultants" fill className="object-cover" />
+                <Image src="/images/consultoras-maeum-global-contato-planejamento.webp" alt="Consultoras Maeum Global" fill className="object-cover object-center brightness-[0.80]" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0F0A08] via-transparent to-transparent" />
                 <div className="absolute top-8 left-1/2 -translate-x-1/2 flex flex-col items-center opacity-80">
                    <div className="w-12 h-12 border-2 border-[#C8A27C] mb-2 flex items-center justify-center">
