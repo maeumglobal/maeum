@@ -150,66 +150,9 @@ export default function ClientChatWidget() {
       <div className="flex flex-1 min-h-0 relative">
          <div className="absolute inset-0 opacity-5 pointer-events-none z-0" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/cubes.png")' }}></div>
          
-         {/* LEFT SIDEBAR: Lista de Consultoras (Exatamente como o Mockup pediu) */}
-         <div className={`w-[35%] border-r border-[#3D2620] bg-[#150D0B] flex-col hidden sm:flex z-10`}>
-            <div className="p-4 border-b border-[#3D2620]">
-              <span className="text-[9px] text-[#C8A27C] uppercase tracking-widest font-bold mb-3 block">CONSULTORAS</span>
-              <div className="relative">
-                <Search className="w-3.5 h-3.5 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input type="text" placeholder="Buscar consultora..." className="w-full bg-[#0F0A08] border border-[#3D2620] rounded-sm py-2 pl-9 pr-3 text-[10px] text-gray-300 focus:outline-none focus:border-[#C8A27C]" />
-              </div>
-            </div>
-
-            <div className="flex-1 overflow-y-auto custom-scrollbar">
-              {consultants.map((c) => (
-                <div 
-                  key={c.id} 
-                  onClick={() => !chatData && setActiveConsultant(c)} // Só pode mudar se o chat não iniciou
-                  className={`p-4 transition-colors flex justify-between cursor-pointer border-b border-[#3D2620]/30 ${activeConsultant?.id === c.id ? 'bg-[#2A1616]/50 border-l-2 border-l-[#C8A27C]' : 'hover:bg-[#1A1110]'} ${chatData && chatData.consultant?.id !== c.id ? 'opacity-50 pointer-events-none' : ''}`}
-                >
-                   <div className="flex items-center gap-3">
-                     {c.avatarUrl ? (
-                       <Image src={c.avatarUrl} alt={c.name} width={36} height={36} className="rounded-full object-cover shrink-0" />
-                     ) : (
-                       <div className="w-9 h-9 rounded-full bg-[#2A1112] border border-[#3D2620] flex items-center justify-center shrink-0">
-                         <User className="w-4 h-4 text-[#C8A27C]" />
-                       </div>
-                     )}
-                     <div>
-                       <h4 className={`text-[11px] font-semibold ${activeConsultant?.id === c.id ? 'text-white' : 'text-gray-300'}`}>{c.name}</h4>
-                       <p className="text-[9px] text-gray-400 truncate w-24">Consultora Especialista</p>
-                     </div>
-                   </div>
-                   <div className="flex flex-col items-end justify-between">
-                     <span className="text-[8px] text-green-500">Online</span>
-                   </div>
-                </div>
-              ))}
-            </div>
-         </div>
-
          {/* RIGHT SIDE: Janela do Chat ou Formulário */}
-         <div className="w-full sm:w-[65%] flex flex-col z-10 bg-[#1A1211]/90">
+         <div className="w-full flex flex-col z-10 bg-[#1A1211]/90">
            
-           {/* Cabeçalho da Consultora Ativa */}
-           {activeConsultant && (
-             <div className="h-16 border-b border-[#3D2620] bg-[#150D0B] flex items-center justify-between px-6 shrink-0">
-                <div className="flex items-center gap-3">
-                   {activeConsultant.avatarUrl ? (
-                     <Image src={activeConsultant.avatarUrl} alt={activeConsultant.name} width={32} height={32} className="rounded-full object-cover shrink-0" />
-                   ) : (
-                     <div className="w-8 h-8 rounded-full bg-[#2A1112] border border-[#3D2620] flex items-center justify-center shrink-0">
-                       <User className="w-4 h-4 text-[#C8A27C]" />
-                     </div>
-                   )}
-                   <div>
-                     <h4 className="text-[11px] font-semibold text-white">{activeConsultant.name}</h4>
-                     <span className="text-[9px] text-gray-500">Consultora de Viagens</span>
-                   </div>
-                </div>
-             </div>
-           )}
-
            {!chatData ? (
              // FORMULÁRIO INICIAL (Se passando por uma mensagem do sistema)
              <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-8">
