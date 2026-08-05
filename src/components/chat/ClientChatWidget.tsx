@@ -207,11 +207,6 @@ export default function ClientChatWidget() {
                      <span className="text-[9px] text-gray-500">Consultora de Viagens</span>
                    </div>
                 </div>
-                <div className="flex items-center gap-4 text-gray-400">
-                   <Phone className="w-4 h-4 cursor-pointer hover:text-[#C8A27C] transition-colors" />
-                   <Video className="w-4 h-4 cursor-pointer hover:text-[#C8A27C] transition-colors" />
-                   <MoreVertical className="w-4 h-4 cursor-pointer hover:text-[#C8A27C] transition-colors" />
-                </div>
              </div>
            )}
 
