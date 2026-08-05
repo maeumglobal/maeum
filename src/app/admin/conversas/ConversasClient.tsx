@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { getAdminChats, getChatMessages, sendMessage } from '@/actions/chatActions';
-import { Search, Send, Paperclip, CheckCheck, User, Clock, ArrowRight } from 'lucide-react';
+import { Search, Send, Paperclip, CheckCheck, User, Clock, ArrowRight, MessageSquare } from 'lucide-react';
 import Image from 'next/image';
 
 export default function ConversasClient() {
