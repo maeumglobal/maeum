@@ -77,9 +77,9 @@ export async function initClientChat(data: { name: string; email: string; messag
         avatarUrl: consultant.avatarUrl
       }
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error('initClientChat error:', error);
-    return { success: false, error: 'Erro ao iniciar o chat.' };
+    return { success: false, error: 'Erro ao iniciar o chat: ' + (error.message || String(error)) };
   }
 }
 
