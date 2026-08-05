@@ -45,15 +45,15 @@ export default function AdminLayout({
               <FileText className="w-4 h-4" /> Minhas Consultas
            </Link>
            
-           <Link href="#" className="flex items-center gap-3 hover:bg-[#2A1112] text-gray-400 hover:text-white px-4 py-3 rounded-md font-medium text-[11px] tracking-wide transition-colors">
-              <Users className="w-4 h-4" /> Leads & Clientes
+           <Link href="/admin/equipe" className="flex items-center gap-3 hover:bg-[#2A1112] text-gray-400 hover:text-white px-4 py-3 rounded-md font-medium text-[11px] tracking-wide transition-colors">
+              <Users className="w-4 h-4" /> Gerenciar Equipe
            </Link>
            
-           <Link href="#" className="flex items-center justify-between hover:bg-[#2A1112] text-gray-400 hover:text-white px-4 py-3 rounded-md font-medium text-[11px] tracking-wide transition-colors">
+           <Link href="/admin/conversas" className="flex items-center justify-between hover:bg-[#2A1112] text-gray-400 hover:text-white px-4 py-3 rounded-md font-medium text-[11px] tracking-wide transition-colors">
               <div className="flex items-center gap-3">
                  <MessageSquare className="w-4 h-4" /> Conversas
               </div>
-              <div className="w-4 h-4 rounded-full bg-[#8A3324] text-white text-[9px] flex items-center justify-center font-bold">8</div>
+              <div className="w-4 h-4 rounded-full bg-[#8A3324] text-white text-[9px] flex items-center justify-center font-bold">!</div>
            </Link>
 
            <Link href="#" className="flex items-center gap-3 hover:bg-[#2A1112] text-gray-400 hover:text-white px-4 py-3 rounded-md font-medium text-[11px] tracking-wide transition-colors">
