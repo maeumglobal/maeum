@@ -16,24 +16,6 @@ const DESTINATIONS = [
     desc: 'Um país fascinante que combina palácios tradicionais de dinastias milenares com a cultura pop contemporânea, tecnologia de ponta e clínicas exclusivas de K-Beauty.',
     image: 'https://images.unsplash.com/photo-1538669715515-5e3819766a9e?q=80&w=600',
     packages: 3
-  },
-  {
-    id: 'd-2',
-    name: 'Japão',
-    slug: 'japao',
-    country: 'Japão',
-    desc: 'Encante-se com a harmonia dos templos históricos de Kyoto, os jardins zen, a gastronomia com estrelas Michelin e as ruas iluminadas de Tokyo.',
-    image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=600',
-    packages: 2
-  },
-  {
-    id: 'd-3',
-    name: 'Vietnã',
-    slug: 'vietna',
-    country: 'Vietnã',
-    desc: 'Explore paisagens deslumbrantes como a Baía de Ha Long, os charmosos templos de Hoi An e a rica herança culinária e histórica em Hanói.',
-    image: 'https://images.unsplash.com/photo-1528127269322-539801943592?q=80&w=600',
-    packages: 1
   }
 ];
 

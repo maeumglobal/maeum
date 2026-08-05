@@ -4,8 +4,11 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Phone, Mail, MapPin, Send } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function Footer() {
+  const { t } = useLanguage();
+
   return (
     <footer className="w-full border-t border-border/40 bg-background text-white py-16 px-4 md:px-8 mt-auto">
       <div className="mx-auto max-w-7xl grid grid-cols-2 md:grid-cols-7 gap-8 text-xs text-gray-400">
@@ -20,7 +23,7 @@ export default function Footer() {
             className="h-auto w-32 object-contain"
           />
           <p className="leading-relaxed text-[11px] text-gray-400 max-w-xs">
-            Conectamos você ao melhor da Ásia através de experiências autênticas, roteiros personalizados e suporte completo em cada etapa da sua jornada.
+            {t('Conectamos você ao melhor da Ásia através de experiências autênticas, roteiros personalizados e suporte completo em cada etapa da sua jornada.')}
           </p>
           {/* Custom SVG Social Icons matching reference */}
           <div className="flex gap-4 items-center mt-2">
@@ -45,73 +48,71 @@ export default function Footer() {
 
         {/* Column 2 - Coreia do Sul */}
         <div className="flex flex-col gap-4">
-          <h3 className="text-[10px] font-bold uppercase tracking-wider text-accent">Coreia do Sul</h3>
+          <h3 className="text-[10px] font-bold uppercase tracking-wider text-accent">{t('Coreia do Sul')}</h3>
           <ul className="flex flex-col gap-2.5 text-gray-400">
-            <li><Link href="/coreia-do-sul" className="hover:text-accent transition-colors">Visão geral</Link></li>
-            <li><Link href="/coreia-do-sul/experiencias" className="hover:text-accent transition-colors">Experiências</Link></li>
-            <li><Link href="/coreia-do-sul/k-beauty" className="hover:text-accent transition-colors">K-Beauty</Link></li>
-            <li><Link href="/coreia-do-sul/intercambio" className="hover:text-accent transition-colors">Intercâmbio</Link></li>
+            <li><Link href="/coreia-do-sul" className="hover:text-accent transition-colors">{t('Visão geral')}</Link></li>
+            <li><Link href="/coreia-do-sul/experiencias" className="hover:text-accent transition-colors">{t('Experiências')}</Link></li>
+            <li><Link href="/coreia-do-sul/k-beauty" className="hover:text-accent transition-colors">{t('K-Beauty')}</Link></li>
+            <li><Link href="/coreia-do-sul/intercambio" className="hover:text-accent transition-colors">{t('Intercâmbio')}</Link></li>
           </ul>
         </div>
 
         {/* Column 3 - Jornadas */}
         <div className="flex flex-col gap-4">
-          <h3 className="text-[10px] font-bold uppercase tracking-wider text-accent">Jornadas</h3>
+          <h3 className="text-[10px] font-bold uppercase tracking-wider text-accent">{t('Jornadas')}</h3>
           <ul className="flex flex-col gap-2.5 text-gray-400">
-            <li><Link href="/coreia-do-sul/jornadas" className="hover:text-accent transition-colors">Próximas saídas</Link></li>
-            <li><Link href="/coreia-do-sul/jornadas" className="hover:text-accent transition-colors">Cheotnun</Link></li>
-            <li><Link href="/coreia-do-sul/jornadas" className="hover:text-accent transition-colors">Projeto ARMY</Link></li>
-            <li><Link href="/coreia-do-sul/jornadas" className="hover:text-accent transition-colors">Caravana de Verão</Link></li>
+            <li><Link href="/coreia-do-sul/jornadas" className="hover:text-accent transition-colors">{t('Próximas saídas')}</Link></li>
+            <li><Link href="/coreia-do-sul/jornadas" className="hover:text-accent transition-colors">{t('Cheotnun')}</Link></li>
+            <li><Link href="/coreia-do-sul/jornadas" className="hover:text-accent transition-colors">{t('Projeto ARMY')}</Link></li>
+            <li><Link href="/coreia-do-sul/jornadas" className="hover:text-accent transition-colors">{t('Caravana de Verão')}</Link></li>
           </ul>
         </div>
 
         {/* Column 4 - Destinos */}
         <div className="flex flex-col gap-4">
-          <h3 className="text-[10px] font-bold uppercase tracking-wider text-accent">Destinos</h3>
+          <h3 className="text-[10px] font-bold uppercase tracking-wider text-accent">{t('Destinos')}</h3>
           <ul className="flex flex-col gap-2.5 text-gray-400">
-            <li><Link href="/destinos" className="hover:text-accent transition-colors">Coreia do Sul</Link></li>
-            <li><Link href="/destinos" className="hover:text-accent transition-colors">Japão</Link></li>
-            <li><Link href="/destinos" className="hover:text-accent transition-colors">Vietnã</Link></li>
+            <li><Link href="/destinos" className="hover:text-accent transition-colors">{t('Coreia do Sul')}</Link></li>
           </ul>
         </div>
 
         {/* Column 5 - Journal */}
         <div className="flex flex-col gap-4">
-          <h3 className="text-[10px] font-bold uppercase tracking-wider text-accent">Journal</h3>
+          <h3 className="text-[10px] font-bold uppercase tracking-wider text-accent">{t('Journal')}</h3>
           <ul className="flex flex-col gap-2.5 text-gray-400">
-            <li><Link href="/journal" className="hover:text-accent transition-colors">Todos os vídeos</Link></li>
-            <li><Link href="/journal" className="hover:text-accent transition-colors">Guias completos</Link></li>
-            <li><Link href="/journal" className="hover:text-accent transition-colors">Bastidores</Link></li>
-            <li><Link href="/journal" className="hover:text-accent transition-colors">Vlogs</Link></li>
+            <li><Link href="/journal" className="hover:text-accent transition-colors">{t('Todos os vídeos')}</Link></li>
+            <li><Link href="/journal" className="hover:text-accent transition-colors">{t('Guias completos')}</Link></li>
+            <li><Link href="/journal" className="hover:text-accent transition-colors">{t('Bastidores')}</Link></li>
+            <li><Link href="/journal" className="hover:text-accent transition-colors">{t('Vlogs')}</Link></li>
           </ul>
         </div>
 
         {/* Column 7 - Contato */}
         <div className="flex flex-col gap-4">
-          <h3 className="text-[10px] font-bold uppercase tracking-wider text-accent">Contato</h3>
+          <h3 className="text-[10px] font-bold uppercase tracking-wider text-accent">{t('Contato')}</h3>
           <ul className="flex flex-col gap-2.5 text-gray-400">
             <li className="hover:text-accent transition-colors">contato@maeumglobal.com.br</li>
             <li className="hover:text-accent transition-colors">+55 (41) 98709-4799</li>
-            <li className="hover:text-accent transition-colors">Atendimento via WhatsApp</li>
+            <li className="hover:text-accent transition-colors">{t('Atendimento via WhatsApp')}</li>
           </ul>
         </div>
       </div>
 
       <div className="mx-auto max-w-7xl border-t border-gray-800 mt-12 pt-6 flex flex-col sm:flex-row items-center justify-between text-[10px] text-gray-500 gap-4">
-        <p>&copy; {new Date().getFullYear()} MaeumGlobal Agency. Todos os direitos reservados.</p>
+        <p>&copy; {new Date().getFullYear()} MaeumGlobal Agency. {t('Todos os direitos reservados.')}</p>
         <div className="flex items-center gap-1">
-          <span>Orgulhosamente desenvolvido por</span>
+          <span>{t('Orgulhosamente desenvolvido por')}</span>
           <a className="font-semibold text-gray-200 hover:text-accent transition-colors duration-200" href="https://www.voltris.com.br" target="_blank" rel="noreferrer">Voltris</a>
         </div>
         <div className="flex gap-6 mt-4 sm:mt-0">
-          <Link href="/politica-de-privacidade" className="hover:text-accent transition-colors">Política de Privacidade</Link>
-          <Link href="/termos-de-uso" className="hover:text-accent transition-colors">Termos de Uso</Link>
-          <Link href="/reembolso" className="hover:text-accent transition-colors">Reembolso</Link>
+          <Link href="/politica-de-privacidade" className="hover:text-accent transition-colors">{t('Política de Privacidade')}</Link>
+          <Link href="/termos-de-uso" className="hover:text-accent transition-colors">{t('Termos de Uso')}</Link>
+          <Link href="/reembolso" className="hover:text-accent transition-colors">{t('Reembolso')}</Link>
         </div>
       </div>
       
       <div className="mx-auto max-w-7xl text-center text-[10px] text-gray-500 mt-6">
-        <span>Em parceria com a </span>
+        <span>{t('Em parceria com a ')}</span>
         <a href="https://www.cheotnun.com" target="_blank" rel="noreferrer" className="font-semibold text-gray-200 hover:text-accent transition-colors duration-200">Cheotnun</a>
       </div>
     </footer>

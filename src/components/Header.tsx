@@ -1,10 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Menu, X, User, LogOut, LayoutDashboard } from 'lucide-react';
+import { Menu, X, User, LogOut, LayoutDashboard, Check } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { FlagES, FlagPT, FlagEN } from '@/components/Flags';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 
@@ -12,7 +14,24 @@ export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const { user: currentUser, logout } = useAuth();
+  const { locale, setLocale, t, isModalOpen, setIsModalOpen } = useLanguage();
+
+  // Close modals when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Element;
+      if (isModalOpen && !target.closest('[data-language-selector]')) {
+        setIsModalOpen(false);
+      }
+      if (isUserMenuOpen && !target.closest('[data-user-selector]')) {
+        setIsUserMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isModalOpen, setIsModalOpen, isUserMenuOpen]);
 
   const handleLogout = () => {
     logout();
@@ -27,13 +46,13 @@ export default function Header() {
   };
 
   const navItems = [
-    { label: 'Home', href: '/' },
-    { label: 'Destinos', href: '/destinos' },
-    { label: 'Experiências', href: '/experiencias' },
-    { label: 'Intercâmbio', href: '/coreia-do-sul/intercambio' },
-    { label: 'Pacotes', href: '/pacotes' },
-    { label: 'Sobre Nós', href: '/sobre' },
-    { label: 'Contato', href: '/contato' }
+    { label: t('Home'), href: '/' },
+    { label: t('Destinos'), href: '/destinos' },
+    { label: t('Experiências'), href: '/experiencias' },
+    { label: t('Intercâmbio'), href: '/coreia-do-sul/intercambio' },
+    { label: t('Pacotes'), href: '/pacotes' },
+    { label: t('Sobre Nós'), href: '/sobre' },
+    { label: t('Contato'), href: '/contato' }
   ];
 
   return (
@@ -74,35 +93,89 @@ export default function Header() {
 
         {/* Action Buttons */}
         <div className="hidden md:flex items-center gap-4">
+          
+          {/* Language Selector */}
+          <div className="relative">
+            <button 
+              onClick={() => setIsModalOpen(!isModalOpen)}
+              className="flex items-center gap-1.5 text-foreground/80 hover:text-primary transition-colors px-2 py-1.5 border border-transparent hover:border-border rounded-full"
+              data-language-selector
+            >
+              {locale === 'es' ? <FlagES /> : locale === 'pt' ? <FlagPT /> : <FlagEN />}
+              <span className="text-xs font-bold">{locale === 'es' ? 'ES' : locale === 'pt' ? 'PT' : 'EN'}</span>
+            </button>
+            
+            {/* Language Modal */}
+            {isModalOpen && (
+              <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-border bg-card p-2 shadow-lg z-50 animate-in fade-in slide-in-from-top-2 duration-150" data-language-selector>
+                <div className="flex flex-col gap-1">
+                  <button
+                    onClick={() => setLocale('pt')}
+                    className={`flex items-center gap-2.5 w-full px-3 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-colors ${locale === 'pt' ? 'bg-accent/15 text-accent' : 'text-foreground/80 hover:text-foreground hover:bg-white/5'}`}
+                  >
+                    <FlagPT />
+                    <span>{t('Português')}</span>
+                    {locale === 'pt' && <Check className="h-3.5 w-3.5 ml-auto" />}
+                  </button>
+                  <button
+                    onClick={() => setLocale('es')}
+                    className={`flex items-center gap-2.5 w-full px-3 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-colors ${locale === 'es' ? 'bg-accent/15 text-accent' : 'text-foreground/80 hover:text-foreground hover:bg-white/5'}`}
+                  >
+                    <FlagES />
+                    <span>{t('Espanhol')}</span>
+                    {locale === 'es' && <Check className="h-3.5 w-3.5 ml-auto" />}
+                  </button>
+                  <button
+                    onClick={() => setLocale('en')}
+                    className={`flex items-center gap-2.5 w-full px-3 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-colors ${locale === 'en' ? 'bg-accent/15 text-accent' : 'text-foreground/80 hover:text-foreground hover:bg-white/5'}`}
+                  >
+                    <FlagEN />
+                    <span>{t('Inglês')}</span>
+                    {locale === 'en' && <Check className="h-3.5 w-3.5 ml-auto" />}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* User profile dropdown or Login Actions */}
           {currentUser ? (
-            <div className="relative group">
-              <button className="flex items-center gap-1.5 px-4 py-1.5 border border-border rounded-full text-xs hover:bg-muted transition-all">
+            <div className="relative" data-user-selector>
+              <button 
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                className={`flex items-center gap-1.5 px-4 py-1.5 border rounded-full text-xs transition-all ${isUserMenuOpen ? 'bg-accent/15 border-accent/30' : 'border-border hover:bg-white/5'}`}
+              >
                 <User className="h-3.5 w-3.5 text-accent" />
-                <span className="max-w-[100px] truncate">{currentUser.name}</span>
+                <span className="max-w-[100px] truncate text-foreground">{currentUser.name}</span>
               </button>
-              <div className="absolute right-0 top-full mt-1.5 w-48 rounded-md border border-border bg-card p-1 shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-150">
-                <Link
-                  href={
-                    currentUser.role === 'super_admin' || currentUser.role === 'admin'
-                      ? '/dashboard/admin'
-                      : currentUser.role === 'consultora'
-                      ? '/dashboard/consultora'
-                      : '/dashboard/cliente'
-                  }
-                  className="w-full text-left px-3 py-2 text-xs rounded hover:bg-primary/5 hover:text-primary transition-colors flex items-center gap-2 text-foreground/80"
-                >
-                  <LayoutDashboard className="h-4 w-4 text-accent" />
-                  <span>Meu Painel</span>
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="w-full text-left px-3 py-2 text-xs rounded hover:bg-red-50 hover:text-red-650 transition-colors flex items-center gap-2 text-red-500 border-t border-border mt-1"
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span>Sair da Conta</span>
-                </button>
-              </div>
+              
+              {isUserMenuOpen && (
+                <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-border bg-card p-2 shadow-lg z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                  <div className="flex flex-col gap-1">
+                    <Link
+                      href={
+                        currentUser.role === 'super_admin' || currentUser.role === 'admin'
+                          ? '/dashboard/admin'
+                          : currentUser.role === 'consultora'
+                          ? '/dashboard/consultora'
+                          : '/dashboard/cliente'
+                      }
+                      onClick={() => setIsUserMenuOpen(false)}
+                      className="w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-accent/15 hover:text-accent transition-colors flex items-center gap-2 text-foreground/80"
+                    >
+                      <LayoutDashboard className="h-4 w-4 text-accent" />
+                      <span>{t('Meu Painel')}</span>
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-red-500/10 hover:text-red-500 transition-colors flex items-center gap-2 text-red-500/80 border-t border-border mt-1"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      <span>{t('Sair da Conta')}</span>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="flex items-center gap-2.5">
@@ -110,20 +183,20 @@ export default function Header() {
                 href="/login"
                 className="text-xs font-semibold text-foreground/80 hover:text-primary px-3 py-1.5 transition-colors"
               >
-                Entrar
+                {t('Entrar')}
               </Link>
               <Link
                 href="/login"
                 className="bg-primary hover:bg-accent-hover text-white text-xs font-semibold px-4 py-2 rounded-full shadow-sm transition-transform hover:scale-105"
               >
-                Cadastrar
+                {t('Cadastrar')}
               </Link>
             </div>
           )}
 
           <Link href="/contato">
             <Button size="sm" className="bg-primary hover:bg-accent-hover text-white text-xs font-semibold rounded-full px-5">
-              SOLICITAR ORÇAMENTO
+              {t('SOLICITAR ORÇAMENTO')}
             </Button>
           </Link>
         </div>
@@ -157,11 +230,38 @@ export default function Header() {
 
           <div className="h-px bg-border/50" />
 
+          {/* Mobile Language Selector */}
+          <div className="flex justify-center gap-4 py-2">
+            <button
+              onClick={() => setLocale('pt')}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-colors ${locale === 'pt' ? 'bg-accent/15 text-accent border border-accent/20' : 'text-foreground/60 border border-transparent'}`}
+            >
+              <FlagPT />
+              <span className="text-xs font-bold">PT</span>
+            </button>
+            <button
+              onClick={() => setLocale('es')}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-colors ${locale === 'es' ? 'bg-accent/15 text-accent border border-accent/20' : 'text-foreground/60 border border-transparent'}`}
+            >
+              <FlagES />
+              <span className="text-xs font-bold">ES</span>
+            </button>
+            <button
+              onClick={() => setLocale('en')}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-colors ${locale === 'en' ? 'bg-accent/15 text-accent border border-accent/20' : 'text-foreground/60 border border-transparent'}`}
+            >
+              <FlagEN />
+              <span className="text-xs font-bold">EN</span>
+            </button>
+          </div>
+          
+          <div className="h-px bg-border/50" />
+
           {/* User actions on Mobile */}
           {currentUser ? (
             <div className="flex flex-col gap-3">
               <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                Sessão: {currentUser.name} ({currentUser.role})
+                {t('Sessão:')} {currentUser.name} ({currentUser.role})
               </div>
               <Link
                 href={getDashboardLink()}
@@ -169,14 +269,14 @@ export default function Header() {
                 className="flex items-center gap-2 text-sm text-foreground/80 py-1"
               >
                 <LayoutDashboard className="h-4 w-4 text-accent" />
-                Meu Painel
+                {t('Meu Painel')}
               </Link>
               <button
                 onClick={handleLogout}
                 className="flex items-center gap-2 text-sm text-red-500 py-1 text-left"
               >
                 <LogOut className="h-4 w-4" />
-                Sair da Conta
+                {t('Sair da Conta')}
               </button>
             </div>
           ) : (
@@ -185,20 +285,20 @@ export default function Header() {
                 href="/login"
                 className="text-center border border-border hover:bg-muted text-secondary font-bold text-xs py-2.5 rounded-xl transition-all"
               >
-                Entrar
+                {t('Entrar')}
               </Link>
               <Link
                 href="/login"
                 className="text-center bg-primary hover:bg-accent-hover text-white font-bold text-xs py-2.5 rounded-xl transition-all"
               >
-                Cadastrar
+                {t('Cadastrar')}
               </Link>
             </div>
           )}
 
           <Link href="/contato" onClick={() => setMobileMenuOpen(false)}>
             <Button className="w-full bg-primary hover:bg-accent-hover text-white rounded-full">
-              SOLICITAR ORÇAMENTO
+              {t('SOLICITAR ORÇAMENTO')}
             </Button>
           </Link>
         </div>

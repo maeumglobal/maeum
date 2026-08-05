@@ -24,15 +24,6 @@ const POSTS = [
     date: '28 de Maio, 2026',
     category: 'GASTRONOMIA',
     image: 'https://images.unsplash.com/photo-1553621042-f6e147245754?q=80&w=600'
-  },
-  {
-    id: 'p-3',
-    title: 'Kyoto: Um roteiro de 3 dias pelos templos mais bonitos',
-    summary: 'Dicas práticas para visitar o Pavilhão Dourado (Kinkaku-ji), o santuário Fushimi Inari com seus milhares de toriis e o místico Templo de Prata.',
-    author: 'Mariana Santos',
-    date: '15 de Maio, 2026',
-    category: 'JAPÃO',
-    image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=600'
   }
 ];
 

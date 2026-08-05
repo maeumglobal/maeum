@@ -91,7 +91,7 @@ export default function PoliticaPrivacidadePage() {
       title: '8. Transferências Internacionais',
       content: `Como operamos viagens para a Ásia, seus dados podem ser transferidos para:
       
-      • Coreia do Sul, Japão, Vietnã e outros países asiáticos
+      • Coreia do Sul e outros países asiáticos
       • Fornecedores e parceiros internacionais de turismo
       
       Garantimos que todas as transferências sigam padrões adequados de proteção, 

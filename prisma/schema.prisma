@@ -10,49 +10,79 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ─────────────────────────────────────────────
+// USUÁRIOS & EQUIPE
+// ─────────────────────────────────────────────
 model User {
-  id        String   @id @default(uuid())
-  name      String
-  email     String   @unique
-  role      String   @default("customer") // super_admin, admin, consultora, customer
-  avatarUrl String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String?
+  role         String   @default("customer") // super_admin, admin, consultora, customer
+  phone        String?
+  avatarUrl    String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  assignedLeads Lead[]         @relation("ConsultantLeads")
-  chats         Chat[]         @relation("ConsultantChats")
-  proposals     Proposal[]     @relation("ConsultantProposals")
-  notifications Notification[] @relation("UserNotifications")
+  assignedLeads  Lead[]         @relation("ConsultantLeads")
+  chats          Chat[]         @relation("ConsultantChats")
+  proposals      Proposal[]     @relation("ConsultantProposals")
+  notifications  Notification[] @relation("UserNotifications")
+  adminLogs      AdminLog[]     @relation("AdminUserLogs")
+  clientBookings Booking[]      @relation("ClientBookings")
 }
 
+// ─────────────────────────────────────────────
+// NOTIFICAÇÕES
+// ─────────────────────────────────────────────
 model Notification {
   id        String   @id @default(uuid())
   userId    String
   title     String
   message   String
+  type      String   @default("info") // info, success, warning, error
+  priority  String   @default("normal") // low, normal, high, urgent
+  category  String   @default("system") // system, booking, payment, lead, marketing
   isRead    Boolean  @default(false)
   linkUrl   String?
+  iconName  String?
   createdAt DateTime @default(now())
+  readAt    DateTime?
 
-  user      User     @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
 }
 
+// ─────────────────────────────────────────────
+// LEADS & CRM
+// ─────────────────────────────────────────────
 model Lead {
-  id            String   @id @default(uuid())
-  name          String
-  email         String
-  phone         String?
-  destination   String?
-  budget        Float?
-  status        String   @default("lead") // lead, contact, proposal, negotiation, approval, payment, trip_preparation, trip_completed
-  notes         String?
-  consultantId  String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @default("")
+  phone        String?
+  destination  String?
+  budget       Float?
+  status       String   @default("novo") // novo, atendimento, proposta, fechado, perdido
+  notes        String?
+  origin       String?
+  consultantId String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  consultant    User?    @relation("ConsultantLeads", fields: [consultantId], references: [id])
+  consultant User? @relation("ConsultantLeads", fields: [consultantId], references: [id])
+
+  @@index([status])
+  @@index([consultantId])
+  @@index([createdAt])
 }
 
+// ─────────────────────────────────────────────
+// CHAT & MENSAGENS
+// ─────────────────────────────────────────────
 model Chat {
   id           String    @id @default(uuid())
   consultantId String
@@ -60,45 +90,66 @@ model Chat {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  consultant   User      @relation("ConsultantChats", fields: [consultantId], references: [id])
-  messages     ChatMessage[]
+  consultant User        @relation("ConsultantChats", fields: [consultantId], references: [id])
+  messages   ChatMessage[]
+
+  @@index([customerId])
 }
 
 model ChatMessage {
-  id        String   @id @default(uuid())
-  chatId    String
-  senderId  String
-  content   String
-  createdAt DateTime @default(now())
+  id             String   @id @default(uuid())
+  chatId         String
+  senderId       String
+  content        String
+  attachmentUrl  String?
+  attachmentType String?
+  readAt         DateTime?
+  createdAt      DateTime @default(now())
 
-  chat      Chat     @relation(fields: [chatId], references: [id])
+  chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  @@index([chatId])
 }
 
+// ─────────────────────────────────────────────
+// PROPOSTAS
+// ─────────────────────────────────────────────
 model Proposal {
   id           String   @id @default(uuid())
   title        String
   totalValue   Float
-  status       String   @default("pending") // pending, approved, paid, rejected
+  status       String   @default("draft") // draft, sent, approved, paid, rejected
+  uniqueLink   String?  @unique
   consultantId String
   customerId   String
+  leadId       String?
+  version      Int      @default(1)
+  notes        String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  consultant   User     @relation("ConsultantProposals", fields: [consultantId], references: [id])
-  items        ProposalItem[]
+  consultant User          @relation("ConsultantProposals", fields: [consultantId], references: [id])
+  items      ProposalItem[]
+  bookings   Booking[]
+
+  @@index([customerId])
+  @@index([status])
 }
 
 model ProposalItem {
   id         String   @id @default(uuid())
   proposalId String
   name       String
-  type       String   // package, extra, flight, etc
+  type       String   // package, extra, flight, insurance, ktx, wifi
   price      Float
   details    String?
 
-  proposal   Proposal @relation(fields: [proposalId], references: [id])
+  proposal Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
 }
 
+// ─────────────────────────────────────────────
+// PACOTES & PRODUTOS
+// ─────────────────────────────────────────────
 model Package {
   id          String   @id @default(uuid())
   title       String
@@ -106,52 +157,485 @@ model Package {
   destination String?
   price       Float
   description String?
+  gallery     String   @default("[]") // JSON array as string
+  itinerary   String   @default("[]") // JSON array as string
+  included    String   @default("[]")
+  notIncluded String   @default("[]")
   status      String   @default("active") // active, draft, archived
-  gallery     String // JSON array as string
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  bookings Booking[]
+
+  @@index([status])
+  @@index([destination])
 }
 
+// ─────────────────────────────────────────────
+// RESERVAS
+// ─────────────────────────────────────────────
 model Booking {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   clientId    String
   packageId   String?
   proposalId  String?
-  status      String   @default("confirmed") // pending, confirmed, cancelled, completed
+  status      String    @default("confirmed") // pending, confirmed, cancelled, completed
   startDate   DateTime?
   endDate     DateTime?
   totalPrice  Float?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  client   User      @relation("ClientBookings", fields: [clientId], references: [id])
+  package  Package?  @relation(fields: [packageId], references: [id])
+  proposal Proposal? @relation(fields: [proposalId], references: [id])
+  payments Payment[]
+  timeline BookingTimeline[]
+
+  @@index([clientId])
+  @@index([status])
+}
+
+model BookingTimeline {
+  id          String   @id @default(uuid())
+  bookingId   String
+  eventDate   DateTime
+  eventTime   String?
+  title       String
+  description String?
   createdAt   DateTime @default(now())
 
-  payments    Payment[]
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
 }
 
+// ─────────────────────────────────────────────
+// PAGAMENTOS
+// ─────────────────────────────────────────────
 model Payment {
-  id              String   @id @default(uuid())
+  id              String    @id @default(uuid())
   bookingId       String
   clientId        String?
-  stripeSessionId String?  @unique
+  stripeSessionId String?   @unique
+  stripePaymentId String?
   amount          Float
-  status          String   @default("pending") // pending, paid, failed, refunded
-  paymentMethod   String?  // credit_card, pix, boleto
-  createdAt       DateTime @default(now())
+  status          String    @default("pending") // pending, paid, failed, refunded
+  paymentMethod   String?   // credit_card, pix, boleto
+  dueDate         DateTime?
   paidAt          DateTime?
+  createdAt       DateTime  @default(now())
 
-  booking         Booking  @relation(fields: [bookingId], references: [id])
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
+  @@index([status])
+  @@index([clientId])
 }
 
-model Partner {
-  id           String   @id @default(uuid())
-  name         String
-  category     String?
-  contactEmail String?
-  status       String   @default("active")
+// ─────────────────────────────────────────────
+// EXPERIÊNCIAS & CATEGORIAS
+// ─────────────────────────────────────────────
+model Category {
+  id          String   @id @default(uuid())
+  slug        String   @unique
+  name        String
+  destination String   @default("Coreia do Sul")
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  experiences ExperienceCategory[]
+
+  @@index([isActive])
 }
 
 model Experience {
+  id           String   @id @default(uuid())
+  slug         String   @unique
+  title        String
+  subtitle     String?
+  location     String   @default("Seul")
+  region       String   @default("Seul")
+  city         String   @default("Seul")
+  description  String?
+  highlights   String   @default("[]") // JSON
+  included     String   @default("[]") // JSON
+  durationHours Float   @default(2)
+  pricePerPerson Float  @default(0)
+  mainImage    String?
+  gallery      String   @default("[]") // JSON
+  videoUrl     String?
+  videoEmbed   String?
+  status       String   @default("active") // active, inactive, draft
+  bookingType  String   @default("direct") // direct, request
+  availableFrom DateTime?
+  partnerId    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  partner    Partner?  @relation(fields: [partnerId], references: [id])
+  categories ExperienceCategory[]
+
+  @@index([status])
+  @@index([bookingType])
+}
+
+model ExperienceCategory {
+  experienceId String
+  categoryId   String
+
+  experience Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+  category   Category   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([experienceId, categoryId])
+}
+
+// ─────────────────────────────────────────────
+// K-BEAUTY
+// ─────────────────────────────────────────────
+model KbeautyExperience {
+  id                  String   @id @default(uuid())
+  slug                String   @unique
+  title               String
+  subtitle            String?
+  location            String   @default("Seul")
+  description         String?
+  highlights          String   @default("[]") // JSON
+  included            String   @default("[]") // JSON
+  durationHours       Float    @default(2)
+  pricePerPerson      Float    @default(0)
+  mainImage           String?
+  gallery             String   @default("[]") // JSON
+  status              String   @default("active")
+  bookingType         String   @default("request")
+  isPartnerExperience Boolean  @default(false)
+  isIncludedInJourney Boolean  @default(false)
+  partnerId           String?
+  availableFrom       DateTime?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([status])
+}
+
+// ─────────────────────────────────────────────
+// PARCEIROS
+// ─────────────────────────────────────────────
+model Partner {
+  id           String   @id @default(uuid())
+  name         String
+  category     String?  // kbeauty, exchange, hotel, tour
+  contactEmail String?
+  phone        String?
+  website      String?
+  logoUrl      String?
+  description  String?
+  status       String   @default("active")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  experiences Experience[]
+
+  @@index([status])
+  @@index([category])
+}
+
+// ─────────────────────────────────────────────
+// INTERCÂMBIO
+// ─────────────────────────────────────────────
+model ExchangeInstitution {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  description String?
+  country     String   @default("Coreia do Sul")
+  website     String?
+  logoUrl     String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  campuses ExchangeCampus[]
+}
+
+model ExchangeCampus {
+  id            String   @id @default(uuid())
+  institutionId String
+  name          String
+  city          String
+  location      String?
+  description   String?
+  mainImage     String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  institution ExchangeInstitution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  programs    ExchangeProgram[]
+
+  @@index([institutionId])
+}
+
+model ExchangeProgram {
+  id                  String   @id @default(uuid())
+  campusId            String
+  name                String
+  slug                String   @unique
+  description         String?
+  durationWeeksMin    Int      @default(1)
+  durationWeeksMax    Int      @default(52)
+  classesPerWeek      Int      @default(20)
+  levelRequired       String   @default("Todos os níveis")
+  pricingTiers        String   @default("[]") // JSON
+  includesEnrollment  Boolean  @default(true)
+  enrollmentFee       Float    @default(0)
+  includesMaterial    Boolean  @default(false)
+  materialFee         Float    @default(0)
+  culturalActivities  Boolean  @default(true)
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+
+  campus ExchangeCampus @relation(fields: [campusId], references: [id], onDelete: Cascade)
+
+  @@index([campusId])
+}
+
+// ─────────────────────────────────────────────
+// JORNADAS
+// ─────────────────────────────────────────────
+model Journey {
+  id              String   @id @default(uuid())
+  slug            String   @unique
+  title           String
+  subtitle        String?
+  concept         String?
+  destinations    String   @default("[]") // JSON array
+  durationDays    Int      @default(10)
+  totalSpots      Int      @default(15)
+  accommodation   String?
+  pricePerPerson  Float    @default(0)
+  priceCurrency   String   @default("BRL")
+  mainImage       String?
+  gallery         String   @default("[]") // JSON
+  videoUrl        String?
+  videoEmbed      String?
+  included        String   @default("[]") // JSON
+  notIncluded     String   @default("[]") // JSON
+  itinerary       String   @default("[]") // JSON
+  highlights      String   @default("[]") // JSON
+  paymentOptions  String   @default("{}") // JSON
+  status          String   @default("active") // active, draft, archived
+  category        String   @default("premium") // premium, army
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  departures JourneyDeparture[]
+
+  @@index([status])
+  @@index([category])
+}
+
+model JourneyDeparture {
+  id              String   @id @default(uuid())
+  journeyId       String
+  startDate       DateTime
+  endDate         DateTime
+  totalSpots      Int      @default(15)
+  availableSpots  Int      @default(15)
+  status          String   @default("available") // available, sold_out, cancelled
+  notes           String?
+  priceAdjustment Float    @default(0)
+  createdAt       DateTime @default(now())
+
+  journey Journey @relation(fields: [journeyId], references: [id], onDelete: Cascade)
+
+  @@index([journeyId])
+  @@index([startDate])
+}
+
+// ─────────────────────────────────────────────
+// BLOG
+// ─────────────────────────────────────────────
+model BlogPost {
+  id          String    @id @default(uuid())
+  slug        String    @unique
+  title       String
+  excerpt     String?
+  content     String    @default("")
+  author      String    @default("Maeum Editor")
+  coverImage  String?
+  tags        String    @default("[]") // JSON
+  status      String    @default("draft") // draft, published, archived
+  seoTitle    String?
+  seoDesc     String?
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([status])
+  @@index([publishedAt])
+}
+
+// ─────────────────────────────────────────────
+// DEPOIMENTOS
+// ─────────────────────────────────────────────
+model Testimonial {
+  id          String   @id @default(uuid())
+  name        String
+  destination String?
+  text        String
+  rating      Int      @default(5)
+  avatarUrl   String?
+  status      String   @default("pending") // pending, approved, rejected
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([status])
+}
+
+// ─────────────────────────────────────────────
+// FAQ
+// ─────────────────────────────────────────────
+model FaqItem {
+  id        String   @id @default(uuid())
+  question  String
+  answer    String
+  category  String   @default("Geral")
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+  @@index([isActive])
+}
+
+// ─────────────────────────────────────────────
+// CONFIGURAÇÕES DO SITE
+// ─────────────────────────────────────────────
+model SiteConfig {
+  id        String   @id @default(uuid())
+  section   String   // brand, contact, social, seo, smtp, integrations, legal
+  configKey String
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([section, configKey])
+  @@index([section])
+}
+
+// ─────────────────────────────────────────────
+// NAVEGAÇÃO
+// ─────────────────────────────────────────────
+model NavigationItem {
   id             String   @id @default(uuid())
-  partnerId      String?
-  title          String
-  pricePerPerson Float?
-  status         String   @default("active")
+  parentId       String?
+  navigationType String   @default("main") // main, footer
+  label          String
+  url            String
+  icon           String?
+  sortOrder      Int      @default(0)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  @@index([navigationType, isActive])
+}
+
+// ─────────────────────────────────────────────
+// CMS PAGES
+// ─────────────────────────────────────────────
+model CmsPage {
+  id           String   @id @default(uuid())
+  title        String
+  slug         String   @unique
+  content      String   @default("")
+  seoTitle     String?
+  seoDesc      String?
+  status       String   @default("draft") // draft, published
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([status])
+}
+
+// ─────────────────────────────────────────────
+// CMS BLOCKS (PAGE BUILDER)
+// ─────────────────────────────────────────────
+model CmsBlock {
+  id        String   @id @default(uuid())
+  pageName  String   @default("home")
+  sectionId String
+  blockType String
+  content   String   @default("{}") // JSON
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([pageName, isActive])
+}
+
+// ─────────────────────────────────────────────
+// DESTAQUES / DESTINATIONS
+// ─────────────────────────────────────────────
+model Destination {
+  id             String   @id @default(uuid())
+  name           String
+  slug           String   @unique
+  country        String
+  description    String?
+  mainImage      String?
+  gallery        String   @default("[]") // JSON
+  mapLat         Float?
+  mapLng         Float?
+  isFeatured     Boolean  @default(true)
+  seoTitle       String?
+  seoDescription String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([isFeatured])
+}
+
+// ─────────────────────────────────────────────
+// LOGS ADMINISTRATIVOS
+// ─────────────────────────────────────────────
+model AdminLog {
+  id          String   @id @default(uuid())
+  userId      String
+  action      String   // create, update, delete, login, logout, status_change, etc.
+  entity      String   // lead, package, experience, journey, user, etc.
+  entityId    String?
+  details     String?  // JSON com detalhes
+  ipAddress   String?
+  userAgent   String?
+  result      String   @default("success") // success, error
+  createdAt   DateTime @default(now())
+
+  user User @relation("AdminUserLogs", fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([action])
+  @@index([entity])
+  @@index([createdAt])
+}
+
+// ─────────────────────────────────────────────
+// DOCUMENTOS DOS CLIENTES
+// ─────────────────────────────────────────────
+model Document {
+  id           String   @id @default(uuid())
+  clientId     String
+  uploadedById String
+  fileName     String
+  fileUrl      String
+  fileSize     Int?
+  mimeType     String?
+  category     String   @default("general") // passport, ticket, insurance, visa, other
+  notes        String?
+  createdAt    DateTime @default(now())
+
+  @@index([clientId])
+  @@index([category])
 }

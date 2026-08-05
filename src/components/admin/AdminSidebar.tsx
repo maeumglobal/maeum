@@ -1,11 +1,9 @@
-/* eslint-disable @next/next/no-img-element */
 'use client';
 
 import React, { useState } from 'react';
 import { 
   LayoutDashboard, ClipboardList, User, Package, CalendarCheck, 
-  CreditCard, Link as LinkIcon, Wallet, Compass, Users, 
-  Megaphone, FileText, UserCog, BarChart2, Settings, LogOut, ChevronDown
+  CreditCard, Compass, Users, FileText, UserCog, Settings, LogOut, ChevronDown, Activity
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -20,35 +18,25 @@ export default function AdminSidebar({ activeTab, onTabChange }: { activeTab: st
 
   const navItems = [
     { id: 'dashboard_home', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'leads', label: 'Consultas & Leads', icon: ClipboardList },
-    { id: 'users', label: 'Clientes', icon: User }, // reused users for now
-    { id: 'packages', label: 'Pacotes & Produtos', icon: Package },
+    { id: 'leads', label: 'CRM / Leads', icon: ClipboardList },
+    { id: 'users', label: 'Clientes e Equipe', icon: UserCog },
     { id: 'reservas', label: 'Reservas', icon: CalendarCheck },
     { 
-      id: 'finance_group', label: 'Pagamentos', icon: CreditCard,
+      id: 'produtos', label: 'Produtos', icon: Package,
       subItems: [
-        { id: 'stats', label: 'Visão Geral' },
-        { id: 'links_pagamento', label: 'Links de Pagamento' }
+        { id: 'jornadas', label: 'Jornadas (Pacotes)' },
+        { id: 'experiencias', label: 'Experiências' },
+        { id: 'categorias', label: 'Categorias' }
       ]
     },
-    { id: 'links_pagamento', label: 'Links de Pagamento', icon: LinkIcon },
     { 
-      id: 'finances', label: 'Financeiro', icon: Wallet,
+      id: 'cms', label: 'Conteúdo (CMS)', icon: FileText,
       subItems: [
-        { id: 'stats', label: 'Relatórios' }
+        { id: 'blog', label: 'Blog & Artigos' },
+        { id: 'depoimentos_faq', label: 'Depoimentos & FAQ' }
       ]
     },
-    { id: 'experiencias', label: 'Experiências', icon: Compass },
-    { id: 'parceiros', label: 'Parceiros', icon: Users },
-    { 
-      id: 'marketing', label: 'Marketing', icon: Megaphone,
-      subItems: [
-        { id: 'leads', label: 'E-mail Marketing' }
-      ]
-    },
-    { id: 'cmspages', label: 'Conteúdos do Site', icon: FileText },
-    { id: 'users_team', label: 'Usuários & Equipe', icon: UserCog }, // mapped to users
-    { id: 'stats_reports', label: 'Relatórios', icon: BarChart2 }, // mapped to stats
+    { id: 'logs', label: 'Auditoria de Logs', icon: Activity },
     { id: 'visual', label: 'Configurações', icon: Settings },
   ];
 
@@ -65,7 +53,7 @@ export default function AdminSidebar({ activeTab, onTabChange }: { activeTab: st
           <div className="text-center">
             <h1 className="text-[var(--admin-primary)] font-bold tracking-widest text-sm mb-1 uppercase">Maeum</h1>
             <h2 className="text-[var(--admin-primary)] font-light tracking-[0.2em] text-[10px] mb-2 uppercase">Global</h2>
-            <div className="bg-[var(--admin-accent-red)] text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">Admin</div>
+            <div className="bg-[var(--admin-accent-red)] text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">Admin Pro</div>
           </div>
         </div>
       </div>
@@ -75,8 +63,8 @@ export default function AdminSidebar({ activeTab, onTabChange }: { activeTab: st
           <ul className="flex flex-col gap-1">
             {navItems.map((item) => {
               const Icon = item.icon;
-              const isActive = activeTab === item.id || (item.id === 'users_team' && activeTab === 'users') || (item.id === 'stats_reports' && activeTab === 'stats');
-              const isExpanded = expandedMenus[item.id];
+              const isActive = activeTab === item.id || (item.subItems && item.subItems.some(sub => sub.id === activeTab));
+              const isExpanded = expandedMenus[item.id] || isActive;
               
               return (
                 <li key={item.id} className="flex flex-col">
@@ -85,10 +73,7 @@ export default function AdminSidebar({ activeTab, onTabChange }: { activeTab: st
                       if (item.subItems) {
                         toggleMenu(item.id);
                       } else {
-                        // For mapping some items to existing tabs
-                        if (item.id === 'users_team') onTabChange('users');
-                        else if (item.id === 'stats_reports') onTabChange('stats');
-                        else onTabChange(item.id);
+                        onTabChange(item.id);
                       }
                     }}
                     className={`flex items-center justify-between w-full px-3 py-2.5 rounded-lg transition-all duration-200 ${
@@ -119,7 +104,7 @@ export default function AdminSidebar({ activeTab, onTabChange }: { activeTab: st
                             <button
                               onClick={() => onTabChange(sub.id)}
                               className={`w-full text-left py-1.5 text-xs transition-colors ${
-                                activeTab === sub.id ? 'text-[var(--admin-primary)]' : 'text-[var(--admin-text-muted)] hover:text-white'
+                                activeTab === sub.id ? 'text-[var(--admin-primary)] font-semibold' : 'text-[var(--admin-text-muted)] hover:text-[var(--admin-text-main)]'
                               }`}
                             >
                               {sub.label}
@@ -136,19 +121,17 @@ export default function AdminSidebar({ activeTab, onTabChange }: { activeTab: st
         </nav>
       </div>
 
-      {/* User Profile */}
       <div className="p-4 border-t border-[var(--admin-border)]">
         <div className="flex items-center justify-between mb-4 px-2">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-[var(--admin-border)] overflow-hidden">
-              <img src="https://i.pravatar.cc/150?u=priscila" alt="Admin" className="w-full h-full object-cover" />
+              <img src={user?.avatar_url || "https://i.pravatar.cc/150?u=admin"} alt="Admin" className="w-full h-full object-cover" />
             </div>
             <div className="flex flex-col">
-              <span className="text-[var(--admin-text-main)] text-sm font-bold">{user?.name || 'Priscila A.'}</span>
-              <span className="text-[var(--admin-text-muted)] text-[10px]">Administradora</span>
+              <span className="text-[var(--admin-text-main)] text-sm font-bold truncate max-w-[100px]">{user?.name || 'Administrador'}</span>
+              <span className="text-[var(--admin-text-muted)] text-[10px]">{user?.role || 'SYSTEM'}</span>
             </div>
           </div>
-          <ChevronDown className="w-4 h-4 text-[var(--admin-text-muted)]" />
         </div>
         <button 
           onClick={logout}
