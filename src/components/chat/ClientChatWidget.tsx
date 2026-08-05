@@ -58,7 +58,7 @@ export default function ClientChatWidget() {
 
   const handleStartChat = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.email || !activeConsultant) return;
+    if (!formData.name || !formData.email) return;
     
     setIsStarting(true);
     const initialMessage = `Olá, meu nome é ${formData.name}. Gostaria de iniciar um atendimento!`;
@@ -67,7 +67,7 @@ export default function ClientChatWidget() {
       name: formData.name,
       email: formData.email,
       message: initialMessage,
-      consultantId: activeConsultant.id // Inicia com a consultora selecionada
+      consultantId: activeConsultant?.id // Inicia com a consultora selecionada, se houver
     });
 
     if (res.success) {
