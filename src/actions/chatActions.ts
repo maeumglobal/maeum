@@ -4,13 +4,24 @@ import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 
 // INICIAR CHAT (Cliente)
-export async function initClientChat(data: { name: string; email: string; message: string; customerId?: string }) {
+export async function initClientChat(data: { name: string; email: string; message: string; customerId?: string; consultantId?: string }) {
   try {
-    // Acha uma consultora (ex: a primeira ativa, ou faz um rodízio real depois)
-    const consultant = await prisma.user.findFirst({
-      where: { role: 'consultora', isActive: true },
-      select: { id: true, name: true, avatarUrl: true },
-    });
+    let consultant;
+    
+    if (data.consultantId) {
+      consultant = await prisma.user.findUnique({
+        where: { id: data.consultantId },
+        select: { id: true, name: true, avatarUrl: true },
+      });
+    }
+
+    if (!consultant) {
+      // Acha uma consultora genérica se não houver ID ou se falhar
+      consultant = await prisma.user.findFirst({
+        where: { role: 'consultora', isActive: true },
+        select: { id: true, name: true, avatarUrl: true },
+      });
+    }
 
     if (!consultant) {
       return { success: false, error: 'Nenhuma consultora disponível no momento.' };
