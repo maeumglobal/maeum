@@ -5,7 +5,7 @@ import Image from 'next/image';
 import {
   Search, Bell, MessageCircle, FileText, CheckCircle2, Target, Wallet,
   ArrowUpRight, MessageSquare, Calendar, Phone, Video, Send, Check, AlertCircle,
-  Briefcase, DollarSign, Globe, Lock, HelpCircle
+  Briefcase, DollarSign, Globe, Lock, HelpCircle, ArrowRight, Map
 } from 'lucide-react';
 
 export default function AdminDashboardPage() {

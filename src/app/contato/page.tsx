@@ -7,7 +7,7 @@ import {
   MessageSquare, CalendarCheck, MessageCircle, Clock, ShieldCheck, 
   Users, Heart, Phone, Mail, Camera, MapPin, Search, PhoneCall, 
   Video, MoreVertical, Paperclip, Send, ArrowRight, CheckCheck, 
-  Briefcase, Gift
+  Briefcase, Gift, Award
 } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
