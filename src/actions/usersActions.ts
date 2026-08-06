@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 // ─── USUÁRIOS ────────────────────────────────────────────────
 export async function getUsers({
@@ -70,21 +71,52 @@ export async function createUser(data: {
     const existing = await prisma.user.findUnique({ where: { email: data.email } });
     if (existing) return { success: false, error: 'E-mail já cadastrado.' };
 
+    const pwd = data.password || 'maeum2026';
+    const role = data.role || 'customer';
+
+    // 1. Create user in Supabase Auth invisibly
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      email: data.email,
+      password: pwd,
+      email_confirm: true,
+      user_metadata: { name: data.name, role: role }
+    });
+
+    if (authError) {
+      console.error('Supabase Auth Error:', authError);
+      return { success: false, error: 'Erro ao criar credenciais de login: ' + authError.message };
+    }
+
+    const authUserId = authData.user.id;
+
+    // 2. Insert into maeum_users (public table)
+    await supabaseAdmin.from('maeum_users').insert([{
+      id: authUserId,
+      email: data.email,
+      name: data.name,
+      role: role,
+      phone: data.phone,
+      is_active: true
+    }]);
+
+    // 3. Insert into Prisma User table
     const user = await prisma.user.create({
       data: {
+        id: authUserId,
         name: data.name,
         email: data.email,
-        passwordHash: data.password || 'maeum2026',
-        role: data.role || 'customer',
+        passwordHash: pwd,
+        role: role,
         phone: data.phone,
       },
       select: { id: true, name: true, email: true, role: true, phone: true, createdAt: true },
     });
+    
     revalidatePath('/dashboard/admin');
     return { success: true, data: user };
   } catch (error) {
     console.error('createUser error:', error);
-    return { success: false, error: 'Erro ao criar usuário.' };
+    return { success: false, error: 'Erro interno ao criar usuário.' };
   }
 }
 
