@@ -88,10 +88,17 @@ export default function CoreiaDoSulPage() {
       <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <Image
-            src="https://images.unsplash.com/photo-1538669715515-5e3819766a9e?q=80&w=1920"
-            alt="Coreia do Sul"
+            src="/images/agencia-viagens-coreia-do-sul-maeum-global-destinos.webp"
+            alt="Coreia do Sul Desktop"
             fill
-            className="object-cover object-center scale-105"
+            className="object-cover object-center scale-105 hidden md:block"
+            priority
+          />
+          <Image
+            src="/images/mobile/agencia-viagens-coreia-do-sul-maeum-global-destinos-mobile.webp"
+            alt="Coreia do Sul Mobile"
+            fill
+            className="object-cover object-center scale-105 block md:hidden"
             priority
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#1C1C1C] via-[#1C1C1C]/50 to-black/60" />

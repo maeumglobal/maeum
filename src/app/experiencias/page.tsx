@@ -169,10 +169,16 @@ export default function ExperienciasPage() {
 
           <div className="lg:w-1/2 relative h-[500px] w-full rounded-sm overflow-hidden border border-[#3D2620]">
             <Image 
-              src="/images/atendimento-especializado-viagem-coreia-do-sul-maeum-global-v2.webp" 
-              alt="Korean Experience" 
+              src="/images/agencia-viagens-coreia-do-sul-maeum-global-experiencias.webp" 
+              alt="Experiências na Coreia do Sul Maeum Global Desktop" 
               fill 
-              className="object-cover object-center brightness-[0.80]" 
+              className="object-cover object-center brightness-[0.80] hidden md:block" 
+            />
+            <Image 
+              src="/images/mobile/agencia-viagens-coreia-do-sul-maeum-global-experiencias-mobile.webp" 
+              alt="Experiências na Coreia do Sul Maeum Global Mobile" 
+              fill 
+              className="object-cover object-center brightness-[0.80] block md:hidden" 
             />
             <div className="absolute inset-0 bg-gradient-to-l from-transparent to-[#0F0A08]/50" />
           </div>

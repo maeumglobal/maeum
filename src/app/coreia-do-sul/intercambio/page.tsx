@@ -80,10 +80,18 @@ export default function LexisKoreaIntercambioPage() {
         {/* Hero */}
         <section className="relative h-[65vh] min-h-[480px] w-full overflow-hidden">
           <Image
-            src="https://images.unsplash.com/photo-1538481199705-c710c4e965fc?q=80&w=1920"
-            alt="Estudar na Coreia do Sul"
+            src="/images/agencia-viagens-coreia-do-sul-maeum-global-intercambio.webp"
+            alt="Intercâmbio na Coreia do Sul Maeum Global Desktop"
             fill
-            className="object-cover"
+            className="object-cover hidden md:block"
+            priority
+            unoptimized
+          />
+          <Image
+            src="/images/mobile/agencia-viagens-coreia-do-sul-maeum-global-intercambio-mobile.webp"
+            alt="Intercâmbio na Coreia do Sul Maeum Global Mobile"
+            fill
+            className="object-cover block md:hidden"
             priority
             unoptimized
           />

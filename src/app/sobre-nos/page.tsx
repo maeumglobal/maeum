@@ -44,7 +44,8 @@ export default function SobreNosPage() {
           <div className="lg:w-1/2 relative h-[600px] w-full overflow-hidden flex items-center justify-center">
             {/* Simulation of the office image with logo on the wall */}
             <div className="absolute inset-0">
-               <Image src="/images/atendimento-especializado-viagem-coreia-do-sul-maeum-global-v2.webp" alt="Maeum Office" fill className="object-cover opacity-60" />
+               <Image src="/images/agencia-viagens-coreia-do-sul-maeum-global-sobre-nos.webp" alt="Agência Maeum Desktop" fill className="object-cover opacity-60 hidden md:block" />
+               <Image src="/images/mobile/agencia-viagens-coreia-do-sul-maeum-global-sobre-nos-mobile.webp" alt="Agência Maeum Mobile" fill className="object-cover opacity-60 block md:hidden" />
                <div className="absolute inset-0 bg-gradient-to-r from-[#0F0A08] to-[#0F0A08]/40" />
             </div>
             <div className="relative z-10 flex flex-col items-center">

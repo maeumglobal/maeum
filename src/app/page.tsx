@@ -114,10 +114,17 @@ export default function Home() {
       <section className="relative min-h-screen flex flex-col justify-center overflow-hidden border-b border-[#3A232E]/30">
         <div className="absolute inset-0 z-0">
           <Image
-            src="/images/atendimento-especializado-viagem-coreia-do-sul-maeum-global-v2.webp"
-            alt="Coreia do Sul Maeum"
+            src="/images/agencia-viagens-coreia-do-sul-maeum-global-home.webp"
+            alt="Agência de Viagens Coreia do Sul Maeum Global Desktop"
             fill
-            className="object-cover object-center"
+            className="object-cover object-center hidden md:block"
+            priority
+          />
+          <Image
+            src="/images/mobile/agencia-viagens-coreia-do-sul-maeum-global-home-mobile.webp"
+            alt="Agência de Viagens Coreia do Sul Maeum Global Mobile"
+            fill
+            className="object-cover object-center block md:hidden"
             priority
           />
           <div className="absolute inset-0 bg-gradient-to-r from-[#0F0A08] via-[#0F0A08]/70 to-transparent w-full sm:w-2/3" />
