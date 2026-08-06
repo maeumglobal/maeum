@@ -11,6 +11,7 @@ import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createProposalAction, submitChatMessageAction } from '@/actions/crmActions';
+import { authService } from '@/lib/supabaseAuth';
 
 // Import db engine client-side
 import { db } from '@/lib/db';
@@ -28,6 +29,7 @@ const WORKFLOW_STAGES = [
 
 export default function ConsultoraDashboard() {
   const [activeTab, setActiveTab] = useState('crm');
+  const [currentUser, setCurrentUser] = useState<any>(null);
   
   // Data States
   const [leads, setLeads] = useState<any[]>([]);
@@ -77,6 +79,8 @@ export default function ConsultoraDashboard() {
   };
 
   useEffect(() => {
+    const user = authService.getCurrentUser();
+    setCurrentUser(user);
     loadData();
     // Auto scroll chat
     if (activeTab === 'chat') {
@@ -144,17 +148,16 @@ export default function ConsultoraDashboard() {
       <main className="flex-1 max-w-7xl mx-auto w-full py-12 px-4 md:px-8">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between border-b border-border/60 pb-6 mb-8 gap-4">
           <div className="flex items-center gap-4">
-            <div className="relative h-16 w-16 rounded-full overflow-hidden border-2 border-primary">
-              <Image
-                src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200"
-                alt="Mariana Santos"
-                fill
-                className="object-cover"
-              />
+            <div className="relative h-16 w-16 rounded-full overflow-hidden border-2 border-primary bg-muted flex items-center justify-center">
+              {currentUser?.avatarUrl ? (
+                <Image src={currentUser.avatarUrl} alt={currentUser.name} fill className="object-cover" />
+              ) : (
+                <span className="text-xl font-bold text-muted-foreground uppercase">{currentUser?.name?.[0] || 'C'}</span>
+              )}
             </div>
             <div>
               <span className="text-xs font-semibold text-primary uppercase tracking-wider">Área da Consultora</span>
-              <h1 className="font-heading text-3xl font-light text-secondary">Olá, Mariana Santos</h1>
+              <h1 className="font-heading text-3xl font-light text-secondary">Olá, {currentUser?.name || 'Consultora'}</h1>
             </div>
           </div>
         </div>
