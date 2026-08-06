@@ -64,6 +64,7 @@ export default function Header() {
     { label: t('Experiências'), href: '/experiencias' },
     { label: t('Intercâmbio'), href: '/coreia-do-sul/intercambio' },
     { label: t('Pacotes'), href: '/pacotes' },
+    { label: t('Jornadas'), href: '/jornadas' },
     { label: t('Sobre Nós'), href: '/sobre' },
     { label: t('Contato'), href: '/contato' }
   ];
