@@ -77,7 +77,7 @@ export default function DestinosPage() {
       <Header />
 
       {/* 1. Hero Section */}
-      <section className="relative h-[85vh] min-h-[600px] flex flex-col justify-center overflow-hidden border-b border-[#3D2620]">
+      <section className="relative h-[100dvh] flex flex-col justify-center overflow-hidden border-b border-[#3D2620]">
         <div className="absolute inset-0 z-0">
           <Image 
             src="/images/agencia-viagens-coreia-do-sul-maeum-global-destinos.webp" 
