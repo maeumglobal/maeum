@@ -16,49 +16,45 @@ export default function SobreNosPage() {
       <Header />
 
       {/* 1. Hero Section */}
-      <section className="relative pt-32 pb-24 px-6 sm:px-12 max-w-[1400px] mx-auto w-full border-b border-[#3D2620]">
-        <div className="flex flex-col lg:flex-row gap-16 items-center">
-          <div className="lg:w-1/2 flex flex-col items-start gap-6 relative z-10">
-            <span className="text-[10px] uppercase tracking-[0.2em] text-[#C8A27C] font-semibold">
-              SOBRE A MAEUM GLOBAL
-            </span>
-            <h1 className="font-heading text-5xl sm:text-6xl md:text-[70px] font-light tracking-wide leading-[1.1] text-white">
-              Muito mais que <br />
-              viagens. Criamos <br />
-              <span className="italic text-[#C8A27C]">conexões que <br/>transformam.</span>
-            </h1>
-            <div className="w-12 h-[1px] bg-[#C8A27C] my-2"></div>
-            <p className="text-[12px] sm:text-[13px] text-gray-400 max-w-xl font-light text-left leading-relaxed opacity-90">
-              A Maeum Global nasceu do desejo de proporcionar experiências autênticas, profundas e transformadoras na Coreia do Sul. 
-              <br/><br/>
-              Acreditamos que cada viagem é única e deve refletir a essência de quem viaja. Por isso, cada roteiro é cuidadosamente planejado, com curadoria premium e atenção a cada detalhe.
-            </p>
-            <div className="mt-4">
-              <button className="flex items-center justify-center gap-3 bg-transparent border border-[#C8A27C] text-[#C8A27C] hover:bg-[#C8A27C]/10 font-bold text-[10px] py-4 px-8 rounded-none transition-all group uppercase tracking-widest">
-                CONHEÇA NOSSAS JORNADAS
-                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-              </button>
-            </div>
-          </div>
+      <section className="relative h-[100dvh] flex flex-col justify-center overflow-hidden border-b border-[#3D2620]">
+        <div className="absolute inset-0 z-0">
+          <Image 
+            src="/images/agencia-viagens-coreia-do-sul-maeum-global-sobre-nos.webp" 
+            alt="Agência Maeum Desktop" 
+            fill 
+            className="object-cover object-center hidden md:block" 
+            priority
+          />
+          <Image 
+            src="/images/mobile/agencia-viagens-coreia-do-sul-maeum-global-sobre-nos-mobile.webp" 
+            alt="Agência Maeum Mobile" 
+            fill 
+            className="object-cover object-center block md:hidden" 
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0F0A08] via-[#0F0A08]/80 to-transparent w-full sm:w-2/3" />
+        </div>
 
-          <div className="lg:w-1/2 relative h-[600px] w-full overflow-hidden flex items-center justify-center">
-            {/* Simulation of the office image with logo on the wall */}
-            <div className="absolute inset-0">
-               <Image src="/images/agencia-viagens-coreia-do-sul-maeum-global-sobre-nos.webp" alt="Agência Maeum Desktop" fill className="object-cover opacity-60 hidden md:block" />
-               <Image src="/images/mobile/agencia-viagens-coreia-do-sul-maeum-global-sobre-nos-mobile.webp" alt="Agência Maeum Mobile" fill className="object-cover opacity-60 block md:hidden" />
-               <div className="absolute inset-0 bg-gradient-to-r from-[#0F0A08] to-[#0F0A08]/40" />
-            </div>
-            <div className="relative z-10 flex flex-col items-center">
-               {/* Abstract Logo */}
-               <div className="w-16 h-16 border-2 border-[#C8A27C] flex items-center justify-center mb-4 opacity-80">
-                  <div className="w-10 h-10 border border-[#C8A27C]"></div>
-               </div>
-               <h2 className="font-heading text-4xl text-[#C8A27C] tracking-widest uppercase opacity-90">MAEUM</h2>
-               <span className="text-[10px] tracking-[0.4em] text-[#C8A27C] opacity-80 mt-1">GLOBAL</span>
-               <div className="flex items-center gap-2 mt-4 text-[#C8A27C] text-[8px] uppercase tracking-widest opacity-60">
-                 <span>COREIA</span> • <span>EXPERIÊNCIAS</span> • <span>MEMÓRIAS</span>
-               </div>
-            </div>
+        <div className="relative z-10 px-6 sm:px-12 max-w-7xl mx-auto w-full flex flex-col items-start gap-6 pt-24">
+          <span className="text-[10px] uppercase tracking-[0.2em] text-[#C8A27C] font-semibold">
+            SOBRE A MAEUM GLOBAL
+          </span>
+          <h1 className="font-heading text-5xl sm:text-6xl md:text-[70px] font-light tracking-wide leading-[1.1] text-white">
+            Muito mais que <br />
+            viagens. Criamos <br />
+            <span className="italic text-[#C8A27C]">conexões que <br/>transformam.</span>
+          </h1>
+          <div className="w-12 h-[1px] bg-[#C8A27C] my-2"></div>
+          <p className="text-[12px] sm:text-[13px] text-gray-300 max-w-xl font-light text-left leading-relaxed opacity-90">
+            A Maeum Global nasceu do desejo de proporcionar experiências autênticas, profundas e transformadoras na Coreia do Sul. 
+            <br/><br/>
+            Acreditamos que cada viagem é única e deve refletir a essência de quem viaja. Por isso, cada roteiro é cuidadosamente planejado, com curadoria premium e atenção a cada detalhe.
+          </p>
+          <div className="mt-4">
+            <button className="flex items-center justify-center gap-3 bg-transparent border border-[#C8A27C] text-[#C8A27C] hover:bg-[#C8A27C] hover:text-[#0F0A08] font-bold text-[10px] py-4 px-8 rounded-none transition-all group uppercase tracking-widest">
+              CONHEÇA NOSSAS JORNADAS
+              <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            </button>
           </div>
         </div>
       </section>

@@ -85,7 +85,7 @@ export default function CoreiaDoSulPage() {
       <Header />
 
       {/* Hero Banner */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden">
+      <section className="relative h-[100dvh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <Image
             src="/images/agencia-viagens-coreia-do-sul-maeum-global-destinos.webp"

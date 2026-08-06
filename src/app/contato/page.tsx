@@ -19,45 +19,46 @@ export default function ContatoPage() {
       <Header />
 
       {/* 1. Hero Section */}
-      <section className="relative pt-32 pb-0 sm:pb-24 px-6 sm:px-12 max-w-[1400px] mx-auto w-full">
-        <div className="flex flex-col lg:flex-row gap-16 items-center">
-          <div className="lg:w-[45%] flex flex-col items-start gap-6 relative z-10 pt-10">
-            <span className="text-[10px] uppercase tracking-[0.2em] text-[#C8A27C] font-semibold">
-              ESTAMOS AQUI PARA VOCÊ
-            </span>
-            <h1 className="font-heading text-4xl sm:text-5xl md:text-[60px] font-light tracking-wide leading-[1.1] text-white">
-              Converse com <br />
-              nossa equipe.<br />
-              <span className="italic text-[#C8A27C]">Seu sonho, nosso propósito.</span>
-            </h1>
-            <p className="text-[12px] sm:text-[13px] text-gray-400 font-light text-left leading-relaxed opacity-90 mt-2">
-              Tire dúvidas, conheça melhor nossos pacotes, solicite seu planejamento ou apenas venha conversar. Nossa equipe está sempre pronta para te acolher e transformar sua viagem para a Coreia em realidade.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 w-full mt-4">
-              <button className="flex items-center justify-center gap-3 bg-[#C8A27C] hover:bg-[#B8906C] text-[#0F0A08] font-bold text-[10px] py-4 px-8 rounded-none transition-all uppercase tracking-widest flex-1">
-                INICIAR CONVERSA AGORA
-                <MessageCircle className="w-4 h-4" />
-              </button>
-              <button className="flex items-center justify-center gap-3 bg-transparent border border-[#C8A27C] text-[#C8A27C] hover:bg-[#C8A27C]/10 font-bold text-[10px] py-4 px-8 rounded-none transition-all uppercase tracking-widest flex-1">
-                SOLICITAR PLANEJAMENTO
-                <CalendarCheck className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
+      <section className="relative h-[100dvh] flex flex-col justify-center overflow-hidden border-b border-[#3D2620]">
+        <div className="absolute inset-0 z-0">
+          <Image 
+            src="/images/agencia-viagens-coreia-do-sul-maeum-global-contato.webp" 
+            alt="Consultoras Maeum Global Desktop" 
+            fill 
+            className="object-cover object-center brightness-[0.80] hidden md:block" 
+            priority
+          />
+          <Image 
+            src="/images/mobile/agencia-viagens-coreia-do-sul-maeum-global-contato-mobile.webp" 
+            alt="Consultoras Maeum Global Mobile" 
+            fill 
+            className="object-cover object-center brightness-[0.80] block md:hidden" 
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0F0A08] via-[#0F0A08]/80 to-transparent w-full sm:w-2/3" />
+        </div>
 
-          <div className="lg:w-[55%] relative h-[500px] lg:h-[600px] w-full mt-10 lg:mt-0">
-             <div className="absolute inset-0 rounded-sm overflow-hidden border border-[#3D2620]">
-                <Image src="/images/agencia-viagens-coreia-do-sul-maeum-global-contato.webp" alt="Consultoras Maeum Global Desktop" fill className="object-cover object-center brightness-[0.80] hidden md:block" />
-                <Image src="/images/mobile/agencia-viagens-coreia-do-sul-maeum-global-contato-mobile.webp" alt="Consultoras Maeum Global Mobile" fill className="object-cover object-center brightness-[0.80] block md:hidden" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0F0A08] via-transparent to-transparent" />
-                <div className="absolute top-8 left-1/2 -translate-x-1/2 flex flex-col items-center opacity-80">
-                   <div className="w-12 h-12 border-2 border-[#C8A27C] mb-2 flex items-center justify-center">
-                     <div className="w-6 h-6 border border-[#C8A27C]"></div>
-                   </div>
-                   <span className="font-heading text-2xl text-[#C8A27C] tracking-widest">MAEUM</span>
-                   <span className="text-[8px] tracking-[0.4em] text-[#C8A27C] mt-1">GLOBAL</span>
-                </div>
-             </div>
+        <div className="relative z-10 px-6 sm:px-12 max-w-7xl mx-auto w-full flex flex-col items-start gap-6 pt-24">
+          <span className="text-[10px] uppercase tracking-[0.2em] text-[#C8A27C] font-semibold">
+            ESTAMOS AQUI PARA VOCÊ
+          </span>
+          <h1 className="font-heading text-4xl sm:text-5xl md:text-[60px] font-light tracking-wide leading-[1.1] text-white">
+            Converse com <br />
+            nossa equipe.<br />
+            <span className="italic text-[#C8A27C]">Seu sonho, nosso propósito.</span>
+          </h1>
+          <p className="text-[12px] sm:text-[13px] text-gray-300 font-light text-left leading-relaxed opacity-90 mt-2 max-w-xl">
+            Tire dúvidas, conheça melhor nossos pacotes, solicite seu planejamento ou apenas venha conversar. Nossa equipe está sempre pronta para te acolher e transformar sua viagem para a Coreia em realidade.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto mt-4">
+            <button className="flex items-center justify-center gap-3 bg-[#C8A27C] hover:bg-[#B8906C] text-[#0F0A08] font-bold text-[10px] py-4 px-8 rounded-none transition-all uppercase tracking-widest">
+              INICIAR CONVERSA AGORA
+              <MessageCircle className="w-4 h-4" />
+            </button>
+            <button className="flex items-center justify-center gap-3 bg-transparent border border-[#C8A27C] text-[#C8A27C] hover:bg-[#C8A27C]/10 font-bold text-[10px] py-4 px-8 rounded-none transition-all uppercase tracking-widest">
+              SOLICITAR PLANEJAMENTO
+              <CalendarCheck className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </section>

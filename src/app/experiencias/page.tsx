@@ -139,48 +139,48 @@ export default function ExperienciasPage() {
       <Header />
 
       {/* 1. Hero Section */}
-      <section className="relative pt-32 pb-16 px-6 sm:px-12 max-w-[1400px] mx-auto w-full border-b border-[#3D2620]">
-        <div className="flex flex-col lg:flex-row gap-16 items-center">
-          <div className="lg:w-1/2 flex flex-col items-start gap-6 relative z-10">
-            <span className="text-[10px] uppercase tracking-[0.2em] text-[#C8A27C] font-semibold">
-              MAEUM EXPERIENCES
-            </span>
-            <h1 className="font-heading text-5xl sm:text-6xl md:text-[70px] font-light tracking-wide leading-[1.1] text-white">
-              Viva a Coreia <br />
-              além dos <br />
-              <span className="italic text-[#C8A27C]">pontos turísticos.</span>
-            </h1>
-            <p className="text-[13px] sm:text-sm text-gray-400 max-w-xl font-light text-left leading-relaxed opacity-90 mt-2">
-              Acreditamos que conhecer um país significa criar conexões com as pessoas, a cultura e as tradições locais. 
-              Cada experiência da Maeum Global foi escolhida para proporcionar momentos autênticos, em pequenos grupos 
-              e com parceiros cuidadosamente selecionados.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 mt-4 w-full sm:w-auto">
-              <button className="flex items-center justify-center gap-3 bg-[#C8A27C] hover:bg-[#B8906C] text-[#0F0A08] font-bold text-[11px] py-4 px-8 rounded-none transition-all group uppercase tracking-widest">
-                EXPLORAR EXPERIÊNCIAS
-                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-              </button>
-              <button className="flex items-center justify-center gap-3 bg-transparent border border-[#C8A27C] text-[#C8A27C] hover:bg-[#C8A27C]/10 font-bold text-[11px] py-4 px-8 rounded-none transition-all uppercase tracking-widest">
-                <CalendarCheck className="w-4 h-4" />
-                SOLICITAR PLANEJAMENTO
-              </button>
-            </div>
-          </div>
+      <section className="relative h-[100dvh] flex flex-col justify-center overflow-hidden border-b border-[#3D2620]">
+        <div className="absolute inset-0 z-0">
+          <Image 
+            src="/images/agencia-viagens-coreia-do-sul-maeum-global-experiencias.webp" 
+            alt="Experiências na Coreia do Sul Maeum Global Desktop" 
+            fill 
+            className="object-cover object-center brightness-[0.80] hidden md:block" 
+            priority
+          />
+          <Image 
+            src="/images/mobile/agencia-viagens-coreia-do-sul-maeum-global-experiencias-mobile.webp" 
+            alt="Experiências na Coreia do Sul Maeum Global Mobile" 
+            fill 
+            className="object-cover object-center brightness-[0.80] block md:hidden" 
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0F0A08] via-[#0F0A08]/80 to-transparent w-full sm:w-2/3" />
+        </div>
 
-          <div className="lg:w-1/2 relative h-[500px] lg:h-[600px] w-full rounded-sm overflow-hidden border border-[#3D2620]">
-            <Image 
-              src="/images/agencia-viagens-coreia-do-sul-maeum-global-experiencias.webp" 
-              alt="Experiências na Coreia do Sul Maeum Global Desktop" 
-              fill 
-              className="object-cover object-center brightness-[0.80] hidden md:block" 
-            />
-            <Image 
-              src="/images/mobile/agencia-viagens-coreia-do-sul-maeum-global-experiencias-mobile.webp" 
-              alt="Experiências na Coreia do Sul Maeum Global Mobile" 
-              fill 
-              className="object-cover object-center brightness-[0.80] block md:hidden" 
-            />
-            <div className="absolute inset-0 bg-gradient-to-l from-transparent to-[#0F0A08]/50" />
+        <div className="relative z-10 px-6 sm:px-12 max-w-7xl mx-auto w-full flex flex-col items-start gap-6 pt-24">
+          <span className="text-[10px] uppercase tracking-[0.2em] text-[#C8A27C] font-semibold">
+            MAEUM EXPERIENCES
+          </span>
+          <h1 className="font-heading text-5xl sm:text-6xl md:text-[70px] font-light tracking-wide leading-[1.1] text-white">
+            Viva a Coreia <br />
+            além dos <br />
+            <span className="italic text-[#C8A27C]">pontos turísticos.</span>
+          </h1>
+          <p className="text-[13px] sm:text-sm text-gray-300 max-w-xl font-light text-left leading-relaxed opacity-90 mt-2">
+            Acreditamos que conhecer um país significa criar conexões com as pessoas, a cultura e as tradições locais. 
+            Cada experiência da Maeum Global foi escolhida para proporcionar momentos autênticos, em pequenos grupos 
+            e com parceiros cuidadosamente selecionados.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 mt-4 w-full sm:w-auto">
+            <button className="flex items-center justify-center gap-3 bg-[#C8A27C] hover:bg-[#B8906C] text-[#0F0A08] font-bold text-[11px] py-4 px-8 rounded-none transition-all group uppercase tracking-widest">
+              EXPLORAR EXPERIÊNCIAS
+              <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            </button>
+            <button className="flex items-center justify-center gap-3 bg-transparent border border-[#C8A27C] text-[#C8A27C] hover:bg-[#C8A27C]/10 font-bold text-[11px] py-4 px-8 rounded-none transition-all uppercase tracking-widest">
+              <CalendarCheck className="w-4 h-4" />
+              SOLICITAR PLANEJAMENTO
+            </button>
           </div>
         </div>
       </section>

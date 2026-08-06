@@ -78,7 +78,7 @@ export default function LexisKoreaIntercambioPage() {
 
       <main className="flex-1">
         {/* Hero */}
-        <section className="relative h-screen w-full overflow-hidden">
+        <section className="relative h-[100dvh] w-full overflow-hidden">
           <Image
             src="/images/agencia-viagens-coreia-do-sul-maeum-global-intercambio.webp"
             alt="Intercâmbio na Coreia do Sul Maeum Global Desktop"
