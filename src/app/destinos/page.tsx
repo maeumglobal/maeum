@@ -85,6 +85,8 @@ export default function DestinosPage() {
             fill 
             className="object-cover object-center hidden md:block" 
             priority
+            quality={100}
+            unoptimized
           />
           <Image 
             src="/images/mobile/agencia-viagens-coreia-do-sul-maeum-global-destinos-mobile.webp" 
@@ -92,6 +94,8 @@ export default function DestinosPage() {
             fill 
             className="object-cover object-center block md:hidden" 
             priority
+            quality={100}
+            unoptimized
           />
         </div>
 

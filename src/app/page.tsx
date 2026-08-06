@@ -24,6 +24,8 @@ export default function HomePage() {
             fill 
             className="object-cover object-center hidden md:block" 
             priority
+            quality={100}
+            unoptimized
           />
           <Image 
             src="/images/mobile/agencia-viagens-coreia-do-sul-maeum-global-oficial-mobile.webp" 
@@ -31,6 +33,8 @@ export default function HomePage() {
             fill 
             className="object-cover object-center block md:hidden" 
             priority
+            quality={100}
+            unoptimized
           />
         </div>
 
