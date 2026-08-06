@@ -29,7 +29,7 @@ export default function LoginPage() {
 
     try {
       if (mode === 'login') {
-        await login(email);
+        await login(email, password);
         setSuccess('Login realizado! Redirecionando...');
       } else {
         if (!name) { setError('Nome é obrigatório.'); setLoading(false); return; }
