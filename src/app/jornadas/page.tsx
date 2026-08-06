@@ -112,10 +112,17 @@ export default function JornadasPage() {
       <section className="relative h-[85vh] min-h-[600px] flex flex-col justify-center overflow-hidden border-b border-[#3D2620]">
         <div className="absolute inset-0 z-0">
           <Image 
-            src="https://images.unsplash.com/photo-1515091943-9d5c0ad20094?q=80&w=2000" 
+            src="/images/agencia-viagens-coreia-do-sul-maeum-global-jornadas.webp" 
             alt="Jornadas na Coreia" 
             fill 
-            className="object-cover object-center brightness-75" 
+            className="object-cover object-center brightness-75 hidden md:block" 
+            priority
+          />
+          <Image 
+            src="/images/mobile/agencia-viagens-coreia-do-sul-maeum-global-jornadas-mobile.webp" 
+            alt="Jornadas na Coreia Mobile" 
+            fill 
+            className="object-cover object-center brightness-75 block md:hidden" 
             priority
           />
           <div className="absolute inset-0 bg-gradient-to-r from-[#0F0A08] via-[#0F0A08]/90 to-transparent w-full sm:w-2/3" />
