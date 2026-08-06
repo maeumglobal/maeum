@@ -3,232 +3,347 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Compass, Sparkles, GraduationCap, Map, Heart, UtensilsCrossed, Palette, Landmark, ChevronRight } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { 
+  ArrowRight, Calendar, Users, DollarSign, Heart, MessageSquare, 
+  Award, ShieldCheck, Headphones, Compass, Star, MapPin 
+} from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
-const CATEGORIES = [
-  {
-    title: 'Experiências na Coreia',
-    slug: 'experiencias',
-    description: 'Viva momentos únicos com experiências individuais cuidadosamente selecionadas — da culinária ao lifestyle coreano.',
-    icon: Compass,
-    color: 'from-[#8B0000]/80 to-[#8B0000]',
-  },
-  {
-    title: 'Experiências K-Beauty',
-    slug: 'k-beauty',
-    description: 'Descubra o universo da beleza coreana com clínicas premium, skincare de ponta e consultorias exclusivas.',
-    icon: Sparkles,
-    color: 'from-[#B8860B]/80 to-[#B8860B]',
-  },
-  {
-    title: 'Intercâmbio na Coreia',
-    slug: 'intercambio',
-    description: 'Programas de intercâmbio de alto padrão com escolas renomadas, acomodações premium e suporte completo.',
-    icon: GraduationCap,
-    color: 'from-[#8B0000]/80 to-[#8B0000]',
-  },
-  {
-    title: 'Jornadas Maeum',
-    slug: 'jornadas',
-    description: 'Grupos exclusivos com roteiros imersivos, acompanhamento local e experiências que transformam.',
-    icon: Map,
-    color: 'from-[#B8860B]/80 to-[#B8860B]',
-  },
-];
-
-const HIGHLIGHTS = [
-  {
-    title: 'Cultura Milenar',
-    description: 'Palácios centenários, templos budistas, vilarejos tradicionais e uma rica herança cultural que convive em harmonia com o moderno.',
-    icon: Landmark,
-  },
-  {
-    title: 'Gastronomia Incomparável',
-    description: 'Do kimchi ao bulgogi, passando pelos mercados de rua e restaurantes com estrelas Michelin — a culinária coreana é uma experiência por si só.',
-    icon: UtensilsCrossed,
-  },
-  {
-    title: 'K-Beauty & Bem-Estar',
-    description: 'A Coreia é a capital global da beleza. Clínicas de skincare, spas de luxo e as tendências mais inovadoras do mundo da estética.',
-    icon: Palette,
-  },
-  {
-    title: 'História & Tradição',
-    description: 'Palácios da dinastia Joseon, templos budistas milenares e vilarejos preservados contam a história de um povo orgulhoso de suas raízes.',
-    icon: Landmark,
-  },
-];
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.15 },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.6, ease: 'easeInOut' as const },
-  },
-};
-
-export default function CoreiaDoSulPage() {
+export default function HomePage() {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-[#0F0A08] text-[#EFEBE4] font-sans selection:bg-[#C8A27C] selection:text-[#0F0A08]">
       <Header />
 
-      {/* Hero Banner */}
-      <section className="relative h-[100dvh] flex items-center justify-center overflow-hidden">
+      {/* 1. Hero Section */}
+      <section className="relative h-[90vh] min-h-[700px] flex flex-col justify-center overflow-hidden border-b border-[#3D2620]">
         <div className="absolute inset-0 z-0">
-          <Image
-            src="/images/agencia-viagens-coreia-do-sul-maeum-global-destinos.webp"
-            alt="Coreia do Sul Desktop"
-            fill
-            className="object-cover object-center scale-105 hidden md:block"
+          <Image 
+            src="https://images.unsplash.com/photo-1515091943-9d5c0ad20094?q=80&w=2000" 
+            alt="Coreia com Profundidade" 
+            fill 
+            className="object-cover object-center brightness-[0.4]" 
             priority
           />
-          <Image
-            src="/images/mobile/agencia-viagens-coreia-do-sul-maeum-global-destinos-mobile.webp"
-            alt="Coreia do Sul Mobile"
-            fill
-            className="object-cover object-center scale-105 block md:hidden"
-            priority
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#1C1C1C] via-[#1C1C1C]/50 to-black/60" />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/30 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0F0A08] via-[#0F0A08]/80 to-transparent w-full sm:w-2/3" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0F0A08]/20 to-[#0F0A08]" />
         </div>
 
-        <div className="relative z-10 text-center px-4 max-w-4xl mx-auto text-white flex flex-col items-center gap-5">
-          <motion.span
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-xs uppercase tracking-[0.2em] text-[#C8A27C] font-bold bg-[#C8A27C]/10 backdrop-blur border border-[#C8A27C]/30 rounded-full px-4 py-1.5"
-          >
-            MAEUM GLOBAL
-          </motion.span>
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.3 }}
-            className="font-heading text-5xl sm:text-7xl md:text-8xl font-light tracking-wide leading-tight text-white"
-          >
-            Coreia do Sul
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.4 }}
-            className="text-base sm:text-lg text-gray-200 max-w-xl font-light tracking-wide"
-          >
-            Descubra a Coreia através de experiências únicas
-          </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.5 }}
-            className="flex gap-3 mt-2"
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-[#C8A27C]" />
-            <span className="w-1.5 h-1.5 rounded-full bg-[#C8A27C]/60" />
-            <span className="w-1.5 h-1.5 rounded-full bg-[#C8A27C]/30" />
-          </motion.div>
+        <div className="relative z-10 px-6 sm:px-12 max-w-[1400px] mx-auto w-full flex flex-col items-start gap-5 pt-20">
+          <span className="text-[10px] uppercase tracking-[0.2em] text-[#C8A27C] font-semibold">
+            COREIA COM PROFUNDIDADE
+          </span>
+          <h1 className="font-heading text-5xl sm:text-6xl md:text-[80px] font-light tracking-wide leading-[1.1] text-white">
+            Mais vivência. <br />
+            Menos roteiro.<br />
+            <span className="italic text-[#C8A27C]">Só o que importa.</span>
+          </h1>
+          <p className="text-[13px] text-gray-300 max-w-[500px] font-light text-left leading-relaxed opacity-90 mt-4">
+            Experiências autorais criadas com quem vive a Coreia. <br/>
+            Você não vem apenas como turista.<br/>
+            Você vive como parte da história.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center gap-6 mt-6">
+            <button className="flex items-center justify-center gap-3 bg-[#C8A27C] hover:bg-[#B8906C] text-[#0F0A08] font-bold text-[10px] py-4 px-8 rounded-none transition-all group uppercase tracking-widest">
+              EXPLORAR EXPERIÊNCIAS
+              <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            </button>
+            <Link href="/sobre" className="text-[10px] text-white hover:text-[#C8A27C] font-bold uppercase tracking-widest border-b border-white/30 hover:border-[#C8A27C] pb-1 transition-colors">
+              CONHEÇA A MAEUM
+            </Link>
+          </div>
         </div>
       </section>
 
-      {/* Category Cards */}
-      <section className="py-20 px-4 md:px-8 max-w-7xl mx-auto w-full">
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: '-100px' }}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
-        >
-          {CATEGORIES.map((cat) => {
-            const Icon = cat.icon;
-            return (
-              <motion.div key={cat.slug} variants={itemVariants}>
-                <Link href={`/coreia-do-sul/${cat.slug}`} className="group block h-full">
-                  <div className="relative h-full bg-card border border-border/80 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 flex flex-col">
-                    <div className={`absolute inset-0 bg-gradient-to-br ${cat.color} opacity-0 group-hover:opacity-5 transition-opacity duration-500`} />
-                    <div className="p-8 flex flex-col items-center text-center gap-5 flex-1">
-                      <div className="p-4 rounded-2xl bg-muted/50 group-hover:bg-primary/10 group-hover:scale-110 transition-all duration-500">
-                        <Icon className="h-8 w-8 text-accent group-hover:text-[#B8860B] transition-colors duration-500" />
-                      </div>
-                      <h3 className="font-heading text-xl font-medium text-secondary group-hover:text-primary transition-colors duration-300">
-                        {cat.title}
-                      </h3>
-                      <p className="text-xs text-muted-foreground leading-relaxed">
-                        {cat.description}
-                      </p>
-                    </div>
-                    <div className="px-8 pb-8 pt-2">
-                      <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-primary group-hover:text-[#B8860B] uppercase tracking-wider transition-colors duration-300">
-                        Explorar
-                        <ChevronRight className="h-3 w-3 group-hover:translate-x-1 transition-transform duration-300" />
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              </motion.div>
-            );
-          })}
-        </motion.div>
+      {/* 2. Planning Box */}
+      <section className="relative z-20 px-6 sm:px-12 max-w-[1400px] mx-auto w-full -mt-24 mb-24">
+        <div className="bg-[#150E0C] border border-[#3D2620] rounded-sm p-8 sm:p-12 flex flex-col shadow-2xl">
+          
+          <div className="flex flex-col lg:flex-row gap-12 mb-10">
+            {/* Left Col */}
+            <div className="lg:w-1/3 flex flex-col gap-4">
+              <h2 className="font-heading text-3xl sm:text-4xl font-light text-white leading-tight">
+                Planeje sua <br/> viagem do seu <br/> jeito.
+              </h2>
+              <p className="text-[12px] text-gray-400 font-light mt-4 leading-relaxed">
+                Nos conte o que você imagina. Nós cuidamos de cada detalhe.
+              </p>
+            </div>
+
+            {/* Right Col - Form */}
+            <div className="lg:w-2/3 grid grid-cols-1 md:grid-cols-2 gap-6">
+              
+              <div className="flex flex-col gap-2">
+                <label className="flex items-center gap-2 text-[9px] uppercase tracking-widest text-gray-400 font-semibold">
+                  <Calendar className="w-3 h-3 text-[#C8A27C]" /> IDA E VOLTA
+                </label>
+                <div className="flex items-center gap-2 bg-[#0F0A08] border border-[#3D2620] p-3 text-[11px]">
+                  <input type="text" placeholder="Data de ida" className="bg-transparent w-full outline-none text-white" />
+                  <ArrowRight className="w-3 h-3 text-gray-600" />
+                  <input type="text" placeholder="Data de volta" className="bg-transparent w-full outline-none text-white text-right" />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="flex items-center gap-2 text-[9px] uppercase tracking-widest text-gray-400 font-semibold">
+                  <Users className="w-3 h-3 text-[#C8A27C]" /> QUANTAS PESSOAS?
+                </label>
+                <div className="bg-[#0F0A08] border border-[#3D2620] p-3 text-[11px]">
+                  <input type="text" placeholder="Ex: 2 pessoas" className="bg-transparent w-full outline-none text-white" />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="flex items-center gap-2 text-[9px] uppercase tracking-widest text-gray-400 font-semibold">
+                  <DollarSign className="w-3 h-3 text-[#C8A27C]" /> ORÇAMENTO POR PESSOA
+                </label>
+                <div className="bg-[#0F0A08] border border-[#3D2620] p-3 text-[11px]">
+                  <select className="bg-transparent w-full outline-none text-gray-400 appearance-none">
+                    <option>Selecione seu orçamento</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="flex items-center gap-2 text-[9px] uppercase tracking-widest text-gray-400 font-semibold">
+                  <Heart className="w-3 h-3 text-[#C8A27C]" /> O QUE VOCÊ PROCURA?
+                </label>
+                <div className="bg-[#0F0A08] border border-[#3D2620] p-3 text-[11px]">
+                  <select className="bg-transparent w-full outline-none text-gray-400 appearance-none">
+                    <option>Selecione o que mais combina com você</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2 md:col-span-2">
+                <label className="flex items-center gap-2 text-[9px] uppercase tracking-widest text-gray-400 font-semibold">
+                  <MessageSquare className="w-3 h-3 text-[#C8A27C]" /> ALGO IMPORTANTE QUE DEVEMOS SABER?
+                </label>
+                <div className="bg-[#0F0A08] border border-[#3D2620] p-3 text-[11px]">
+                  <input type="text" placeholder="Ex: lua de mel, aniversário, interesses específicos..." className="bg-transparent w-full outline-none text-white" />
+                </div>
+              </div>
+
+              <div className="md:col-span-2 flex justify-end mt-2">
+                <button className="flex items-center justify-center gap-3 bg-[#C8A27C] hover:bg-[#B8906C] text-[#0F0A08] font-bold text-[10px] py-4 px-8 rounded-none transition-all group uppercase tracking-widest">
+                  SOLICITAR ORÇAMENTO
+                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                </button>
+              </div>
+
+            </div>
+          </div>
+
+          <div className="border-t border-[#3D2620] pt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="flex items-start gap-4">
+              <Award className="w-8 h-8 text-[#C8A27C] shrink-0 stroke-[1.5]" />
+              <div className="flex flex-col">
+                <span className="text-[10px] text-white font-bold mb-1">Especialistas locais</span>
+                <span className="text-[10px] text-gray-400 leading-snug">Quem vive, conhece e seleciona.</span>
+              </div>
+            </div>
+            <div className="flex items-start gap-4">
+              <ShieldCheck className="w-8 h-8 text-[#C8A27C] shrink-0 stroke-[1.5]" />
+              <div className="flex flex-col">
+                <span className="text-[10px] text-white font-bold mb-1">Roteiros 100% personalizados</span>
+                <span className="text-[10px] text-gray-400 leading-snug">Nada engessado, tudo com intenção.</span>
+              </div>
+            </div>
+            <div className="flex items-start gap-4">
+              <Headphones className="w-8 h-8 text-[#C8A27C] shrink-0 stroke-[1.5]" />
+              <div className="flex flex-col">
+                <span className="text-[10px] text-white font-bold mb-1">Acompanhamento 24/7</span>
+                <span className="text-[10px] text-gray-400 leading-snug">Antes, durante e depois da viagem.</span>
+              </div>
+            </div>
+            <div className="flex items-start gap-4">
+              <Heart className="w-8 h-8 text-[#C8A27C] shrink-0 stroke-[1.5]" />
+              <div className="flex flex-col">
+                <span className="text-[10px] text-white font-bold mb-1">Experiências autênticas</span>
+                <span className="text-[10px] text-gray-400 leading-snug">Cultura, pessoas e lugares além do óbvio.</span>
+              </div>
+            </div>
+          </div>
+          
+        </div>
       </section>
 
-      {/* Por que a Coreia? */}
-      <section className="py-20 px-4 md:px-8 bg-muted/30">
-        <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-14"
-          >
-            <span className="text-xs uppercase tracking-widest text-primary font-bold">MAEUM GLOBAL</span>
-            <h2 className="font-heading text-3xl sm:text-4xl font-light text-secondary mt-2">Por que a Coreia?</h2>
-            <p className="text-sm text-muted-foreground mt-3 max-w-xl mx-auto leading-relaxed">
-              Um país que encanta em todos os sentidos — da cultura milenar à vanguarda da inovação.
-            </p>
-          </motion.div>
+      {/* 3. Jornadas Que Marcam */}
+      <section className="py-16 px-6 sm:px-12 max-w-[1400px] mx-auto w-full">
+        <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-6 mb-12">
+          <div className="flex flex-col gap-2">
+            <span className="text-[10px] uppercase tracking-[0.2em] text-[#C8A27C] font-semibold">
+              JORNADAS QUE MARCAM
+            </span>
+            <h2 className="font-heading text-4xl sm:text-5xl font-light text-white leading-tight">
+              Viagens que viram <br/>
+              <span className="italic text-[#C8A27C]">histórias</span> pra sempre.
+            </h2>
+          </div>
+          <Link href="/jornadas" className="flex items-center justify-center gap-3 bg-transparent border border-[#3D2620] hover:border-[#C8A27C] text-[#C8A27C] font-bold text-[10px] py-3.5 px-6 rounded-none transition-all group uppercase tracking-widest shrink-0">
+            VER TODAS AS JORNADAS
+            <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+          </Link>
+        </div>
 
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: '-100px' }}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
-          >
-            {HIGHLIGHTS.map((item) => {
-              const Icon = item.icon;
-              return (
-                <motion.div
-                  key={item.title}
-                  variants={itemVariants}
-                  className="group relative bg-card border border-border/80 rounded-2xl p-6 hover:shadow-lg transition-all duration-500 overflow-hidden"
-                >
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-[100%] -mr-8 -mt-8 group-hover:bg-primary/10 transition-colors duration-500" />
-                  <div className="relative z-10">
-                      <div className="p-3 rounded-xl bg-primary/10 w-fit mb-4 group-hover:bg-primary/20 transition-colors duration-500">
-                        <Icon className="h-5 w-5 text-accent" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          
+          {/* Card 1 */}
+          <div className="group border border-[#3D2620] rounded-sm overflow-hidden flex flex-col bg-[#150E0C] hover:border-[#C8A27C]/50 transition-colors cursor-pointer">
+            <div className="relative h-[240px] w-full overflow-hidden">
+              <Image src="https://images.unsplash.com/photo-1596706935706-95ff817d2bb9?q=80&w=800" alt="Projeto ARMY 2027" fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
+              <div className="absolute top-4 left-4 bg-[#C8A27C] text-[#0F0A08] text-[9px] font-bold px-3 py-1.5 uppercase tracking-widest">
+                MAIS ESCOLHIDA
+              </div>
+            </div>
+            <div className="p-8 flex flex-col flex-1">
+              <div className="flex items-center gap-2 text-[10px] text-[#C8A27C] font-bold uppercase tracking-widest mb-4">
+                <Users className="w-3 h-3" /> GRUPOS EXCLUSIVOS
+              </div>
+              <h3 className="font-heading text-2xl text-white font-light mb-4 group-hover:text-[#C8A27C] transition-colors">
+                Projeto ARMY 2027<br/>Always Destination
+              </h3>
+              <div className="flex items-center gap-3 text-[10px] text-gray-400 font-bold tracking-widest mb-6">
+                <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> 15 DIAS</span>
+                <span className="text-[#3D2620]">|</span>
+                <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> SEUL • BUSAN • JEJU</span>
+              </div>
+              <p className="text-[12px] text-gray-400 font-light leading-relaxed mb-8 flex-1">
+                Uma jornada feita para ARMYs que sonham em viver a Coreia de forma inesquecível.
+              </p>
+              <div className="flex items-center justify-between text-[#C8A27C] font-bold text-[10px] tracking-widest uppercase">
+                <span>A PARTIR DE R$ 39.000/PESSOA</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </div>
+          </div>
 
-                    </div>
-                    <h3 className="font-heading text-lg font-medium text-secondary mb-2">{item.title}</h3>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{item.description}</p>
+          {/* Card 2 */}
+          <div className="group border border-[#3D2620] rounded-sm overflow-hidden flex flex-col bg-[#150E0C] hover:border-[#C8A27C]/50 transition-colors cursor-pointer">
+            <div className="relative h-[240px] w-full overflow-hidden">
+              <Image src="https://images.unsplash.com/photo-1515091943-9d5c0ad20094?q=80&w=800" alt="The Horizon of Seven" fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
+              <div className="absolute top-4 left-4 bg-[#8A3324] text-white text-[9px] font-bold px-3 py-1.5 uppercase tracking-widest">
+                NOVIDADE
+              </div>
+            </div>
+            <div className="p-8 flex flex-col flex-1">
+              <div className="flex items-center gap-2 text-[10px] text-[#C8A27C] font-bold uppercase tracking-widest mb-4">
+                <Star className="w-3 h-3" /> EXPERIÊNCIA IMERSIVA
+              </div>
+              <h3 className="font-heading text-2xl text-white font-light mb-4 group-hover:text-[#C8A27C] transition-colors">
+                The Horizon of Seven<br/>Jeju Edition
+              </h3>
+              <div className="flex items-center gap-3 text-[10px] text-gray-400 font-bold tracking-widest mb-6">
+                <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> 16 DIAS</span>
+                <span className="text-[#3D2620]">|</span>
+                <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> SEUL • BUSAN • JEJU</span>
+              </div>
+              <p className="text-[12px] text-gray-400 font-light leading-relaxed mb-8 flex-1">
+                Natureza, cultura e momentos únicos na ilha mais encantadora da Coreia do Sul.
+              </p>
+              <div className="flex items-center justify-between text-[#C8A27C] font-bold text-[10px] tracking-widest uppercase">
+                <span>A PARTIR DE R$ 42.000/PESSOA</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </div>
+          </div>
+
+          {/* Card 3 */}
+          <div className="group border border-[#3D2620] rounded-sm overflow-hidden flex flex-col bg-[#150E0C] hover:border-[#C8A27C]/50 transition-colors cursor-pointer">
+            <div className="relative h-[240px] w-full overflow-hidden">
+              <Image src="https://images.unsplash.com/photo-1546874177-9e66487e671c?q=80&w=800" alt="Cheotnun" fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
+              <div className="absolute top-4 left-4 bg-[#C8A27C] text-[#0F0A08] text-[9px] font-bold px-3 py-1.5 uppercase tracking-widest">
+                EXCLUSIVO
+              </div>
+            </div>
+            <div className="p-8 flex flex-col flex-1">
+              <div className="flex items-center gap-2 text-[10px] text-[#C8A27C] font-bold uppercase tracking-widest mb-4">
+                <Heart className="w-3 h-3" /> VIAGEM ÍNTIMA
+              </div>
+              <h3 className="font-heading text-2xl text-white font-light mb-4 group-hover:text-[#C8A27C] transition-colors">
+                Cheotnun — A Magia<br/>da Primeira Neve
+              </h3>
+              <div className="flex items-center gap-3 text-[10px] text-gray-400 font-bold tracking-widest mb-6">
+                <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> 10 DIAS</span>
+                <span className="text-[#3D2620]">|</span>
+                <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> SEUL</span>
+              </div>
+              <p className="text-[12px] text-gray-400 font-light leading-relaxed mb-8 flex-1">
+                Um roteiro exclusivo para viver o inverno coreano de forma mágica e acolhedora.
+              </p>
+              <div className="flex items-center justify-between text-[#C8A27C] font-bold text-[10px] tracking-widest uppercase">
+                <span>A PARTIR DE R$ 32.000/PESSOA</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* 4. Partnership */}
+      <section className="py-24 px-6 sm:px-12 max-w-[1400px] mx-auto w-full">
+        <div className="border border-[#3D2620] bg-[#150E0C] rounded-sm flex flex-col">
+          
+          <div className="flex flex-col lg:flex-row">
+            <div className="p-10 sm:p-16 flex-1 flex flex-col justify-center">
+              <span className="text-[10px] uppercase tracking-[0.2em] text-[#C8A27C] font-bold mb-4">
+                PARCERIA OFICIAL
+              </span>
+              <h2 className="font-heading text-3xl sm:text-4xl font-light text-white mb-2">
+                Maeum Global × Cheotnun
+              </h2>
+              <h3 className="font-heading text-2xl font-light text-[#C8A27C] italic mb-6">
+                A beleza da Coreia faz parte da sua jornada.
+              </h3>
+              <p className="text-[12px] text-gray-400 font-light leading-relaxed max-w-lg mb-10">
+                Em parceria com a Cheotnun, referência em experiências K-Beauty, 
+                oferecemos acesso a clínicas selecionadas, análises de pele, 
+                workshops e tratamentos exclusivos para cuidar de você por dentro 
+                e por fora — do seu jeito, no seu tempo.
+              </p>
+              <div className="flex items-center gap-8">
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-8 h-8 border border-[#C8A27C] flex items-center justify-center opacity-80">
+                    <div className="w-4 h-4 border border-[#C8A27C]"></div>
                   </div>
-                </motion.div>
-              );
-            })}
-          </motion.div>
+                  <span className="text-[10px] tracking-[0.2em] text-[#C8A27C] uppercase font-bold">MAEUM</span>
+                </div>
+                <span className="text-[#3D2620] text-2xl font-light">×</span>
+                <div className="flex flex-col">
+                  <span className="text-xl font-heading text-white">Cheotnun</span>
+                  <span className="text-[8px] tracking-[0.2em] text-gray-500 uppercase">K-BEAUTY EXPERIENCE</span>
+                </div>
+              </div>
+            </div>
+            <div className="lg:w-[45%] relative min-h-[400px] lg:min-h-auto border-l border-[#3D2620]">
+              <Image src="https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?q=80&w=800" alt="K-Beauty Experience" fill className="object-cover" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border-t border-[#3D2620]">
+            <div className="p-8 border-b sm:border-b-0 sm:border-r border-[#3D2620] flex flex-col items-center text-center gap-3">
+              <Compass className="w-6 h-6 text-[#C8A27C]" strokeWidth={1.5} />
+              <span className="text-[9px] font-bold text-[#C8A27C] uppercase tracking-widest">EXPERIÊNCIAS K-BEAUTY</span>
+              <span className="text-[10px] text-gray-400 font-light leading-relaxed">Tratamentos, workshops e vivências cuidadosamente selecionadas.</span>
+            </div>
+            <div className="p-8 border-b lg:border-b-0 lg:border-r border-[#3D2620] flex flex-col items-center text-center gap-3">
+              <ShieldCheck className="w-6 h-6 text-[#C8A27C]" strokeWidth={1.5} />
+              <span className="text-[9px] font-bold text-[#C8A27C] uppercase tracking-widest">ACESSO EXCLUSIVO</span>
+              <span className="text-[10px] text-gray-400 font-light leading-relaxed">Clínicas e profissionais de excelência com acesso privilegiado.</span>
+            </div>
+            <div className="p-8 border-b sm:border-b-0 sm:border-r border-[#3D2620] flex flex-col items-center text-center gap-3">
+              <Award className="w-6 h-6 text-[#C8A27C]" strokeWidth={1.5} />
+              <span className="text-[9px] font-bold text-[#C8A27C] uppercase tracking-widest">CURADORIA PREMIUM</span>
+              <span className="text-[10px] text-gray-400 font-light leading-relaxed">Cada experiência é escolhida para representar o melhor da beleza coreana.</span>
+            </div>
+            <div className="p-8 flex flex-col items-center text-center gap-3">
+              <Star className="w-6 h-6 text-[#C8A27C]" strokeWidth={1.5} />
+              <span className="text-[9px] font-bold text-[#C8A27C] uppercase tracking-widest">BELEZA & CULTURA</span>
+              <span className="text-[10px] text-gray-400 font-light leading-relaxed">Bem-estar que conecta corpo, mente e tradição coreana.</span>
+            </div>
+          </div>
+
         </div>
       </section>
 
