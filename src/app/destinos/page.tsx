@@ -83,18 +83,16 @@ export default function DestinosPage() {
             src="/images/agencia-viagens-coreia-do-sul-maeum-global-destinos.webp" 
             alt="Destinos na Coreia" 
             fill 
-            className="object-cover object-center brightness-50 hidden md:block" 
+            className="object-cover object-center hidden md:block" 
             priority
           />
           <Image 
             src="/images/mobile/agencia-viagens-coreia-do-sul-maeum-global-destinos-mobile.webp" 
             alt="Destinos na Coreia Mobile" 
             fill 
-            className="object-cover object-center brightness-50 block md:hidden" 
+            className="object-cover object-center block md:hidden" 
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0F0A08] via-[#0F0A08]/90 to-transparent w-full sm:w-2/3" />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#0F0A08]/40 via-transparent to-[#0F0A08]" />
         </div>
 
         <div className="relative z-10 px-6 sm:px-12 max-w-[1400px] mx-auto w-full flex flex-col items-start gap-6 pt-20">

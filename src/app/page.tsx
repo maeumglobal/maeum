@@ -22,18 +22,16 @@ export default function HomePage() {
             src="/images/agencia-viagens-coreia-do-sul-maeum-global-oficial.webp" 
             alt="Coreia com Profundidade Desktop" 
             fill 
-            className="object-cover object-center brightness-[0.4] hidden md:block" 
+            className="object-cover object-center hidden md:block" 
             priority
           />
           <Image 
             src="/images/mobile/agencia-viagens-coreia-do-sul-maeum-global-oficial-mobile.webp" 
             alt="Coreia com Profundidade Mobile" 
             fill 
-            className="object-cover object-center brightness-[0.4] block md:hidden" 
+            className="object-cover object-center block md:hidden" 
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0F0A08] via-[#0F0A08]/80 to-transparent w-full sm:w-2/3" />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0F0A08]/20 to-[#0F0A08]" />
         </div>
 
         <div className="relative z-10 px-6 sm:px-12 max-w-[1400px] mx-auto w-full flex flex-col items-start gap-5 pt-20">
