@@ -15,11 +15,11 @@ const MOCK_USERS_MAEUM = [
 ];
 
 export const authService = {
-  async signUp(email: string, name: string, role: string = 'customer') {
+  async signUp(email: string, password: string = 'password123', name: string, role: string = 'customer') {
     if (supabase) {
       const { data, error } = await supabase.auth.signUp({
         email,
-        password: 'password123',
+        password,
         options: {
           data: { name, role }
         }
@@ -34,11 +34,11 @@ export const authService = {
     }
   },
 
-  async signIn(email: string) {
+  async signIn(email: string, password?: string) {
     if (supabase) {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password: 'password123'
+        password: password || 'password123'
       });
       if (error) throw error;
       return data;

@@ -6,6 +6,7 @@ import {
   CreditCard, Map, Briefcase, Calendar, DollarSign, BarChart2,
   ArrowRight
 } from 'lucide-react';
+import AdminGuard from '@/components/AdminGuard';
 
 export const metadata = {
   title: 'Dashboard | Maeum Global',
@@ -18,6 +19,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
+    <AdminGuard>
     <div className="flex h-screen bg-[#0F0A08] text-[#EFEBE4] font-sans selection:bg-[#C8A27C] selection:text-[#0F0A08] overflow-hidden">
       
       {/* SIDEBAR */}
@@ -114,5 +116,6 @@ export default function AdminLayout({
       </main>
       
     </div>
+    </AdminGuard>
   );
 }

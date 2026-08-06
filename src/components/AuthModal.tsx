@@ -50,7 +50,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, defaultMode = 'l
 
     try {
       if (mode === 'login') {
-        await authService.signIn(email);
+        await authService.signIn(email, password);
         setSuccessMsg('✓ Sessão iniciada com sucesso!');
       } else if (mode === 'register') {
         if (!name) {
@@ -58,7 +58,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, defaultMode = 'l
           setLoading(false);
           return;
         }
-        await authService.signUp(email, name, role);
+        await authService.signUp(email, password, name, role);
         setSuccessMsg('✓ Cadastro realizado com sucesso!');
       } else {
         // Recovery
