@@ -48,6 +48,16 @@ export default function Header() {
     return '/dashboard/cliente';
   };
 
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const navItems = [
     { label: t('Home'), href: '/' },
     { label: t('Destinos'), href: '/destinos' },
@@ -60,8 +70,8 @@ export default function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b border-border/40 px-4 md:px-8 py-3 bg-transparent relative">
-        <div className="absolute inset-0 -z-10 bg-background/95 backdrop-blur" />
+      <header className={`fixed top-0 z-50 w-full px-4 md:px-8 transition-all duration-300 ${scrolled ? 'border-b border-border/40 py-3 bg-background/95 backdrop-blur' : 'border-b border-transparent py-5 bg-transparent'} relative`}>
+        {scrolled && <div className="absolute inset-0 -z-10 bg-background/95 backdrop-blur" />}
       <div className="mx-auto flex max-w-7xl items-center justify-between relative z-10">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 relative">

@@ -167,7 +167,7 @@ export default function ExperienciasPage() {
             </div>
           </div>
 
-          <div className="lg:w-1/2 relative h-[500px] w-full rounded-sm overflow-hidden border border-[#3D2620]">
+          <div className="lg:w-1/2 relative h-[500px] lg:h-[600px] w-full rounded-sm overflow-hidden border border-[#3D2620]">
             <Image 
               src="/images/agencia-viagens-coreia-do-sul-maeum-global-experiencias.webp" 
               alt="Experiências na Coreia do Sul Maeum Global Desktop" 

@@ -111,7 +111,7 @@ export default function Home() {
       <Header />
 
       {/* 1. Hero Section */}
-      <section className="relative min-h-screen flex flex-col justify-center overflow-hidden border-b border-[#3A232E]/30">
+      <section className="relative h-screen flex flex-col justify-center overflow-hidden border-b border-[#3A232E]/30">
         <div className="absolute inset-0 z-0">
           <Image
             src="/images/agencia-viagens-coreia-do-sul-maeum-global-home.webp"

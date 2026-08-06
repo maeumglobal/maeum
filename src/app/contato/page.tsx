@@ -45,7 +45,7 @@ export default function ContatoPage() {
             </div>
           </div>
 
-          <div className="lg:w-[55%] relative h-[400px] sm:h-[500px] w-full mt-10 lg:mt-0">
+          <div className="lg:w-[55%] relative h-[500px] lg:h-[600px] w-full mt-10 lg:mt-0">
              <div className="absolute inset-0 rounded-sm overflow-hidden border border-[#3D2620]">
                 <Image src="/images/agencia-viagens-coreia-do-sul-maeum-global-contato.webp" alt="Consultoras Maeum Global Desktop" fill className="object-cover object-center brightness-[0.80] hidden md:block" />
                 <Image src="/images/mobile/agencia-viagens-coreia-do-sul-maeum-global-contato-mobile.webp" alt="Consultoras Maeum Global Mobile" fill className="object-cover object-center brightness-[0.80] block md:hidden" />
