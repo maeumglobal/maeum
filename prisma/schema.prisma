@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,55 +8,44 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// ─────────────────────────────────────────────
-// USUÁRIOS & EQUIPE
-// ─────────────────────────────────────────────
 model User {
-  id           String   @id @default(uuid())
-  name         String
-  email        String   @unique
-  passwordHash String?
-  role         String   @default("customer") // super_admin, admin, consultora, customer
-  phone        String?
-  avatarUrl    String?
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  assignedLeads  Lead[]         @relation("ConsultantLeads")
-  chats          Chat[]         @relation("ConsultantChats")
-  proposals      Proposal[]     @relation("ConsultantProposals")
-  notifications  Notification[] @relation("UserNotifications")
+  id             String         @id @default(uuid())
+  name           String
+  email          String         @unique
+  passwordHash   String?
+  role           String         @default("customer")
+  phone          String?
+  avatarUrl      String?
+  isActive       Boolean        @default(true)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
   adminLogs      AdminLog[]     @relation("AdminUserLogs")
   clientBookings Booking[]      @relation("ClientBookings")
+  chats          Chat[]         @relation("ConsultantChats")
+  assignedLeads  Lead[]         @relation("ConsultantLeads")
+  notifications  Notification[] @relation("UserNotifications")
+  proposals      Proposal[]     @relation("ConsultantProposals")
 }
 
-// ─────────────────────────────────────────────
-// NOTIFICAÇÕES
-// ─────────────────────────────────────────────
 model Notification {
-  id        String   @id @default(uuid())
+  id        String    @id @default(uuid())
   userId    String
   title     String
   message   String
-  type      String   @default("info") // info, success, warning, error
-  priority  String   @default("normal") // low, normal, high, urgent
-  category  String   @default("system") // system, booking, payment, lead, marketing
-  isRead    Boolean  @default(false)
+  type      String    @default("info")
+  priority  String    @default("normal")
+  category  String    @default("system")
+  isRead    Boolean   @default(false)
   linkUrl   String?
   iconName  String?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
   readAt    DateTime?
-
-  user User @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  user      User      @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, isRead])
   @@index([userId, createdAt])
 }
 
-// ─────────────────────────────────────────────
-// LEADS & CRM
-// ─────────────────────────────────────────────
 model Lead {
   id           String   @id @default(uuid())
   name         String
@@ -67,71 +53,61 @@ model Lead {
   phone        String?
   destination  String?
   budget       Float?
-  status       String   @default("novo") // novo, atendimento, proposta, fechado, perdido
+  status       String   @default("novo")
   notes        String?
   origin       String?
   consultantId String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-
-  consultant User? @relation("ConsultantLeads", fields: [consultantId], references: [id])
+  consultant   User?    @relation("ConsultantLeads", fields: [consultantId], references: [id])
 
   @@index([status])
   @@index([consultantId])
   @@index([createdAt])
 }
 
-// ─────────────────────────────────────────────
-// CHAT & MENSAGENS
-// ─────────────────────────────────────────────
 model Chat {
-  id           String    @id @default(uuid())
+  id           String        @id @default(uuid())
   consultantId String
   customerId   String
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-
-  consultant User        @relation("ConsultantChats", fields: [consultantId], references: [id])
-  messages   ChatMessage[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  consultant   User          @relation("ConsultantChats", fields: [consultantId], references: [id])
+  messages     ChatMessage[]
 
   @@index([customerId])
 }
 
 model ChatMessage {
-  id             String   @id @default(uuid())
+  id             String    @id @default(uuid())
   chatId         String
   senderId       String
   content        String
   attachmentUrl  String?
   attachmentType String?
   readAt         DateTime?
-  createdAt      DateTime @default(now())
-
-  chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  createdAt      DateTime  @default(now())
+  chat           Chat      @relation(fields: [chatId], references: [id], onDelete: Cascade)
 
   @@index([chatId])
 }
 
-// ─────────────────────────────────────────────
-// PROPOSTAS
-// ─────────────────────────────────────────────
 model Proposal {
-  id           String   @id @default(uuid())
+  id           String         @id @default(uuid())
   title        String
   totalValue   Float
-  status       String   @default("draft") // draft, sent, approved, paid, rejected
-  uniqueLink   String?  @unique
+  status       String         @default("draft")
+  uniqueLink   String?        @unique
   consultantId String
   customerId   String
   leadId       String?
-  version      Int      @default(1)
+  version      Int            @default(1)
   notes        String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  consultant User          @relation("ConsultantProposals", fields: [consultantId], references: [id])
-  items      ProposalItem[]
-  bookings   Booking[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  bookings     Booking[]
+  consultant   User           @relation("ConsultantProposals", fields: [consultantId], references: [id])
+  items        ProposalItem[]
 
   @@index([customerId])
   @@index([status])
@@ -141,58 +117,49 @@ model ProposalItem {
   id         String   @id @default(uuid())
   proposalId String
   name       String
-  type       String   // package, extra, flight, insurance, ktx, wifi
+  type       String
   price      Float
   details    String?
-
-  proposal Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  proposal   Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
 }
 
-// ─────────────────────────────────────────────
-// PACOTES & PRODUTOS
-// ─────────────────────────────────────────────
 model Package {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   title       String
-  slug        String   @unique
+  slug        String    @unique
   destination String?
   price       Float
   description String?
-  gallery     String   @default("[]") // JSON array as string
-  itinerary   String   @default("[]") // JSON array as string
-  included    String   @default("[]")
-  notIncluded String   @default("[]")
-  status      String   @default("active") // active, draft, archived
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  bookings Booking[]
+  gallery     String    @default("[]")
+  itinerary   String    @default("[]")
+  included    String    @default("[]")
+  notIncluded String    @default("[]")
+  status      String    @default("active")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  bookings    Booking[]
 
   @@index([status])
   @@index([destination])
 }
 
-// ─────────────────────────────────────────────
-// RESERVAS
-// ─────────────────────────────────────────────
 model Booking {
-  id          String    @id @default(uuid())
-  clientId    String
-  packageId   String?
-  proposalId  String?
-  status      String    @default("confirmed") // pending, confirmed, cancelled, completed
-  startDate   DateTime?
-  endDate     DateTime?
-  totalPrice  Float?
-  notes       String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  client   User      @relation("ClientBookings", fields: [clientId], references: [id])
-  package  Package?  @relation(fields: [packageId], references: [id])
-  proposal Proposal? @relation(fields: [proposalId], references: [id])
-  payments Payment[]
-  timeline BookingTimeline[]
+  id         String            @id @default(uuid())
+  clientId   String
+  packageId  String?
+  proposalId String?
+  status     String            @default("confirmed")
+  startDate  DateTime?
+  endDate    DateTime?
+  totalPrice Float?
+  notes      String?
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+  client     User              @relation("ClientBookings", fields: [clientId], references: [id])
+  package    Package?          @relation(fields: [packageId], references: [id])
+  proposal   Proposal?         @relation(fields: [proposalId], references: [id])
+  timeline   BookingTimeline[]
+  payments   Payment[]
 
   @@index([clientId])
   @@index([status])
@@ -206,15 +173,11 @@ model BookingTimeline {
   title       String
   description String?
   createdAt   DateTime @default(now())
-
-  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
   @@index([bookingId])
 }
 
-// ─────────────────────────────────────────────
-// PAGAMENTOS
-// ─────────────────────────────────────────────
 model Payment {
   id              String    @id @default(uuid())
   bookingId       String
@@ -222,62 +185,56 @@ model Payment {
   stripeSessionId String?   @unique
   stripePaymentId String?
   amount          Float
-  status          String    @default("pending") // pending, paid, failed, refunded
-  paymentMethod   String?   // credit_card, pix, boleto
+  status          String    @default("pending")
+  paymentMethod   String?
   dueDate         DateTime?
   paidAt          DateTime?
   createdAt       DateTime  @default(now())
-
-  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  booking         Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
   @@index([bookingId])
   @@index([status])
   @@index([clientId])
 }
 
-// ─────────────────────────────────────────────
-// EXPERIÊNCIAS & CATEGORIAS
-// ─────────────────────────────────────────────
 model Category {
-  id          String   @id @default(uuid())
-  slug        String   @unique
+  id          String               @id @default(uuid())
+  slug        String               @unique
   name        String
-  destination String   @default("Coreia do Sul")
-  isActive    Boolean  @default(true)
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-
+  destination String               @default("Coreia do Sul")
+  isActive    Boolean              @default(true)
+  sortOrder   Int                  @default(0)
+  createdAt   DateTime             @default(now())
   experiences ExperienceCategory[]
 
   @@index([isActive])
 }
 
 model Experience {
-  id           String   @id @default(uuid())
-  slug         String   @unique
-  title        String
-  subtitle     String?
-  location     String   @default("Seul")
-  region       String   @default("Seul")
-  city         String   @default("Seul")
-  description  String?
-  highlights   String   @default("[]") // JSON
-  included     String   @default("[]") // JSON
-  durationHours Float   @default(2)
-  pricePerPerson Float  @default(0)
-  mainImage    String?
-  gallery      String   @default("[]") // JSON
-  videoUrl     String?
-  videoEmbed   String?
-  status       String   @default("active") // active, inactive, draft
-  bookingType  String   @default("direct") // direct, request
-  availableFrom DateTime?
-  partnerId    String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  partner    Partner?  @relation(fields: [partnerId], references: [id])
-  categories ExperienceCategory[]
+  id             String               @id @default(uuid())
+  slug           String               @unique
+  title          String
+  subtitle       String?
+  location       String               @default("Seul")
+  region         String               @default("Seul")
+  city           String               @default("Seul")
+  description    String?
+  highlights     String               @default("[]")
+  included       String               @default("[]")
+  durationHours  Float                @default(2)
+  pricePerPerson Float                @default(0)
+  mainImage      String?
+  gallery        String               @default("[]")
+  videoUrl       String?
+  videoEmbed     String?
+  status         String               @default("active")
+  bookingType    String               @default("direct")
+  availableFrom  DateTime?
+  partnerId      String?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  partner        Partner?             @relation(fields: [partnerId], references: [id])
+  categories     ExperienceCategory[]
 
   @@index([status])
   @@index([bookingType])
@@ -286,151 +243,133 @@ model Experience {
 model ExperienceCategory {
   experienceId String
   categoryId   String
-
-  experience Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
-  category   Category   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  category     Category   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  experience   Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
 
   @@id([experienceId, categoryId])
 }
 
-// ─────────────────────────────────────────────
-// K-BEAUTY
-// ─────────────────────────────────────────────
 model KbeautyExperience {
-  id                  String   @id @default(uuid())
-  slug                String   @unique
+  id                  String    @id @default(uuid())
+  slug                String    @unique
   title               String
   subtitle            String?
-  location            String   @default("Seul")
+  location            String    @default("Seul")
   description         String?
-  highlights          String   @default("[]") // JSON
-  included            String   @default("[]") // JSON
-  durationHours       Float    @default(2)
-  pricePerPerson      Float    @default(0)
+  highlights          String    @default("[]")
+  included            String    @default("[]")
+  durationHours       Float     @default(2)
+  pricePerPerson      Float     @default(0)
   mainImage           String?
-  gallery             String   @default("[]") // JSON
-  status              String   @default("active")
-  bookingType         String   @default("request")
-  isPartnerExperience Boolean  @default(false)
-  isIncludedInJourney Boolean  @default(false)
+  gallery             String    @default("[]")
+  status              String    @default("active")
+  bookingType         String    @default("request")
+  isPartnerExperience Boolean   @default(false)
+  isIncludedInJourney Boolean   @default(false)
   partnerId           String?
   availableFrom       DateTime?
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   @@index([status])
 }
 
-// ─────────────────────────────────────────────
-// PARCEIROS
-// ─────────────────────────────────────────────
 model Partner {
-  id           String   @id @default(uuid())
+  id           String       @id @default(uuid())
   name         String
-  category     String?  // kbeauty, exchange, hotel, tour
+  category     String?
   contactEmail String?
   phone        String?
   website      String?
   logoUrl      String?
   description  String?
-  status       String   @default("active")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  experiences Experience[]
+  status       String       @default("active")
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  experiences  Experience[]
 
   @@index([status])
   @@index([category])
 }
 
-// ─────────────────────────────────────────────
-// INTERCÂMBIO
-// ─────────────────────────────────────────────
 model ExchangeInstitution {
-  id          String   @id @default(uuid())
+  id          String           @id @default(uuid())
   name        String
-  slug        String   @unique
+  slug        String           @unique
   description String?
-  country     String   @default("Coreia do Sul")
+  country     String           @default("Coreia do Sul")
   website     String?
   logoUrl     String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-
-  campuses ExchangeCampus[]
+  isActive    Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  campuses    ExchangeCampus[]
 }
 
 model ExchangeCampus {
-  id            String   @id @default(uuid())
+  id            String              @id @default(uuid())
   institutionId String
   name          String
   city          String
   location      String?
   description   String?
   mainImage     String?
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-
-  institution ExchangeInstitution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
-  programs    ExchangeProgram[]
+  isActive      Boolean             @default(true)
+  createdAt     DateTime            @default(now())
+  institution   ExchangeInstitution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  programs      ExchangeProgram[]
 
   @@index([institutionId])
 }
 
 model ExchangeProgram {
-  id                  String   @id @default(uuid())
-  campusId            String
-  name                String
-  slug                String   @unique
-  description         String?
-  durationWeeksMin    Int      @default(1)
-  durationWeeksMax    Int      @default(52)
-  classesPerWeek      Int      @default(20)
-  levelRequired       String   @default("Todos os níveis")
-  pricingTiers        String   @default("[]") // JSON
-  includesEnrollment  Boolean  @default(true)
-  enrollmentFee       Float    @default(0)
-  includesMaterial    Boolean  @default(false)
-  materialFee         Float    @default(0)
-  culturalActivities  Boolean  @default(true)
-  isActive            Boolean  @default(true)
-  createdAt           DateTime @default(now())
-
-  campus ExchangeCampus @relation(fields: [campusId], references: [id], onDelete: Cascade)
+  id                 String         @id @default(uuid())
+  campusId           String
+  name               String
+  slug               String         @unique
+  description        String?
+  durationWeeksMin   Int            @default(1)
+  durationWeeksMax   Int            @default(52)
+  classesPerWeek     Int            @default(20)
+  levelRequired      String         @default("Todos os n├¡veis")
+  pricingTiers       String         @default("[]")
+  includesEnrollment Boolean        @default(true)
+  enrollmentFee      Float          @default(0)
+  includesMaterial   Boolean        @default(false)
+  materialFee        Float          @default(0)
+  culturalActivities Boolean        @default(true)
+  isActive           Boolean        @default(true)
+  createdAt          DateTime       @default(now())
+  campus             ExchangeCampus @relation(fields: [campusId], references: [id], onDelete: Cascade)
 
   @@index([campusId])
 }
 
-// ─────────────────────────────────────────────
-// JORNADAS
-// ─────────────────────────────────────────────
 model Journey {
-  id              String   @id @default(uuid())
-  slug            String   @unique
-  title           String
-  subtitle        String?
-  concept         String?
-  destinations    String   @default("[]") // JSON array
-  durationDays    Int      @default(10)
-  totalSpots      Int      @default(15)
-  accommodation   String?
-  pricePerPerson  Float    @default(0)
-  priceCurrency   String   @default("BRL")
-  mainImage       String?
-  gallery         String   @default("[]") // JSON
-  videoUrl        String?
-  videoEmbed      String?
-  included        String   @default("[]") // JSON
-  notIncluded     String   @default("[]") // JSON
-  itinerary       String   @default("[]") // JSON
-  highlights      String   @default("[]") // JSON
-  paymentOptions  String   @default("{}") // JSON
-  status          String   @default("active") // active, draft, archived
-  category        String   @default("premium") // premium, army
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  departures JourneyDeparture[]
+  id             String             @id @default(uuid())
+  slug           String             @unique
+  title          String
+  subtitle       String?
+  concept        String?
+  destinations   String             @default("[]")
+  durationDays   Int                @default(10)
+  totalSpots     Int                @default(15)
+  accommodation  String?
+  pricePerPerson Float              @default(0)
+  priceCurrency  String             @default("BRL")
+  mainImage      String?
+  gallery        String             @default("[]")
+  videoUrl       String?
+  videoEmbed     String?
+  included       String             @default("[]")
+  notIncluded    String             @default("[]")
+  itinerary      String             @default("[]")
+  highlights     String             @default("[]")
+  paymentOptions String             @default("{}")
+  status         String             @default("active")
+  category       String             @default("premium")
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  departures     JourneyDeparture[]
 
   @@index([status])
   @@index([category])
@@ -443,20 +382,16 @@ model JourneyDeparture {
   endDate         DateTime
   totalSpots      Int      @default(15)
   availableSpots  Int      @default(15)
-  status          String   @default("available") // available, sold_out, cancelled
+  status          String   @default("available")
   notes           String?
   priceAdjustment Float    @default(0)
   createdAt       DateTime @default(now())
-
-  journey Journey @relation(fields: [journeyId], references: [id], onDelete: Cascade)
+  journey         Journey  @relation(fields: [journeyId], references: [id], onDelete: Cascade)
 
   @@index([journeyId])
   @@index([startDate])
 }
 
-// ─────────────────────────────────────────────
-// BLOG
-// ─────────────────────────────────────────────
 model BlogPost {
   id          String    @id @default(uuid())
   slug        String    @unique
@@ -465,8 +400,8 @@ model BlogPost {
   content     String    @default("")
   author      String    @default("Maeum Editor")
   coverImage  String?
-  tags        String    @default("[]") // JSON
-  status      String    @default("draft") // draft, published, archived
+  tags        String    @default("[]")
+  status      String    @default("draft")
   seoTitle    String?
   seoDesc     String?
   publishedAt DateTime?
@@ -477,9 +412,6 @@ model BlogPost {
   @@index([publishedAt])
 }
 
-// ─────────────────────────────────────────────
-// DEPOIMENTOS
-// ─────────────────────────────────────────────
 model Testimonial {
   id          String   @id @default(uuid())
   name        String
@@ -487,16 +419,13 @@ model Testimonial {
   text        String
   rating      Int      @default(5)
   avatarUrl   String?
-  status      String   @default("pending") // pending, approved, rejected
+  status      String   @default("pending")
   sortOrder   Int      @default(0)
   createdAt   DateTime @default(now())
 
   @@index([status])
 }
 
-// ─────────────────────────────────────────────
-// FAQ
-// ─────────────────────────────────────────────
 model FaqItem {
   id        String   @id @default(uuid())
   question  String
@@ -511,12 +440,9 @@ model FaqItem {
   @@index([isActive])
 }
 
-// ─────────────────────────────────────────────
-// CONFIGURAÇÕES DO SITE
-// ─────────────────────────────────────────────
 model SiteConfig {
   id        String   @id @default(uuid())
-  section   String   // brand, contact, social, seo, smtp, integrations, legal
+  section   String
   configKey String
   value     String
   createdAt DateTime @default(now())
@@ -526,13 +452,10 @@ model SiteConfig {
   @@index([section])
 }
 
-// ─────────────────────────────────────────────
-// NAVEGAÇÃO
-// ─────────────────────────────────────────────
 model NavigationItem {
   id             String   @id @default(uuid())
   parentId       String?
-  navigationType String   @default("main") // main, footer
+  navigationType String   @default("main")
   label          String
   url            String
   icon           String?
@@ -543,32 +466,26 @@ model NavigationItem {
   @@index([navigationType, isActive])
 }
 
-// ─────────────────────────────────────────────
-// CMS PAGES
-// ─────────────────────────────────────────────
 model CmsPage {
-  id           String   @id @default(uuid())
-  title        String
-  slug         String   @unique
-  content      String   @default("")
-  seoTitle     String?
-  seoDesc      String?
-  status       String   @default("draft") // draft, published
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id        String   @id @default(uuid())
+  title     String
+  slug      String   @unique
+  content   String   @default("")
+  seoTitle  String?
+  seoDesc   String?
+  status    String   @default("draft")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([status])
 }
 
-// ─────────────────────────────────────────────
-// CMS BLOCKS (PAGE BUILDER)
-// ─────────────────────────────────────────────
 model CmsBlock {
   id        String   @id @default(uuid())
   pageName  String   @default("home")
   sectionId String
   blockType String
-  content   String   @default("{}") // JSON
+  content   String   @default("{}")
   sortOrder Int      @default(0)
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
@@ -577,9 +494,6 @@ model CmsBlock {
   @@index([pageName, isActive])
 }
 
-// ─────────────────────────────────────────────
-// DESTAQUES / DESTINATIONS
-// ─────────────────────────────────────────────
 model Destination {
   id             String   @id @default(uuid())
   name           String
@@ -587,7 +501,7 @@ model Destination {
   country        String
   description    String?
   mainImage      String?
-  gallery        String   @default("[]") // JSON
+  gallery        String   @default("[]")
   mapLat         Float?
   mapLng         Float?
   isFeatured     Boolean  @default(true)
@@ -599,22 +513,18 @@ model Destination {
   @@index([isFeatured])
 }
 
-// ─────────────────────────────────────────────
-// LOGS ADMINISTRATIVOS
-// ─────────────────────────────────────────────
 model AdminLog {
-  id          String   @id @default(uuid())
-  userId      String
-  action      String   // create, update, delete, login, logout, status_change, etc.
-  entity      String   // lead, package, experience, journey, user, etc.
-  entityId    String?
-  details     String?  // JSON com detalhes
-  ipAddress   String?
-  userAgent   String?
-  result      String   @default("success") // success, error
-  createdAt   DateTime @default(now())
-
-  user User @relation("AdminUserLogs", fields: [userId], references: [id])
+  id        String   @id @default(uuid())
+  userId    String
+  action    String
+  entity    String
+  entityId  String?
+  details   String?
+  ipAddress String?
+  userAgent String?
+  result    String   @default("success")
+  createdAt DateTime @default(now())
+  user      User     @relation("AdminUserLogs", fields: [userId], references: [id])
 
   @@index([userId])
   @@index([action])
@@ -622,9 +532,6 @@ model AdminLog {
   @@index([createdAt])
 }
 
-// ─────────────────────────────────────────────
-// DOCUMENTOS DOS CLIENTES
-// ─────────────────────────────────────────────
 model Document {
   id           String   @id @default(uuid())
   clientId     String
@@ -633,10 +540,1049 @@ model Document {
   fileUrl      String
   fileSize     Int?
   mimeType     String?
-  category     String   @default("general") // passport, ticket, insurance, visa, other
+  category     String   @default("general")
   notes        String?
   createdAt    DateTime @default(now())
 
   @@index([clientId])
   @@index([category])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_activity_log {
+  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id     String?      @db.Uuid
+  action      String       @db.VarChar(100)
+  entity_type String?      @db.VarChar(100)
+  entity_id   String?      @db.Uuid
+  changes     Json?
+  metadata    Json?        @default("{}")
+  ip_address  String?      @db.VarChar(50)
+  user_agent  String?
+  created_at  DateTime?    @default(now()) @db.Timestamptz(6)
+  maeum_users maeum_users? @relation(fields: [user_id], references: [id], onUpdate: NoAction)
+
+  @@index([created_at], map: "idx_maeum_activity_log_created")
+  @@index([user_id], map: "idx_maeum_activity_log_user")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_blog_categories {
+  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug             String             @unique @db.VarChar(255)
+  name             String             @db.VarChar(255)
+  description      String?
+  color            String?            @db.VarChar(50)
+  sort_order       Int?               @default(0)
+  is_active        Boolean?           @default(true)
+  created_at       DateTime?          @default(now()) @db.Timestamptz(6)
+  maeum_blog_posts maeum_blog_posts[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_blog_posts {
+  id                    String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug                  String                 @unique @db.VarChar(255)
+  title                 String                 @db.VarChar(255)
+  summary               String?
+  content               Json?
+  main_image            String?
+  gallery               String[]               @default([])
+  video_url             String?
+  video_embed           String?
+  category_id           String?                @db.Uuid
+  tags                  String[]               @default([])
+  author_id             String?                @db.Uuid
+  is_featured           Boolean?               @default(false)
+  status                content_status?        @default(draft)
+  published_at          DateTime?              @db.Timestamptz(6)
+  seo_title             String?                @db.VarChar(255)
+  seo_description       String?
+  metadata              Json?                  @default("{}")
+  created_at            DateTime?              @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime?              @default(now()) @db.Timestamptz(6)
+  maeum_users           maeum_users?           @relation(fields: [author_id], references: [id], onUpdate: NoAction)
+  maeum_blog_categories maeum_blog_categories? @relation(fields: [category_id], references: [id], onUpdate: NoAction)
+
+  @@index([category_id], map: "idx_maeum_blog_posts_category")
+  @@index([slug], map: "idx_maeum_blog_posts_slug")
+  @@index([status], map: "idx_maeum_blog_posts_status")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_categories {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug        String    @unique @db.VarChar(255)
+  name        String    @db.VarChar(255)
+  description String?
+  icon        String?   @db.VarChar(100)
+  color       String?   @db.VarChar(50)
+  destination String?   @default("Coreia do Sul") @db.VarChar(100)
+  is_active   Boolean?  @default(true)
+  sort_order  Int       @default(0)
+  created_at  DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime? @default(now()) @db.Timestamptz(6)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_chat_messages {
+  id                 String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  chat_id            String?      @db.Uuid
+  sender_id          String?      @db.Uuid
+  content            String?
+  content_type       String?      @default("text") @db.VarChar(50)
+  attachment_url     String?
+  attachment_type    String?      @db.VarChar(50)
+  translated_content Json?
+  read_at            DateTime?    @db.Timestamptz(6)
+  metadata           Json?        @default("{}")
+  created_at         DateTime?    @default(now()) @db.Timestamptz(6)
+  maeum_chats        maeum_chats? @relation(fields: [chat_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  maeum_users        maeum_users? @relation(fields: [sender_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([chat_id], map: "idx_maeum_chat_messages_chat")
+  @@index([created_at], map: "idx_maeum_chat_messages_created")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_chats {
+  id                                                 String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  client_id                                          String?               @db.Uuid
+  consultant_id                                      String?               @db.Uuid
+  title                                              String?               @db.VarChar(255)
+  is_active                                          Boolean?              @default(true)
+  metadata                                           Json?                 @default("{}")
+  created_at                                         DateTime?             @default(now()) @db.Timestamptz(6)
+  updated_at                                         DateTime?             @default(now()) @db.Timestamptz(6)
+  maeum_chat_messages                                maeum_chat_messages[]
+  maeum_users_maeum_chats_client_idTomaeum_users     maeum_users?          @relation("maeum_chats_client_idTomaeum_users", fields: [client_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  maeum_users_maeum_chats_consultant_idTomaeum_users maeum_users?          @relation("maeum_chats_consultant_idTomaeum_users", fields: [consultant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([client_id, consultant_id])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_cms_blocks {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  page_slug  String    @db.VarChar(255)
+  section_id String    @db.VarChar(100)
+  block_type String    @db.VarChar(100)
+  content    Json      @default("{}")
+  sort_order Int       @default(0)
+  is_active  Boolean?  @default(true)
+  metadata   Json?     @default("{}")
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @default(now()) @db.Timestamptz(6)
+
+  @@index([page_slug], map: "idx_maeum_cms_blocks_page")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_cms_pages {
+  id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug            String          @unique @db.VarChar(255)
+  title           String          @db.VarChar(255)
+  subtitle        String?
+  content         Json?           @default("{}")
+  sections        Json?           @default("[]")
+  main_image      String?
+  seo_title       String?         @db.VarChar(255)
+  seo_description String?
+  seo_keywords    String[]        @default([])
+  template        String?         @default("default") @db.VarChar(100)
+  status          content_status? @default(draft)
+  sort_order      Int?            @default(0)
+  created_at      DateTime?       @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime?       @default(now()) @db.Timestamptz(6)
+
+  @@index([slug], map: "idx_maeum_cms_pages_slug")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_coupons {
+  id                    String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code                  String         @unique @db.VarChar(50)
+  description           String?
+  discount_type         String         @db.VarChar(20)
+  discount_value        Decimal        @db.Decimal(10, 2)
+  min_purchase_amount   Decimal?       @db.Decimal(10, 2)
+  max_uses              Int?
+  current_uses          Int?           @default(0)
+  max_uses_per_user     Int?           @default(1)
+  starts_at             DateTime?      @db.Timestamptz(6)
+  expires_at            DateTime?      @db.Timestamptz(6)
+  applicable_products   String[]       @default([])
+  applicable_categories String[]       @default([])
+  is_active             Boolean?       @default(true)
+  created_by            String?        @db.Uuid
+  created_at            DateTime?      @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime?      @default(now()) @db.Timestamptz(6)
+  maeum_users           maeum_users?   @relation(fields: [created_by], references: [id], onUpdate: NoAction)
+  maeum_orders          maeum_orders[]
+
+  @@index([code], map: "idx_maeum_coupons_code")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_crm_leads {
+  id                     String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                   String            @db.VarChar(255)
+  phone                  String?           @db.VarChar(50)
+  email                  String?           @db.VarChar(255)
+  interest_destination   String?           @db.VarChar(255)
+  interest_product_id    String?           @db.Uuid
+  interest_product_type  String?           @db.VarChar(50)
+  origin                 String?           @db.VarChar(100)
+  status                 lead_status       @default(lead)
+  assigned_consultant_id String?           @db.Uuid
+  source_url             String?
+  utm_source             String?           @db.VarChar(255)
+  utm_medium             String?           @db.VarChar(255)
+  utm_campaign           String?           @db.VarChar(255)
+  notes                  String?
+  metadata               Json?             @default("{}")
+  created_at             DateTime?         @default(now()) @db.Timestamptz(6)
+  updated_at             DateTime?         @default(now()) @db.Timestamptz(6)
+  maeum_users            maeum_users?      @relation(fields: [assigned_consultant_id], references: [id], onUpdate: NoAction)
+  maeum_proposals        maeum_proposals[]
+
+  @@index([assigned_consultant_id], map: "idx_maeum_crm_leads_assigned")
+  @@index([status], map: "idx_maeum_crm_leads_status")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_destinations {
+  id                 String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name               String               @db.VarChar(255)
+  slug               String               @unique @db.VarChar(255)
+  country            String               @db.VarChar(100)
+  region             String?              @db.VarChar(100)
+  description        String?
+  short_description  String?
+  main_image         String?
+  gallery            String[]             @default([])
+  map_coordinates    Json?
+  video_url          String?
+  video_embed        String?
+  is_featured        Boolean?             @default(false)
+  sort_order         Int?                 @default(0)
+  seo_title          String?              @db.VarChar(255)
+  seo_description    String?
+  seo_keywords       String[]             @default([])
+  status             content_status?      @default(published)
+  created_at         DateTime?            @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime?            @default(now()) @db.Timestamptz(6)
+  maeum_faq_items    maeum_faq_items[]
+  maeum_packages     maeum_packages[]
+  maeum_testimonials maeum_testimonials[]
+
+  @@index([slug], map: "idx_maeum_destinations_slug")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_documents {
+  id                                                   String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  client_id                                            String?      @db.Uuid
+  trip_id                                              String?      @db.Uuid
+  uploaded_by                                          String?      @db.Uuid
+  file_name                                            String       @db.VarChar(255)
+  file_url                                             String
+  file_size                                            Int
+  file_type                                            String?      @db.VarChar(100)
+  category                                             String       @db.VarChar(100)
+  notes                                                String?
+  created_at                                           DateTime?    @default(now()) @db.Timestamptz(6)
+  maeum_users_maeum_documents_client_idTomaeum_users   maeum_users? @relation("maeum_documents_client_idTomaeum_users", fields: [client_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  maeum_trips                                          maeum_trips? @relation(fields: [trip_id], references: [id], onUpdate: NoAction)
+  maeum_users_maeum_documents_uploaded_byTomaeum_users maeum_users? @relation("maeum_documents_uploaded_byTomaeum_users", fields: [uploaded_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([client_id], map: "idx_maeum_documents_client")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_exchange_campuses {
+  id                          String                       @id
+  institution_id              String?
+  name                        String                       @db.VarChar(255)
+  city                        String?                      @db.VarChar(100)
+  location                    String?
+  description                 String?
+  main_image                  String?
+  gallery                     String[]                     @default([])
+  features                    String[]                     @default([])
+  address                     String?
+  map_coordinates             Json?
+  is_active                   Boolean?                     @default(true)
+  sort_order                  Int?                         @default(0)
+  created_at                  DateTime?                    @default(now()) @db.Timestamptz(6)
+  updated_at                  DateTime?                    @default(now()) @db.Timestamptz(6)
+  maeum_exchange_institutions maeum_exchange_institutions? @relation(fields: [institution_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  maeum_exchange_inquiries    maeum_exchange_inquiries[]
+  maeum_exchange_programs     maeum_exchange_programs[]
+
+  @@index([institution_id], map: "idx_maeum_exchange_campuses_institution")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_exchange_inquiries {
+  id                          String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                        String                   @db.VarChar(255)
+  email                       String                   @db.VarChar(255)
+  phone                       String?                  @db.VarChar(50)
+  country_of_residence        String?                  @db.VarChar(100)
+  preferred_language          String?                  @db.VarChar(50)
+  age                         Int?
+  campus_id                   String?
+  program_id                  String?
+  korean_level                String?                  @db.VarChar(50)
+  weeks                       Int?
+  preferred_period            String?                  @db.VarChar(255)
+  interested_in_accommodation Boolean?                 @default(false)
+  interested_in_insurance     Boolean?                 @default(false)
+  interested_in_transfer      Boolean?                 @default(false)
+  notes                       String?
+  status                      lead_status?             @default(lead)
+  assigned_consultant_id      String?                  @db.Uuid
+  metadata                    Json?                    @default("{}")
+  created_at                  DateTime?                @default(now()) @db.Timestamptz(6)
+  updated_at                  DateTime?                @default(now()) @db.Timestamptz(6)
+  maeum_users                 maeum_users?             @relation(fields: [assigned_consultant_id], references: [id], onUpdate: NoAction)
+  maeum_exchange_campuses     maeum_exchange_campuses? @relation(fields: [campus_id], references: [id], onUpdate: NoAction)
+  maeum_exchange_programs     maeum_exchange_programs? @relation(fields: [program_id], references: [id], onUpdate: NoAction)
+
+  @@index([status], map: "idx_maeum_exchange_inquiries_status")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_exchange_institutions {
+  id                      String                    @id
+  name                    String                    @db.VarChar(255)
+  slug                    String                    @unique @db.VarChar(255)
+  description             String?
+  short_description       String?
+  country                 String?                   @default("Coreia do Sul") @db.VarChar(100)
+  website                 String?
+  logo_url                String?
+  main_image              String?
+  gallery                 String[]                  @default([])
+  video_url               String?
+  video_embed             String?
+  features                String[]                  @default([])
+  is_active               Boolean?                  @default(true)
+  is_featured             Boolean?                  @default(false)
+  sort_order              Int?                      @default(0)
+  seo_title               String?                   @db.VarChar(255)
+  seo_description         String?
+  metadata                Json?                     @default("{}")
+  created_at              DateTime?                 @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime?                 @default(now()) @db.Timestamptz(6)
+  maeum_exchange_campuses maeum_exchange_campuses[]
+  maeum_exchange_programs maeum_exchange_programs[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_exchange_programs {
+  id                              String                       @id
+  institution_id                  String?
+  campus_id                       String?
+  name                            String                       @db.VarChar(255)
+  slug                            String                       @unique @db.VarChar(255)
+  description                     String?
+  duration_weeks_min              Int?                         @default(1)
+  duration_weeks_max              Int?                         @default(52)
+  classes_per_week                Int?                         @default(15)
+  class_hours_per_week            Decimal?                     @db.Decimal(5, 1)
+  level_required                  String?                      @default("Todos os níveis") @db.VarChar(100)
+  pricing_tiers                   Json?                        @default("[]")
+  includes_enrollment_fee         Boolean?                     @default(false)
+  enrollment_fee                  Decimal?                     @default(0) @db.Decimal(10, 2)
+  enrollment_fee_currency         String?                      @default("KRW") @db.VarChar(10)
+  includes_material               Boolean?                     @default(false)
+  material_fee                    Decimal?                     @default(0) @db.Decimal(10, 2)
+  material_fee_currency           String?                      @default("KRW") @db.VarChar(10)
+  includes_accommodation          Boolean?                     @default(false)
+  cultural_activities             Boolean?                     @default(false)
+  cultural_activities_description String?
+  is_active                       Boolean?                     @default(true)
+  sort_order                      Int?                         @default(0)
+  metadata                        Json?                        @default("{}")
+  created_at                      DateTime?                    @default(now()) @db.Timestamptz(6)
+  updated_at                      DateTime?                    @default(now()) @db.Timestamptz(6)
+  maeum_exchange_inquiries        maeum_exchange_inquiries[]
+  maeum_exchange_campuses         maeum_exchange_campuses?     @relation(fields: [campus_id], references: [id], onUpdate: NoAction)
+  maeum_exchange_institutions     maeum_exchange_institutions? @relation(fields: [institution_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([institution_id], map: "idx_maeum_exchange_programs_institution")
+  @@index([slug], map: "idx_maeum_exchange_programs_slug")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_experience_availability {
+  id                String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  experience_id     String?
+  date              DateTime             @db.Date
+  start_time        DateTime?            @db.Time(6)
+  end_time          DateTime?            @db.Time(6)
+  max_participants  Int?                 @default(10)
+  available_spots   Int?                 @default(10)
+  status            availability_status? @default(available)
+  price_adjustment  Decimal?             @default(0) @db.Decimal(10, 2)
+  notes             String?
+  created_at        DateTime?            @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime?            @default(now()) @db.Timestamptz(6)
+  maeum_experiences maeum_experiences?   @relation(fields: [experience_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([date], map: "idx_maeum_experience_availability_date")
+  @@index([experience_id], map: "idx_maeum_experience_availability_experience")
+  @@index([status], map: "idx_maeum_experience_availability_status")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_experiences {
+  id                            String                          @id
+  slug                          String                          @unique @db.VarChar(255)
+  title                         String                          @db.VarChar(255)
+  subtitle                      String?
+  location                      String?                         @db.VarChar(255)
+  region                        String?                         @db.VarChar(100)
+  city                          String?                         @db.VarChar(100)
+  category_slugs                String[]                        @default([])
+  description                   String?
+  highlights                    String[]                        @default([])
+  included                      String[]                        @default([])
+  not_included                  String[]                        @default([])
+  duration_hours                Decimal?                        @db.Decimal(5, 1)
+  price_per_person              Decimal                         @db.Decimal(10, 2)
+  price_currency                String?                         @default("BRL") @db.VarChar(10)
+  main_image                    String?
+  gallery                       String[]                        @default([])
+  video_url                     String?
+  video_embed                   String?
+  faq                           Json?                           @default("[]")
+  booking_type                  booking_type?                   @default(direct)
+  available_from                DateTime?                       @db.Date
+  min_participants              Int?                            @default(1)
+  max_participants              Int?                            @default(20)
+  requires_confirmation         Boolean?                        @default(false)
+  status                        content_status?                 @default(draft)
+  is_featured                   Boolean?                        @default(false)
+  seo_title                     String?                         @db.VarChar(255)
+  seo_description               String?
+  metadata                      Json?                           @default("{}")
+  created_at                    DateTime?                       @default(now()) @db.Timestamptz(6)
+  updated_at                    DateTime?                       @default(now()) @db.Timestamptz(6)
+  maeum_experience_availability maeum_experience_availability[]
+
+  @@index([category_slugs], map: "idx_maeum_experiences_category", type: Gin)
+  @@index([slug], map: "idx_maeum_experiences_slug")
+  @@index([status], map: "idx_maeum_experiences_status")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_faq_items {
+  id                 String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  question           String
+  answer             String
+  category           String?             @db.VarChar(100)
+  destination_id     String?             @db.Uuid
+  product_type       String?             @db.VarChar(50)
+  sort_order         Int?                @default(0)
+  is_active          Boolean?            @default(true)
+  created_at         DateTime?           @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime?           @default(now()) @db.Timestamptz(6)
+  maeum_destinations maeum_destinations? @relation(fields: [destination_id], references: [id], onUpdate: NoAction)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_journey_departures {
+  id                      String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  journey_id              String?
+  title                   String?                   @db.VarChar(255)
+  start_date              DateTime                  @db.Date
+  end_date                DateTime                  @db.Date
+  total_spots             Int
+  available_spots         Int
+  status                  availability_status?      @default(available)
+  notes                   String?
+  price_adjustment        Decimal?                  @default(0) @db.Decimal(10, 2)
+  metadata                Json?                     @default("{}")
+  created_at              DateTime?                 @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime?                 @default(now()) @db.Timestamptz(6)
+  maeum_journeys          maeum_journeys?           @relation(fields: [journey_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  maeum_journey_inquiries maeum_journey_inquiries[]
+
+  @@index([start_date, end_date], map: "idx_maeum_journey_departures_dates")
+  @@index([journey_id], map: "idx_maeum_journey_departures_journey")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_journey_inquiries {
+  id                       String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  journey_id               String?
+  departure_id             String?                   @db.Uuid
+  name                     String                    @db.VarChar(255)
+  email                    String                    @db.VarChar(255)
+  phone                    String?                   @db.VarChar(50)
+  participants             Int?                      @default(1)
+  preferred_category       String?                   @db.VarChar(100)
+  message                  String?
+  status                   lead_status?              @default(lead)
+  assigned_consultant_id   String?                   @db.Uuid
+  metadata                 Json?                     @default("{}")
+  created_at               DateTime?                 @default(now()) @db.Timestamptz(6)
+  updated_at               DateTime?                 @default(now()) @db.Timestamptz(6)
+  maeum_users              maeum_users?              @relation(fields: [assigned_consultant_id], references: [id], onUpdate: NoAction)
+  maeum_journey_departures maeum_journey_departures? @relation(fields: [departure_id], references: [id], onUpdate: NoAction)
+  maeum_journeys           maeum_journeys?           @relation(fields: [journey_id], references: [id], onUpdate: NoAction)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_journeys {
+  id                       String                     @id
+  slug                     String                     @unique @db.VarChar(255)
+  title                    String                     @db.VarChar(255)
+  subtitle                 String?
+  concept                  String?
+  destinations             String[]                   @default([])
+  duration_days            Int
+  total_spots              Int?                       @default(15)
+  accommodation            String?                    @db.VarChar(255)
+  accommodation_details    String?
+  price_per_person         Decimal                    @db.Decimal(10, 2)
+  price_currency           String?                    @default("BRL") @db.VarChar(10)
+  main_image               String?
+  gallery                  String[]                   @default([])
+  video_url                String?
+  video_embed              String?
+  included                 String[]                   @default([])
+  not_included             String[]                   @default([])
+  itinerary                Json?                      @default("[]")
+  highlights               Json?                      @default("[]")
+  categories               Json?                      @default("[]")
+  faq                      Json?                      @default("[]")
+  payment_options          Json?                      @default("{}")
+  status                   content_status?            @default(draft)
+  category                 journey_category?          @default(premium)
+  is_featured              Boolean?                   @default(false)
+  seo_title                String?                    @db.VarChar(255)
+  seo_description          String?
+  metadata                 Json?                      @default("{}")
+  created_at               DateTime?                  @default(now()) @db.Timestamptz(6)
+  updated_at               DateTime?                  @default(now()) @db.Timestamptz(6)
+  maeum_journey_departures maeum_journey_departures[]
+  maeum_journey_inquiries  maeum_journey_inquiries[]
+
+  @@index([slug], map: "idx_maeum_journeys_slug")
+  @@index([status], map: "idx_maeum_journeys_status")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_kbeauty_availability {
+  id                        String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  kbeauty_experience_id     String?                    @db.Uuid
+  date                      DateTime                   @db.Date
+  start_time                DateTime?                  @db.Time(6)
+  end_time                  DateTime?                  @db.Time(6)
+  max_participants          Int?                       @default(5)
+  available_spots           Int?                       @default(5)
+  status                    availability_status?       @default(available)
+  price_adjustment          Decimal?                   @default(0) @db.Decimal(10, 2)
+  notes                     String?
+  created_at                DateTime?                  @default(now()) @db.Timestamptz(6)
+  updated_at                DateTime?                  @default(now()) @db.Timestamptz(6)
+  maeum_kbeauty_experiences maeum_kbeauty_experiences? @relation(fields: [kbeauty_experience_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_kbeauty_experiences {
+  id                         String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug                       String                       @unique @db.VarChar(255)
+  title                      String                       @db.VarChar(255)
+  subtitle                   String?
+  location                   String?                      @db.VarChar(255)
+  region                     String?                      @db.VarChar(100)
+  city                       String?                      @db.VarChar(100)
+  partner_id                 String?                      @db.Uuid
+  description                String?
+  highlights                 String[]                     @default([])
+  included                   String[]                     @default([])
+  not_included               String[]                     @default([])
+  duration_hours             Decimal?                     @db.Decimal(5, 1)
+  price_per_person           Decimal                      @db.Decimal(10, 2)
+  price_currency             String?                      @default("BRL") @db.VarChar(10)
+  main_image                 String?
+  gallery                    String[]                     @default([])
+  video_url                  String?
+  video_embed                String?
+  faq                        Json?                        @default("[]")
+  booking_type               booking_type?                @default(request)
+  available_from             DateTime?                    @db.Date
+  min_participants           Int?                         @default(1)
+  max_participants           Int?                         @default(10)
+  requires_confirmation      Boolean?                     @default(true)
+  is_partner_experience      Boolean?                     @default(false)
+  is_included_in_journey     Boolean?                     @default(false)
+  status                     content_status?              @default(draft)
+  is_featured                Boolean?                     @default(false)
+  seo_title                  String?                      @db.VarChar(255)
+  seo_description            String?
+  metadata                   Json?                        @default("{}")
+  created_at                 DateTime?                    @default(now()) @db.Timestamptz(6)
+  updated_at                 DateTime?                    @default(now()) @db.Timestamptz(6)
+  maeum_kbeauty_availability maeum_kbeauty_availability[]
+  maeum_kbeauty_partners     maeum_kbeauty_partners?      @relation(fields: [partner_id], references: [id], onUpdate: NoAction)
+
+  @@index([partner_id], map: "idx_maeum_kbeauty_experiences_partner")
+  @@index([slug], map: "idx_maeum_kbeauty_experiences_slug")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_kbeauty_partners {
+  id                        String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                      String                      @db.VarChar(255)
+  slug                      String                      @unique @db.VarChar(255)
+  description               String?
+  logo_url                  String?
+  website                   String?
+  contact_name              String?                     @db.VarChar(255)
+  contact_email             String?                     @db.VarChar(255)
+  contact_phone             String?                     @db.VarChar(50)
+  address                   String?
+  is_active                 Boolean?                    @default(true)
+  metadata                  Json?                       @default("{}")
+  created_at                DateTime?                   @default(now()) @db.Timestamptz(6)
+  updated_at                DateTime?                   @default(now()) @db.Timestamptz(6)
+  maeum_kbeauty_experiences maeum_kbeauty_experiences[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_media_library {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title         String?      @db.VarChar(255)
+  alt_text      String?
+  description   String?
+  url           String
+  thumbnail_url String?
+  media_type    media_type   @default(image)
+  mime_type     String?      @db.VarChar(100)
+  file_size     Int?
+  width         Int?
+  height        Int?
+  folder        String?      @default("/") @db.VarChar(255)
+  tags          String[]     @default([])
+  uploaded_by   String?      @db.Uuid
+  is_public     Boolean?     @default(true)
+  metadata      Json?        @default("{}")
+  created_at    DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime?    @default(now()) @db.Timestamptz(6)
+  maeum_users   maeum_users? @relation(fields: [uploaded_by], references: [id], onUpdate: NoAction)
+
+  @@index([media_type], map: "idx_maeum_media_type")
+  @@index([uploaded_by], map: "idx_maeum_media_uploaded_by")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_navigation_items {
+  id                           String                   @id
+  parent_id                    String?
+  navigation_type              navigation_type          @default(main)
+  label                        String                   @db.VarChar(255)
+  url                          String?                  @db.VarChar(500)
+  icon                         String?                  @db.VarChar(100)
+  target                       String?                  @default("_self") @db.VarChar(20)
+  sort_order                   Int                      @default(0)
+  is_active                    Boolean?                 @default(true)
+  requires_auth                Boolean?                 @default(false)
+  allowed_roles                user_role_maeum[]
+  metadata                     Json?                    @default("{}")
+  created_at                   DateTime?                @default(now()) @db.Timestamptz(6)
+  updated_at                   DateTime?                @default(now()) @db.Timestamptz(6)
+  maeum_navigation_items       maeum_navigation_items?  @relation("maeum_navigation_itemsTomaeum_navigation_items", fields: [parent_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  other_maeum_navigation_items maeum_navigation_items[] @relation("maeum_navigation_itemsTomaeum_navigation_items")
+
+  @@index([navigation_type], map: "idx_maeum_navigation_type")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_newsletter_campaigns {
+  id               String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title            String       @db.VarChar(255)
+  subject          String       @db.VarChar(255)
+  content          String
+  sender_name      String?      @db.VarChar(255)
+  sender_email     String?      @db.VarChar(255)
+  segment          Json?        @default("{}")
+  scheduled_at     DateTime?    @db.Timestamptz(6)
+  sent_at          DateTime?    @db.Timestamptz(6)
+  total_recipients Int?         @default(0)
+  opened_count     Int?         @default(0)
+  clicked_count    Int?         @default(0)
+  status           String?      @default("draft") @db.VarChar(50)
+  created_by       String?      @db.Uuid
+  created_at       DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime?    @default(now()) @db.Timestamptz(6)
+  maeum_users      maeum_users? @relation(fields: [created_by], references: [id], onUpdate: NoAction)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_newsletter_subscribers {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email           String    @unique @db.VarChar(255)
+  name            String?   @db.VarChar(255)
+  interests       String[]  @default([])
+  is_active       Boolean?  @default(true)
+  subscribed_at   DateTime? @default(now()) @db.Timestamptz(6)
+  unsubscribed_at DateTime? @db.Timestamptz(6)
+  metadata        Json?     @default("{}")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_notification_templates {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key        String    @unique @db.VarChar(100)
+  name       String    @db.VarChar(255)
+  subject    String?
+  content    String
+  variables  String[]  @default([])
+  channels   String[]  @default([])
+  is_active  Boolean?  @default(true)
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @default(now()) @db.Timestamptz(6)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_notifications {
+  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id     String?      @db.Uuid
+  type        String       @db.VarChar(100)
+  title       String       @db.VarChar(255)
+  message     String?
+  data        Json?        @default("{}")
+  link        String?
+  is_read     Boolean?     @default(false)
+  read_at     DateTime?    @db.Timestamptz(6)
+  channel     String?      @default("in_app") @db.VarChar(50)
+  created_at  DateTime?    @default(now()) @db.Timestamptz(6)
+  maeum_users maeum_users? @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([user_id], map: "idx_maeum_notifications_user")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_orders {
+  id                                                  String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  order_number                                        String           @unique @db.VarChar(50)
+  client_id                                           String?          @db.Uuid
+  consultant_id                                       String?          @db.Uuid
+  proposal_id                                         String?          @db.Uuid
+  product_type                                        String           @db.VarChar(50)
+  product_id                                          String?          @db.Uuid
+  product_name                                        String?          @db.VarChar(255)
+  quantity                                            Int?             @default(1)
+  unit_price                                          Decimal          @db.Decimal(10, 2)
+  discount_amount                                     Decimal?         @default(0) @db.Decimal(10, 2)
+  coupon_id                                           String?          @db.Uuid
+  total_amount                                        Decimal          @db.Decimal(10, 2)
+  payment_method                                      payment_method?
+  payment_status                                      String?          @default("pending") @db.VarChar(50)
+  payment_details                                     Json?            @default("{}")
+  notes                                               String?
+  status                                              String?          @default("pending") @db.VarChar(50)
+  metadata                                            Json?            @default("{}")
+  created_at                                          DateTime?        @default(now()) @db.Timestamptz(6)
+  updated_at                                          DateTime?        @default(now()) @db.Timestamptz(6)
+  maeum_users_maeum_orders_client_idTomaeum_users     maeum_users?     @relation("maeum_orders_client_idTomaeum_users", fields: [client_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  maeum_users_maeum_orders_consultant_idTomaeum_users maeum_users?     @relation("maeum_orders_consultant_idTomaeum_users", fields: [consultant_id], references: [id], onUpdate: NoAction)
+  maeum_coupons                                       maeum_coupons?   @relation(fields: [coupon_id], references: [id], onUpdate: NoAction)
+  maeum_proposals                                     maeum_proposals? @relation(fields: [proposal_id], references: [id], onUpdate: NoAction)
+
+  @@index([client_id], map: "idx_maeum_orders_client")
+  @@index([status], map: "idx_maeum_orders_status")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_packages {
+  id                 String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  destination_id     String?             @db.Uuid
+  title              String              @db.VarChar(255)
+  slug               String              @unique @db.VarChar(255)
+  price              Decimal             @db.Decimal(10, 2)
+  price_currency     String?             @default("USD") @db.VarChar(10)
+  duration_days      Int?
+  start_dates        DateTime[]          @default([]) @db.Date
+  end_dates          DateTime[]          @default([]) @db.Date
+  description        String?
+  short_description  String?
+  gallery            String[]            @default([])
+  video_url          String?
+  video_embed        String?
+  itinerary          Json?               @default("[]")
+  included           String[]            @default([])
+  not_included       String[]            @default([])
+  highlights         Json?               @default("[]")
+  faq                Json?               @default("[]")
+  payment_options    Json?               @default("{}")
+  status             content_status?     @default(draft)
+  is_featured        Boolean?            @default(false)
+  seo_title          String?             @db.VarChar(255)
+  seo_description    String?
+  created_at         DateTime?           @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime?           @default(now()) @db.Timestamptz(6)
+  maeum_destinations maeum_destinations? @relation(fields: [destination_id], references: [id], onUpdate: NoAction)
+  maeum_trips        maeum_trips[]
+
+  @@index([destination_id], map: "idx_maeum_packages_destination")
+  @@index([slug], map: "idx_maeum_packages_slug")
+  @@index([status], map: "idx_maeum_packages_status")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_page_views {
+  id               String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  page_url         String
+  page_title       String?      @db.VarChar(255)
+  user_id          String?      @db.Uuid
+  session_id       String?      @db.VarChar(255)
+  referrer         String?
+  utm_source       String?      @db.VarChar(255)
+  utm_medium       String?      @db.VarChar(255)
+  utm_campaign     String?      @db.VarChar(255)
+  device_type      String?      @db.VarChar(50)
+  country          String?      @db.VarChar(100)
+  duration_seconds Int?         @default(0)
+  created_at       DateTime?    @default(now()) @db.Timestamptz(6)
+  maeum_users      maeum_users? @relation(fields: [user_id], references: [id], onUpdate: NoAction)
+
+  @@index([created_at], map: "idx_maeum_page_views_created")
+  @@index([page_url], map: "idx_maeum_page_views_url")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_payment_methods {
+  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  method       payment_method @unique
+  display_name String         @db.VarChar(255)
+  description  String?
+  is_active    Boolean?       @default(true)
+  sort_order   Int?           @default(0)
+  config       Json?          @default("{}")
+  created_at   DateTime?      @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime?      @default(now()) @db.Timestamptz(6)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_proposal_versions {
+  id              String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  proposal_id     String?          @db.Uuid
+  version         Int
+  items           Json
+  total_amount    Decimal          @db.Decimal(10, 2)
+  status          proposal_status
+  change_notes    String?
+  created_by      String?          @db.Uuid
+  created_at      DateTime?        @default(now()) @db.Timestamptz(6)
+  maeum_users     maeum_users?     @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  maeum_proposals maeum_proposals? @relation(fields: [proposal_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_proposals {
+  id                                                     String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  client_id                                              String?                   @db.Uuid
+  consultant_id                                          String?                   @db.Uuid
+  lead_id                                                String?                   @db.Uuid
+  title                                                  String                    @db.VarChar(255)
+  status                                                 proposal_status           @default(draft)
+  items                                                  Json?                     @default("[]")
+  total_amount                                           Decimal                   @default(0.00) @db.Decimal(10, 2)
+  discount_amount                                        Decimal?                  @default(0.00) @db.Decimal(10, 2)
+  payment_conditions                                     String?
+  validity_days                                          Int?                      @default(15)
+  unique_link                                            String                    @unique @db.VarChar(255)
+  version                                                Int                       @default(1)
+  notes                                                  String?
+  metadata                                               Json?                     @default("{}")
+  created_at                                             DateTime?                 @default(now()) @db.Timestamptz(6)
+  updated_at                                             DateTime?                 @default(now()) @db.Timestamptz(6)
+  maeum_orders                                           maeum_orders[]
+  maeum_proposal_versions                                maeum_proposal_versions[]
+  maeum_users_maeum_proposals_client_idTomaeum_users     maeum_users?              @relation("maeum_proposals_client_idTomaeum_users", fields: [client_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  maeum_users_maeum_proposals_consultant_idTomaeum_users maeum_users?              @relation("maeum_proposals_consultant_idTomaeum_users", fields: [consultant_id], references: [id], onUpdate: NoAction)
+  maeum_crm_leads                                        maeum_crm_leads?          @relation(fields: [lead_id], references: [id], onUpdate: NoAction)
+  maeum_trips                                            maeum_trips[]
+
+  @@index([client_id], map: "idx_maeum_proposals_client")
+  @@index([status], map: "idx_maeum_proposals_status")
+  @@index([unique_link], map: "idx_maeum_proposals_unique_link")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_site_settings {
+  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key         String       @unique @db.VarChar(255)
+  value       Json         @default("{}")
+  description String?
+  updated_by  String?      @db.Uuid
+  updated_at  DateTime?    @default(now()) @db.Timestamptz(6)
+  maeum_users maeum_users? @relation(fields: [updated_by], references: [id], onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_testimonials {
+  id                 String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  author_name        String              @db.VarChar(255)
+  author_role        String?             @db.VarChar(255)
+  author_avatar      String?
+  content            String
+  rating             Int?
+  destination_id     String?             @db.Uuid
+  product_type       String?             @db.VarChar(50)
+  is_featured        Boolean?            @default(false)
+  status             content_status?     @default(published)
+  sort_order         Int?                @default(0)
+  created_at         DateTime?           @default(now()) @db.Timestamptz(6)
+  maeum_destinations maeum_destinations? @relation(fields: [destination_id], references: [id], onUpdate: NoAction)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_trips {
+  id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  client_id       String?           @db.Uuid
+  package_id      String?           @db.Uuid
+  proposal_id     String?           @db.Uuid
+  title           String            @db.VarChar(255)
+  start_date      DateTime          @db.Date
+  end_date        DateTime          @db.Date
+  timeline        Json?             @default("[]")
+  payments        Json?             @default("[]")
+  status          String?           @default("preparation") @db.VarChar(50)
+  notes           String?
+  metadata        Json?             @default("{}")
+  created_at      DateTime?         @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime?         @default(now()) @db.Timestamptz(6)
+  maeum_documents maeum_documents[]
+  maeum_users     maeum_users?      @relation(fields: [client_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  maeum_packages  maeum_packages?   @relation(fields: [package_id], references: [id], onUpdate: NoAction)
+  maeum_proposals maeum_proposals?  @relation(fields: [proposal_id], references: [id], onUpdate: NoAction)
+
+  @@index([client_id], map: "idx_maeum_trips_client")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maeum_users {
+  id                                                         String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                                                      String                       @unique @db.VarChar(255)
+  name                                                       String                       @db.VarChar(255)
+  role                                                       user_role_maeum              @default(customer)
+  phone                                                      String?                      @db.VarChar(50)
+  avatar_url                                                 String?
+  bio                                                        String?
+  whatsapp                                                   String?                      @db.VarChar(50)
+  languages                                                  String[]                     @default([])
+  is_active                                                  Boolean?                     @default(true)
+  email_verified                                             Boolean?                     @default(false)
+  last_login_at                                              DateTime?                    @db.Timestamptz(6)
+  metadata                                                   Json?                        @default("{}")
+  created_at                                                 DateTime?                    @default(now()) @db.Timestamptz(6)
+  updated_at                                                 DateTime?                    @default(now()) @db.Timestamptz(6)
+  maeum_activity_log                                         maeum_activity_log[]
+  maeum_blog_posts                                           maeum_blog_posts[]
+  maeum_chat_messages                                        maeum_chat_messages[]
+  maeum_chats_maeum_chats_client_idTomaeum_users             maeum_chats[]                @relation("maeum_chats_client_idTomaeum_users")
+  maeum_chats_maeum_chats_consultant_idTomaeum_users         maeum_chats[]                @relation("maeum_chats_consultant_idTomaeum_users")
+  maeum_coupons                                              maeum_coupons[]
+  maeum_crm_leads                                            maeum_crm_leads[]
+  maeum_documents_maeum_documents_client_idTomaeum_users     maeum_documents[]            @relation("maeum_documents_client_idTomaeum_users")
+  maeum_documents_maeum_documents_uploaded_byTomaeum_users   maeum_documents[]            @relation("maeum_documents_uploaded_byTomaeum_users")
+  maeum_exchange_inquiries                                   maeum_exchange_inquiries[]
+  maeum_journey_inquiries                                    maeum_journey_inquiries[]
+  maeum_media_library                                        maeum_media_library[]
+  maeum_newsletter_campaigns                                 maeum_newsletter_campaigns[]
+  maeum_notifications                                        maeum_notifications[]
+  maeum_orders_maeum_orders_client_idTomaeum_users           maeum_orders[]               @relation("maeum_orders_client_idTomaeum_users")
+  maeum_orders_maeum_orders_consultant_idTomaeum_users       maeum_orders[]               @relation("maeum_orders_consultant_idTomaeum_users")
+  maeum_page_views                                           maeum_page_views[]
+  maeum_proposal_versions                                    maeum_proposal_versions[]
+  maeum_proposals_maeum_proposals_client_idTomaeum_users     maeum_proposals[]            @relation("maeum_proposals_client_idTomaeum_users")
+  maeum_proposals_maeum_proposals_consultant_idTomaeum_users maeum_proposals[]            @relation("maeum_proposals_consultant_idTomaeum_users")
+  maeum_site_settings                                        maeum_site_settings[]
+  maeum_trips                                                maeum_trips[]
+
+  @@index([email], map: "idx_maeum_users_email")
+  @@index([role], map: "idx_maeum_users_role")
+}
+
+enum availability_status {
+  available
+  limited
+  sold_out
+  cancelled
+}
+
+enum booking_type {
+  direct
+  request
+}
+
+enum content_status {
+  draft
+  published
+  archived
+}
+
+enum journey_category {
+  premium
+  army
+  standard
+}
+
+enum lead_status {
+  lead
+  contact
+  consultant_assigned
+  proposal
+  negotiation
+  approval
+  payment
+  trip_preparation
+  trip_completed
+}
+
+enum media_type {
+  image
+  video
+  document
+  audio
+}
+
+enum navigation_type {
+  main
+  footer
+  mobile
+}
+
+enum payment_method {
+  pix
+  boleto
+  credit_card
+  transfer
+  paypal
+}
+
+enum proposal_status {
+  draft
+  sent
+  approved
+  changes_requested
+}
+
+enum user_role_maeum {
+  super_admin
+  admin
+  manager
+  editor
+  consultora
+  customer
 }
