@@ -144,29 +144,29 @@ export default function JornadasPage() {
       </section>
 
       {/* 2. Main Layout (Grid + Sidebar) */}
-      <section className="py-16 px-6 sm:px-12 max-w-7xl mx-auto w-full">
-        <div className="flex flex-col lg:flex-row gap-12">
+      <section className="py-16 px-6 sm:px-12 max-w-[1400px] mx-auto w-full">
+        <div className="flex flex-col xl:flex-row gap-10">
           
           {/* Left Side - Grid */}
           <div className="flex-1 flex flex-col gap-8">
-            <div className="flex items-center justify-center lg:justify-start">
-              <span className="text-[10px] uppercase tracking-[0.2em] text-[#C8A27C] font-bold text-center lg:text-left w-full">
+            <div className="flex items-center justify-center">
+              <span className="text-[10px] uppercase tracking-[0.2em] text-[#C8A27C] font-bold text-center w-full">
                 JORNADAS RECENTES
               </span>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {JORNADAS_RECENTES.map((jornada, i) => (
                 <div key={i} className="group bg-[#150E0C] border border-[#3D2620] rounded-sm overflow-hidden flex flex-col hover:border-[#C8A27C]/50 transition-colors cursor-pointer">
                   {/* Image Container */}
-                  <div className="relative h-[220px] w-full overflow-hidden">
+                  <div className="relative h-[180px] w-full overflow-hidden">
                     <Image 
                       src={jornada.image} 
                       alt={jornada.title} 
                       fill 
                       className="object-cover group-hover:scale-105 transition-transform duration-700" 
                     />
-                    <div className="absolute top-4 left-4 bg-[#0F0A08]/80 backdrop-blur text-white text-[9px] font-bold px-3 py-1.5 uppercase tracking-widest border border-[#3D2620]">
+                    <div className="absolute top-4 left-4 bg-[#0F0A08] text-white text-[9px] font-bold px-2 py-1 uppercase tracking-widest border border-[#3D2620]">
                       {jornada.tag}
                     </div>
                   </div>
@@ -299,39 +299,37 @@ export default function JornadasPage() {
       </section>
 
       {/* 3. Bottom CTA Section */}
-      <section className="relative py-24 px-6 sm:px-12 w-full border-t border-[#3D2620] overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <Image 
-            src="https://images.unsplash.com/photo-1601584989635-c337b51b3152?q=80&w=1600" 
-            alt="Pessoas em Seul" 
-            fill 
-            className="object-cover object-center brightness-50" 
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0F0A08] to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-l from-[#0F0A08]/80 to-transparent" />
-        </div>
-
-        <div className="relative z-10 max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-end gap-12">
-          {/* Left space empty to show image focal point */}
-          <div className="hidden lg:block lg:w-1/3"></div>
+      <section className="py-12 px-6 sm:px-12 max-w-[1400px] mx-auto w-full">
+        <div className="relative w-full border border-[#3D2620] overflow-hidden rounded-sm flex flex-col md:flex-row bg-[#150E0C]">
+          
+          {/* Left Side Image */}
+          <div className="relative w-full md:w-[45%] min-h-[300px] md:min-h-full">
+            <Image 
+              src="https://images.unsplash.com/photo-1601584989635-c337b51b3152?q=80&w=800" 
+              alt="Pessoas em Seul" 
+              fill 
+              className="object-cover object-center" 
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent to-[#150E0C]" />
+          </div>
 
           {/* Right side content */}
-          <div className="w-full lg:w-2/3 flex flex-col items-start lg:items-center text-left lg:text-center gap-6">
-            <span className="text-[10px] uppercase tracking-[0.2em] text-[#C8A27C] font-semibold">
+          <div className="w-full md:w-[55%] flex flex-col items-start justify-center text-left p-10 md:p-16 gap-6 relative z-10">
+            <span className="text-[10px] uppercase tracking-[0.2em] text-[#C8A27C] font-bold">
               VIVA SUA PRÓPRIA JORNADA
             </span>
             <h2 className="font-heading text-4xl sm:text-5xl font-light text-white leading-[1.1]">
-              Sua história na Coreia <br className="hidden md:block" />
+              Sua história na Coreia <br className="hidden lg:block" />
               <span className="italic text-[#C8A27C]">também pode inspirar outros.</span>
             </h2>
-            <p className="text-[13px] text-gray-300 font-light max-w-2xl leading-relaxed">
+            <p className="text-[13px] text-gray-400 font-light max-w-lg leading-relaxed">
               Viaje com a Maeum Global e compartilhe sua jornada com o mundo. Vamos transformar sua experiência em memória, conexão e inspiração.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 mt-4 w-full sm:w-auto">
+            <div className="flex flex-col sm:flex-row gap-4 mt-2 w-full sm:w-auto">
               <button className="flex items-center justify-center bg-[#C8A27C] hover:bg-[#B8906C] text-[#0F0A08] font-bold text-[10px] py-4 px-8 rounded-none transition-all uppercase tracking-widest">
                 QUERO VIVER ESSA EXPERIÊNCIA
               </button>
-              <button className="flex items-center justify-center bg-transparent border border-[#3D2620] hover:border-[#C8A27C] text-[#C8A27C] font-bold text-[10px] py-4 px-8 rounded-none transition-all uppercase tracking-widest">
+              <button className="flex items-center justify-center bg-transparent border border-[#C8A27C]/30 hover:border-[#C8A27C] text-[#C8A27C] font-bold text-[10px] py-4 px-8 rounded-none transition-all uppercase tracking-widest">
                 FALE COM CONSULTORA
               </button>
             </div>
@@ -341,7 +339,7 @@ export default function JornadasPage() {
 
       {/* Support Info Footer */}
       <section className="bg-[#150E0C] border-t border-b border-[#3D2620] py-8 px-6">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-6 opacity-60">
+        <div className="max-w-[1400px] mx-auto flex flex-wrap items-center justify-between gap-6 opacity-60">
           {[
             { label: 'EXPERIÊNCIAS AUTÊNTICAS', icon: Star },
             { label: 'ROTEIROS PERSONALIZADOS', icon: MapPin },
