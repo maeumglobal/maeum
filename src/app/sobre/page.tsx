@@ -154,10 +154,10 @@ export default function SobrePage() {
           </div>
 
           <div className="text-center mt-8">
-            <button className="flex items-center justify-center gap-2 bg-transparent border border-[#3A232E] hover:border-[#C8A27C] text-[#C8A27C] font-bold text-xs py-3 px-8 rounded-xl transition-all uppercase tracking-wider mx-auto">
-              CONHEÇA TODOS OS PARCEIROS
+            <Link href="/contato" className="flex items-center justify-center gap-2 bg-transparent border border-[#3A232E] hover:border-[#C8A27C] text-[#C8A27C] font-bold text-xs py-3 px-8 rounded-xl transition-all uppercase tracking-wider mx-auto w-fit">
+              CONHEÇA NOSSOS PARCEIROS
               <ArrowRight className="h-4 w-4" />
-            </button>
+            </Link>
           </div>
         </div>
       </section>

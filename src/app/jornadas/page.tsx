@@ -142,10 +142,10 @@ export default function JornadasPage() {
             Acompanhe relatos autênticos de quem vive a Coreia do Sul de verdade. Dicas, descobertas, cultura, sabores e momentos inesquecíveis registrados em cada passo das nossas experiências.
           </p>
           <div className="mt-4">
-            <button className="flex items-center justify-center gap-3 bg-transparent border border-[#3D2620] hover:border-[#C8A27C] text-[#C8A27C] font-bold text-[10px] py-4 px-8 rounded-none transition-all group uppercase tracking-widest">
+            <Link href="/contato" className="flex items-center justify-center gap-3 bg-transparent border border-[#3D2620] hover:border-[#C8A27C] text-[#C8A27C] font-bold text-[10px] py-4 px-8 rounded-none transition-all group uppercase tracking-widest w-fit">
               COMPARTILHE SUA JORNADA
               <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-            </button>
+            </Link>
           </div>
         </div>
       </section>
@@ -209,10 +209,10 @@ export default function JornadasPage() {
             </div>
             
             <div className="flex justify-center mt-6">
-              <button className="flex items-center justify-center gap-3 bg-transparent border border-[#3D2620] hover:border-[#C8A27C] text-[#C8A27C] font-bold text-[10px] py-4 px-8 rounded-none transition-all group uppercase tracking-widest">
+              <Link href="#" className="flex items-center justify-center gap-3 bg-transparent border border-[#3D2620] hover:border-[#C8A27C] text-[#C8A27C] font-bold text-[10px] py-4 px-8 rounded-none transition-all group uppercase tracking-widest">
                 VER MAIS JORNADAS
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-              </button>
+              </Link>
             </div>
           </div>
 
@@ -264,7 +264,7 @@ export default function JornadasPage() {
                   className="w-full bg-[#150E0C] border border-[#3D2620] text-white text-[12px] px-4 py-3 placeholder:text-gray-500 focus:outline-none focus:border-[#C8A27C] transition-colors rounded-none"
                 />
                 <button 
-                  type="button" 
+                  type="submit" 
                   className="w-full bg-[#C8A27C] hover:bg-[#B8906C] text-[#0F0A08] font-bold text-[10px] py-3.5 px-4 rounded-none transition-all uppercase tracking-widest"
                 >
                   ASSINAR NEWSLETTER
@@ -333,12 +333,12 @@ export default function JornadasPage() {
               Viaje com a Maeum Global e compartilhe sua jornada com o mundo. Vamos transformar sua experiência em memória, conexão e inspiração.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 mt-2 w-full sm:w-auto">
-              <button className="flex items-center justify-center bg-[#C8A27C] hover:bg-[#B8906C] text-[#0F0A08] font-bold text-[10px] py-4 px-8 rounded-none transition-all uppercase tracking-widest">
+              <Link href="/contato" className="flex items-center justify-center bg-[#C8A27C] hover:bg-[#B8906C] text-[#0F0A08] font-bold text-[10px] py-4 px-8 rounded-none transition-all uppercase tracking-widest w-full sm:w-auto">
                 QUERO VIVER ESSA EXPERIÊNCIA
-              </button>
-              <button className="flex items-center justify-center bg-transparent border border-[#C8A27C]/30 hover:border-[#C8A27C] text-[#C8A27C] font-bold text-[10px] py-4 px-8 rounded-none transition-all uppercase tracking-widest">
+              </Link>
+              <Link href="/contato" className="flex items-center justify-center bg-transparent border border-[#C8A27C]/30 hover:border-[#C8A27C] text-[#C8A27C] font-bold text-[10px] py-4 px-8 rounded-none transition-all uppercase tracking-widest w-full sm:w-auto">
                 FALE COM CONSULTORA
-              </button>
+              </Link>
             </div>
           </div>
         </div>

@@ -173,14 +173,14 @@ export default function ExperienciasPage() {
             e com parceiros cuidadosamente selecionados.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 mt-4 w-full sm:w-auto">
-            <button className="flex items-center justify-center gap-3 bg-[#C8A27C] hover:bg-[#B8906C] text-[#0F0A08] font-bold text-[11px] py-4 px-8 rounded-none transition-all group uppercase tracking-widest">
-              EXPLORAR EXPERIÊNCIAS
+            <Link href="/pacotes" className="flex items-center justify-center gap-3 bg-[#C8A27C] hover:bg-[#B8906C] text-[#0F0A08] font-bold text-[11px] py-4 px-8 rounded-none transition-all group uppercase tracking-widest">
+              VER PACOTES COMPLETOS
               <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-            </button>
-            <button className="flex items-center justify-center gap-3 bg-transparent border border-[#C8A27C] text-[#C8A27C] hover:bg-[#C8A27C]/10 font-bold text-[11px] py-4 px-8 rounded-none transition-all uppercase tracking-widest">
+            </Link>
+            <Link href="/contato" className="flex items-center justify-center gap-3 bg-transparent border border-[#C8A27C] text-[#C8A27C] hover:bg-[#C8A27C]/10 font-bold text-[11px] py-4 px-8 rounded-none transition-all uppercase tracking-widest">
               <CalendarCheck className="w-4 h-4" />
               SOLICITAR PLANEJAMENTO
-            </button>
+            </Link>
           </div>
         </div>
       </section>
@@ -381,13 +381,13 @@ export default function ExperienciasPage() {
           </div>
           
           <div className="relative z-10 flex flex-col gap-4 lg:w-1/3 w-full">
-            <button className="w-full bg-[#C8A27C] hover:bg-[#B8906C] text-[#0F0A08] font-bold text-[10px] py-4 px-8 rounded-none transition-all uppercase tracking-widest flex items-center justify-center gap-3 group">
+            <Link href="/contato" className="w-full bg-[#C8A27C] hover:bg-[#B8906C] text-[#0F0A08] font-bold text-[10px] py-4 px-8 rounded-none transition-all uppercase tracking-widest flex items-center justify-center gap-3 group">
               PERSONALIZAR MINHA EXPERIÊNCIA
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </button>
-            <button className="text-[9px] text-[#C8A27C] hover:text-white uppercase tracking-widest font-semibold transition-colors">
+            </Link>
+            <Link href="/contato" className="text-[9px] text-[#C8A27C] hover:text-white uppercase tracking-widest font-semibold transition-colors flex justify-center mt-2">
               FALAR COM UMA CONSULTORA
-            </button>
+            </Link>
           </div>
         </div>
       </section>

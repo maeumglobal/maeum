@@ -151,14 +151,14 @@ export default function Home() {
           </div>
           
           <div className="flex flex-col sm:flex-row gap-4 mt-2">
-            <button className="flex items-center justify-center gap-3 bg-[#C8A27C] hover:bg-[#B8906C] text-[#0F0A08] font-bold text-[11px] py-4 px-8 rounded-none transition-all group uppercase tracking-widest">
+            <Link href="/jornadas" className="flex items-center justify-center gap-3 bg-[#C8A27C] hover:bg-[#B8906C] text-[#0F0A08] font-bold text-[11px] py-4 px-8 rounded-none transition-all group uppercase tracking-widest">
               CONHECER JORNADAS
               <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-            </button>
-            <button className="flex items-center justify-center gap-3 bg-transparent border border-[#C8A27C] text-[#C8A27C] hover:bg-[#C8A27C]/10 font-bold text-[11px] py-4 px-8 rounded-none transition-all uppercase tracking-widest">
+            </Link>
+            <Link href="/contato" className="flex items-center justify-center gap-3 bg-transparent border border-[#C8A27C] text-[#C8A27C] hover:bg-[#C8A27C]/10 font-bold text-[11px] py-4 px-8 rounded-none transition-all uppercase tracking-widest">
               <CalendarCheck className="w-4 h-4" />
               SOLICITAR PLANEJAMENTO
-            </button>
+            </Link>
           </div>
 
           <div className="flex flex-wrap items-center gap-10 mt-16 pt-8 border-t border-white/10 w-full max-w-2xl opacity-70">
@@ -239,9 +239,9 @@ export default function Home() {
                       <span className="font-heading text-2xl text-white font-medium">{j.price}</span>
                     </div>
                   )}
-                  <button className="w-full bg-[#C8A27C] hover:bg-[#B8906C] text-[#0F0A08] transition-colors py-3 text-[9px] font-bold uppercase tracking-widest rounded-sm">
+                  <Link href="/jornadas" className="w-full bg-[#C8A27C] hover:bg-[#B8906C] text-[#0F0A08] transition-colors py-3 text-[9px] font-bold uppercase tracking-widest rounded-sm flex items-center justify-center">
                     CONHECER JORNADA
-                  </button>
+                  </Link>
                 </div>
               </div>
             </div>
@@ -530,13 +530,13 @@ export default function Home() {
               <p className="text-[11px] text-gray-400 font-light mb-8">
                 Solicite um planejamento personalizado e descubra qual experiência Maeum Global foi criada para você.
               </p>
-              <button className="w-full sm:w-auto bg-[#C8A27C] hover:bg-[#B8906C] text-[#0F0A08] font-bold text-[10px] py-4 px-8 rounded-none transition-all uppercase tracking-widest mb-4">
+              <Link href="/contato" className="w-full sm:w-auto bg-[#C8A27C] hover:bg-[#B8906C] text-[#0F0A08] font-bold text-[10px] py-4 px-8 rounded-none transition-all uppercase tracking-widest mb-4 flex items-center justify-center">
                 SOLICITAR PLANEJAMENTO
-              </button>
-              <button className="flex items-center gap-2 text-[10px] text-[#C8A27C] hover:text-[#B8906C] uppercase tracking-widest transition-colors font-semibold">
+              </Link>
+              <Link href="/contato" className="flex items-center gap-2 text-[10px] text-[#C8A27C] hover:text-[#B8906C] uppercase tracking-widest transition-colors font-semibold">
                 <MessageCircle className="w-3.5 h-3.5" />
                 FALAR COM UM ESPECIALISTA
-              </button>
+              </Link>
             </div>
           </div>
 

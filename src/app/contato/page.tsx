@@ -51,14 +51,14 @@ export default function ContatoPage() {
             Tire dúvidas, conheça melhor nossos pacotes, solicite seu planejamento ou apenas venha conversar. Nossa equipe está sempre pronta para te acolher e transformar sua viagem para a Coreia em realidade.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto mt-4">
-            <button className="flex items-center justify-center gap-3 bg-[#C8A27C] hover:bg-[#B8906C] text-[#0F0A08] font-bold text-[10px] py-4 px-8 rounded-none transition-all uppercase tracking-widest">
+            <a href="https://wa.me/5545999287468?text=Olá,%20gostaria%20de%20conversar%20sobre%20uma%20viagem%20para%20a%20Coreia%20do%20Sul." target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-3 bg-[#C8A27C] hover:bg-[#B8906C] text-[#0F0A08] font-bold text-[10px] py-4 px-8 rounded-none transition-all uppercase tracking-widest">
               INICIAR CONVERSA AGORA
               <MessageCircle className="w-4 h-4" />
-            </button>
-            <button className="flex items-center justify-center gap-3 bg-transparent border border-[#C8A27C] text-[#C8A27C] hover:bg-[#C8A27C]/10 font-bold text-[10px] py-4 px-8 rounded-none transition-all uppercase tracking-widest">
+            </a>
+            <a href="mailto:atendimento@maeumglobal.com.br" className="flex items-center justify-center gap-3 bg-transparent border border-[#C8A27C] text-[#C8A27C] hover:bg-[#C8A27C]/10 font-bold text-[10px] py-4 px-8 rounded-none transition-all uppercase tracking-widest">
               SOLICITAR PLANEJAMENTO
               <CalendarCheck className="w-4 h-4" />
-            </button>
+            </a>
           </div>
         </div>
       </section>
@@ -224,10 +224,10 @@ export default function ContatoPage() {
                  <p className="text-[11px] text-gray-400 font-light">Fale com nossa equipe e criaremos um roteiro personalizado para você.</p>
                </div>
             </div>
-            <button className="w-full md:w-auto bg-[#C8A27C] hover:bg-[#B8906C] text-[#0F0A08] font-bold text-[9px] py-4 px-8 rounded-sm transition-all uppercase tracking-widest flex items-center justify-center gap-3">
+            <a href="mailto:atendimento@maeumglobal.com.br" className="w-full md:w-auto bg-[#C8A27C] hover:bg-[#B8906C] text-[#0F0A08] font-bold text-[9px] py-4 px-8 rounded-sm transition-all uppercase tracking-widest flex items-center justify-center gap-3">
               SOLICITAR PLANEJAMENTO PERSONALIZADO
               <ArrowRight className="w-4 h-4" />
-            </button>
+            </a>
          </div>
       </section>
 

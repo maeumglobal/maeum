@@ -114,10 +114,10 @@ export default function DestinosPage() {
             únicas que vão transformar a sua viagem 
             em memórias inesquecíveis.
           </p>
-          <button className="flex items-center justify-center gap-3 bg-transparent border border-[#3D2620] hover:border-[#C8A27C] text-[#C8A27C] font-bold text-[10px] py-4 px-8 mt-4 rounded-none transition-all group uppercase tracking-widest">
+          <Link href="/jornadas" className="flex items-center justify-center gap-3 bg-transparent border border-[#3D2620] hover:border-[#C8A27C] text-[#C8A27C] font-bold text-[10px] py-4 px-8 mt-4 rounded-none transition-all group uppercase tracking-widest">
             PLANEJE SUA JORNADA
             <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-          </button>
+          </Link>
         </div>
       </section>
 
@@ -331,10 +331,10 @@ export default function DestinosPage() {
               e transformar sonhos em realidade.
             </p>
             <div className="flex flex-col sm:flex-row items-center gap-6 mt-4 w-full sm:w-auto">
-              <button className="flex items-center justify-center gap-3 bg-[#C8A27C] hover:bg-[#B8906C] text-[#0F0A08] font-bold text-[10px] py-4 px-8 rounded-none transition-all group uppercase tracking-widest w-full sm:w-auto">
+              <Link href="/contato" className="flex items-center justify-center gap-3 bg-[#C8A27C] hover:bg-[#B8906C] text-[#0F0A08] font-bold text-[10px] py-4 px-8 rounded-none transition-all group uppercase tracking-widest w-full sm:w-auto">
                 SOLICITAR PLANEJAMENTO
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-              </button>
+              </Link>
               <Link href="/jornadas" className="flex items-center justify-center bg-transparent border border-[#3D2620] hover:border-[#C8A27C] text-[#C8A27C] font-bold text-[10px] py-4 px-8 rounded-none transition-all uppercase tracking-widest w-full sm:w-auto">
                 CONHECER JORNADAS
               </Link>

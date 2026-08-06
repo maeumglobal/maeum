@@ -53,10 +53,10 @@ export default function HomePage() {
             Você vive como parte da história.
           </p>
           <div className="flex flex-col sm:flex-row items-center gap-6 mt-6">
-            <button className="flex items-center justify-center gap-3 bg-[#C8A27C] hover:bg-[#B8906C] text-[#0F0A08] font-bold text-[10px] py-4 px-8 rounded-none transition-all group uppercase tracking-widest">
+            <Link href="/experiencias" className="flex items-center justify-center gap-3 bg-[#C8A27C] hover:bg-[#B8906C] text-[#0F0A08] font-bold text-[10px] py-4 px-8 rounded-none transition-all group uppercase tracking-widest">
               EXPLORAR EXPERIÊNCIAS
               <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-            </button>
+            </Link>
             <Link href="/sobre" className="text-[10px] text-white hover:text-[#C8A27C] font-bold uppercase tracking-widest border-b border-white/30 hover:border-[#C8A27C] pb-1 transition-colors">
               CONHEÇA A MAEUM
             </Link>
@@ -134,10 +134,10 @@ export default function HomePage() {
               </div>
 
               <div className="md:col-span-2 flex justify-end mt-2">
-                <button className="flex items-center justify-center gap-3 bg-[#C8A27C] hover:bg-[#B8906C] text-[#0F0A08] font-bold text-[10px] py-4 px-8 rounded-none transition-all group uppercase tracking-widest">
+                <Link href="/contato" className="flex items-center justify-center gap-3 bg-[#C8A27C] hover:bg-[#B8906C] text-[#0F0A08] font-bold text-[10px] py-4 px-8 rounded-none transition-all group uppercase tracking-widest">
                   SOLICITAR ORÇAMENTO
                   <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                </button>
+                </Link>
               </div>
 
             </div>

@@ -51,10 +51,10 @@ export default function SobreNosPage() {
             Acreditamos que cada viagem é única e deve refletir a essência de quem viaja. Por isso, cada roteiro é cuidadosamente planejado, com curadoria premium e atenção a cada detalhe.
           </p>
           <div className="mt-4">
-            <button className="flex items-center justify-center gap-3 bg-transparent border border-[#C8A27C] text-[#C8A27C] hover:bg-[#C8A27C] hover:text-[#0F0A08] font-bold text-[10px] py-4 px-8 rounded-none transition-all group uppercase tracking-widest">
+            <Link href="/jornadas" className="flex items-center justify-center gap-3 bg-transparent border border-[#C8A27C] text-[#C8A27C] hover:bg-[#C8A27C] hover:text-[#0F0A08] font-bold text-[10px] py-4 px-8 rounded-none transition-all group uppercase tracking-widest w-fit mt-4">
               CONHEÇA NOSSAS JORNADAS
               <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-            </button>
+            </Link>
           </div>
         </div>
       </section>
@@ -160,10 +160,10 @@ export default function SobreNosPage() {
         </div>
 
         <div className="flex justify-center mt-12">
-          <button className="flex items-center justify-center gap-2 text-[#C8A27C] hover:text-white transition-colors text-[9px] font-bold uppercase tracking-widest group">
-            CONHEÇA TODOS OS PARCEIROS
+          <Link href="/contato" className="flex items-center justify-center gap-2 text-[#C8A27C] hover:text-white transition-colors text-[9px] font-bold uppercase tracking-widest group w-fit mx-auto mt-12">
+            CONHEÇA NOSSOS PARCEIROS
             <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
-          </button>
+          </Link>
         </div>
       </section>
 
