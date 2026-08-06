@@ -63,7 +63,7 @@ export default function HomePage() {
       </section>
 
       {/* 2. Planning Box */}
-      <section className="relative z-20 px-6 sm:px-12 max-w-[1400px] mx-auto w-full -mt-24 mb-24">
+      <section className="relative z-20 px-6 sm:px-12 max-w-[1400px] mx-auto w-full mt-8 lg:-mt-12 mb-24">
         <div className="bg-[#150E0C] border border-[#3D2620] rounded-sm p-8 sm:p-12 flex flex-col shadow-2xl">
           
           <div className="flex flex-col lg:flex-row gap-12 mb-10">
