@@ -19,14 +19,14 @@ export default function HomePage() {
       <section className="relative h-[100dvh] flex flex-col justify-center overflow-hidden border-b border-[#3D2620]">
         <div className="absolute inset-0 z-0">
           <Image 
-            src="https://images.unsplash.com/photo-1515091943-9d5c0ad20094?q=80&w=2000" 
+            src="/images/agencia-viagens-coreia-do-sul-maeum-global-oficial.webp" 
             alt="Coreia com Profundidade Desktop" 
             fill 
             className="object-cover object-center brightness-[0.4] hidden md:block" 
             priority
           />
           <Image 
-            src="https://images.unsplash.com/photo-1515091943-9d5c0ad20094?q=80&w=800" 
+            src="/images/mobile/agencia-viagens-coreia-do-sul-maeum-global-oficial-mobile.webp" 
             alt="Coreia com Profundidade Mobile" 
             fill 
             className="object-cover object-center brightness-[0.4] block md:hidden" 
