@@ -59,7 +59,7 @@ export default function Header() {
   }, []);
 
   const navItems = [
-    { label: t('Home'), href: '/' },
+    { label: t('COREIA DO SUL'), href: '/' },
     { label: t('Destinos'), href: '/destinos' },
     { label: t('Experiências'), href: '/experiencias' },
     { label: t('Intercâmbio'), href: '/coreia-do-sul/intercambio' },
