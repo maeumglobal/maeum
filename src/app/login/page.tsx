@@ -75,22 +75,9 @@ export default function LoginPage() {
             </div>
           )}
 
-          <div className="flex bg-muted rounded-full p-1 mb-6 border border-border">
-            <button onClick={() => setMode('login')} className={`flex-1 text-center py-2.5 rounded-full font-bold uppercase tracking-wider text-xs transition-all ${mode === 'login' ? 'bg-primary text-white shadow-md' : 'hover:text-secondary text-muted-foreground'}`}>Entrar</button>
-            <button onClick={() => setMode('register')} className={`flex-1 text-center py-2.5 rounded-full font-bold uppercase tracking-wider text-xs transition-all ${mode === 'register' ? 'bg-primary text-white shadow-md' : 'hover:text-secondary text-muted-foreground'}`}>Cadastrar</button>
-          </div>
+          {/* Tab Selector Removido (Apenas Super Admin pode cadastrar contas) */}
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            {mode === 'register' && (
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-secondary">Nome Completo</label>
-                <div className="relative">
-                  <User className="absolute left-3.5 top-3 h-4 w-4 text-muted-foreground/60" />
-                  <Input required value={name} onChange={e => setName(e.target.value)} placeholder="Seu nome completo" className="pl-10 bg-background border-border rounded-xl text-xs h-11" />
-                </div>
-              </div>
-            )}
-
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-secondary">E-mail</label>
               <div className="relative">
@@ -99,42 +86,25 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {mode === 'login' && (
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-secondary">Senha</label>
-                <div className="relative">
-                  <Lock className="absolute left-3.5 top-3 h-4 w-4 text-muted-foreground/60" />
-                  <Input required type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" className="pl-10 pr-10 bg-background border-border rounded-xl text-xs h-11" />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-3 text-muted-foreground/60 hover:text-secondary">
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-secondary">Senha</label>
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-3 h-4 w-4 text-muted-foreground/60" />
+                <Input required type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" className="pl-10 pr-10 bg-background border-border rounded-xl text-xs h-11" />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-3 text-muted-foreground/60 hover:text-secondary">
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
-            )}
-
-            {mode === 'register' && (
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-secondary">Tipo de Perfil</label>
-                <select value={role} onChange={e => setRole(e.target.value)} className="flex h-11 w-full rounded-xl border border-border bg-background px-3 py-2 text-xs text-secondary">
-                  <option value="customer">Cliente (Viajante)</option>
-                  <option value="consultora">Consultora (B2B)</option>
-                  <option value="super_admin">Administrador</option>
-                </select>
-              </div>
-            )}
+            </div>
 
             <Button type="submit" disabled={loading} className="bg-primary hover:bg-accent-hover text-white font-bold py-3 rounded-xl text-sm mt-2">
-              {loading ? 'Processando...' : mode === 'login' ? 'ENTRAR' : 'CRIAR CONTA'}
+              {loading ? 'Processando...' : 'ENTRAR'}
             </Button>
           </form>
 
           <div className="mt-6 pt-4 border-t border-border text-center">
             <p className="text-[10px] text-muted-foreground">
-              {mode === 'login' ? (
-                <>Não tem conta? <button onClick={() => { setMode('register'); setError(''); setSuccess(''); }} className="text-primary font-bold hover:underline">Cadastre-se</button></>
-              ) : (
-                <>Já tem conta? <button onClick={() => { setMode('login'); setError(''); setSuccess(''); }} className="text-primary font-bold hover:underline">Faça login</button></>
-              )}
+              Apenas o super administrador pode criar novas contas para a equipe.
             </p>
           </div>
         </div>
