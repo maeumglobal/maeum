@@ -97,7 +97,7 @@ export default function Header() {
             <Link
               key={item.href}
               href={item.href}
-              className={`text-sm font-medium transition-colors hover:text-primary ${
+              className={`text-[10px] font-bold uppercase tracking-widest transition-colors hover:text-primary ${
                 pathname === item.href ? 'text-primary' : 'text-foreground/80'
               }`}
             >
@@ -229,7 +229,7 @@ export default function Header() {
                 key={item.href}
                 href={item.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`text-base font-semibold hover:text-primary ${
+                className={`text-xs font-bold uppercase tracking-widest hover:text-primary ${
                   pathname === item.href ? 'text-primary' : 'text-foreground'
                 }`}
               >
