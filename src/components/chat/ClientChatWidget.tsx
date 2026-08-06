@@ -117,11 +117,17 @@ export default function ClientChatWidget() {
       {/* Top Bar Chat */}
       <div className="h-16 border-b border-[#3D2620] bg-[#18110F] flex items-center justify-between px-4 sm:px-6 shrink-0">
          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full border border-[#3D2620] flex items-center justify-center bg-[#2A1616] shrink-0">
-               <Users className="w-4 h-4 text-[#C8A27C]" />
+            <div className="w-8 h-8 rounded-full border border-[#3D2620] flex items-center justify-center bg-[#2A1616] shrink-0 overflow-hidden relative">
+               {activeConsultant?.avatarUrl ? (
+                 <Image src={activeConsultant.avatarUrl} alt={activeConsultant.name} fill className="object-cover" />
+               ) : (
+                 <Users className="w-4 h-4 text-[#C8A27C]" />
+               )}
             </div>
             <div>
-              <h3 className="text-[10px] sm:text-[11px] font-bold text-white tracking-widest uppercase">CHAT COM NOSSAS CONSULTORAS</h3>
+              <h3 className="text-[10px] sm:text-[11px] font-bold text-white tracking-widest uppercase">
+                {activeConsultant ? `CHAT COM ${activeConsultant.name.split(' ')[0]}` : 'CHAT COM NOSSAS CONSULTORAS'}
+              </h3>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
                 <span className="text-[8px] sm:text-[9px] text-gray-400">Online agora</span>

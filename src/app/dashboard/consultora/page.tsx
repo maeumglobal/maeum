@@ -10,10 +10,11 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { createProposalAction, submitChatMessageAction } from '@/actions/crmActions';
+import { createProposalAction } from '@/actions/crmActions';
+import { getAdminChats, getChatMessages, submitChatMessageAction } from '@/actions/chatActions';
 import { authService } from '@/lib/supabaseAuth';
 
-// Import db engine client-side
+// Import db engine client-side (still used for CRM/Proposals temporarily)
 import { db } from '@/lib/db';
 
 const WORKFLOW_STAGES = [
@@ -55,10 +56,12 @@ export default function ConsultoraDashboard() {
     const marianaLeads = allLeads.filter((l: any) => l.assigned_consultant_id === 'c1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22');
     setLeads(marianaLeads);
 
-    // Load active chats
-    const allChats = db.get('chats');
-    const marianaChats = allChats.filter((c: any) => c.consultant_id === 'c1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22');
-    setChats(marianaChats);
+    // Load active chats from Real Database
+    if (currentUser?.id) {
+      getAdminChats(currentUser.id).then(res => {
+        if (res.success && res.chats) setChats(res.chats);
+      });
+    }
 
     // Load proposals
     const allProps = db.get('proposals');
@@ -70,13 +73,23 @@ export default function ConsultoraDashboard() {
     const customerUsers = allUsers.filter((u: any) => u.role === 'customer');
     setClients(customerUsers);
 
-    // Load active chat messages
+    // Load active chat messages from Real Database
     if (activeChat) {
-      const allMsgs = db.get('chat_messages');
-      const chatMsgs = allMsgs.filter((m: any) => m.chat_id === activeChat.id);
-      setChatMessages(chatMsgs);
+      getChatMessages(activeChat.id).then(res => {
+        if (res.success && res.messages) {
+          setChatMessages(res.messages);
+        }
+      });
     }
   };
+
+  // Re-fetch chats occasionally
+  useEffect(() => {
+    if (activeTab === 'chat') {
+      const interval = setInterval(loadData, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [activeTab, currentUser]);
 
   useEffect(() => {
     const user = authService.getCurrentUser();
@@ -129,15 +142,24 @@ export default function ConsultoraDashboard() {
   // Chat message submit
   const handleChatSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!chatInput.trim() || !activeChat) return;
+    if (!chatInput.trim() || !activeChat || !currentUser) return;
 
     const tempMsg = chatInput;
     setChatInput('');
 
-    const res = await submitChatMessageAction(activeChat.id, 'c1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22', tempMsg);
+    // Adiciona otimisticamente na tela
+    const tempMsgObj = {
+      id: Date.now().toString(),
+      chatId: activeChat.id,
+      senderId: currentUser.id,
+      content: tempMsg,
+      createdAt: new Date().toISOString()
+    };
+    setChatMessages(prev => [...prev, tempMsgObj]);
+
+    const res = await submitChatMessageAction(activeChat.id, currentUser.id, tempMsg);
     if (res.success) {
-      const allMsgs = db.get('chat_messages');
-      setChatMessages(allMsgs.filter((m: any) => m.chat_id === activeChat.id));
+      loadData();
     }
   };
 
@@ -367,11 +389,11 @@ export default function ConsultoraDashboard() {
                       }`}
                     >
                       <div className="relative h-8 w-8 rounded-full overflow-hidden">
-                        <Image src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200" alt="Bruno" fill className="object-cover" />
+                        <Image src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200" alt="Cliente" fill className="object-cover" />
                       </div>
-                      <div className="truncate">
-                        <h4 className="text-xs font-bold">Bruno Almeida</h4>
-                        <span className="text-[10px] text-muted-foreground">cliente@maeum.com</span>
+                      <div className="truncate text-left w-full">
+                        <h4 className="text-xs font-bold">{c.customer?.name || 'Cliente'}</h4>
+                        <span className="text-[10px] text-muted-foreground">{c.customer?.email || 'Nenhum e-mail'}</span>
                       </div>
                     </button>
                   ))}
@@ -382,12 +404,12 @@ export default function ConsultoraDashboard() {
                   {activeChat ? (
                     <>
                       <div className="border-b border-border bg-muted/30 p-4 flex items-center gap-3">
-                        <h3 className="text-xs font-bold text-secondary">Chat com Bruno Almeida</h3>
+                        <h3 className="text-xs font-bold text-secondary">Chat com {activeChat.customer?.name || 'Cliente'}</h3>
                       </div>
 
                       <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
                         {chatMessages.map((msg) => {
-                          const isConsultant = msg.sender_id === 'c1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22';
+                          const isConsultant = msg.senderId === currentUser?.id;
                           return (
                             <div
                               key={msg.id}
@@ -401,7 +423,7 @@ export default function ConsultoraDashboard() {
                                 {msg.content}
                               </div>
                               <span className="text-[9px] text-muted-foreground mt-1 px-1">
-                                {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                {new Date(msg.createdAt || msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                               </span>
                             </div>
                           );
