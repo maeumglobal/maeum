@@ -23,6 +23,9 @@ export const metadata: Metadata = {
   title: "MaeumGlobal | Turismo & Intercâmbio de Luxo na Ásia",
   description: "O MaeumGlobal é um aplicativo e plataforma de gestão de turismo de luxo e intercâmbio. Descubra a Ásia antes mesmo de embarcar. Roteiros personalizados, hotéis de luxo, experiências exclusivas e intercâmbio de alto padrão.",
   keywords: ["Turismo de Luxo", "Viagem Coreia do Sul", "Intercâmbio Coreia", "MaeumGlobal"],
+  icons: {
+    icon: '/favicon.ico',
+  },
   verification: {
     google: "4GaRrcm7r8Z6Xr_AGwSBn2e9KMBMJL43_aFipF_uSqs",
     other: {
