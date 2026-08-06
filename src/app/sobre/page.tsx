@@ -57,50 +57,45 @@ export default function SobrePage() {
       <Header />
 
       {/* Hero Section */}
-      <section className="relative min-h-[85vh] flex items-center overflow-hidden">
+      <section className="relative h-[100dvh] flex flex-col justify-center overflow-hidden border-b border-[#3D2620]">
         <div className="absolute inset-0 z-0">
-          <Image
-            src="/images/consultoras-maeum-global-contato-planejamento.webp"
-            alt="Sobre a Maeum Global"
-            fill
-            className="object-cover object-right brightness-75"
+          <Image 
+            src="/images/agencia-viagens-coreia-do-sul-maeum-global-sobre-nos.webp" 
+            alt="Sobre a Maeum Global Desktop" 
+            fill 
+            className="object-cover object-center hidden md:block" 
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#1A0F14] via-[#1A0F14]/85 to-transparent" />
+          <Image 
+            src="/images/mobile/agencia-viagens-coreia-do-sul-maeum-global-sobre-nos-mobile.webp" 
+            alt="Sobre a Maeum Global Mobile" 
+            fill 
+            className="object-cover object-center block md:hidden" 
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0F0A08] via-[#0F0A08]/80 to-transparent w-full sm:w-2/3" />
         </div>
 
-        <div className="relative z-10 px-8 max-w-7xl mx-auto w-full flex flex-col gap-5 mt-16">
-          <span className="text-xs uppercase tracking-widest text-[#C8A27C] font-bold">SOBRE A MAEUM GLOBAL</span>
-          <h1 className="font-heading text-4xl sm:text-6xl font-light text-white leading-tight max-w-xl">
+        <div className="relative z-10 px-6 sm:px-12 max-w-7xl mx-auto w-full flex flex-col items-start gap-6 pt-24">
+          <span className="text-[10px] uppercase tracking-[0.2em] text-[#C8A27C] font-semibold">
+            SOBRE A MAEUM GLOBAL
+          </span>
+          <h1 className="font-heading text-5xl sm:text-6xl md:text-[70px] font-light tracking-wide leading-[1.1] text-white">
             Muito mais que <br />
             viagens. Criamos <br />
-            <span className="italic text-[#C8A27C]">conexões que transformam.</span>
+            <span className="italic text-[#C8A27C]">conexões que <br/>transformam.</span>
           </h1>
-          <p className="text-sm text-gray-300 max-w-lg leading-relaxed font-light">
-            A Maeum Global nasceu do desejo de proporcionar experiências autênticas, profundas e transformadoras na Coreia do Sul. Acreditamos que cada viagem é única e deve refletir a essência de quem viaja. Por isso, cada roteiro é cuidadosamente planejado, com curadoria premium e atenção a cada detalhe.
+          <div className="w-12 h-[1px] bg-[#C8A27C] my-2"></div>
+          <p className="text-[12px] sm:text-[13px] text-gray-300 max-w-xl font-light text-left leading-relaxed opacity-90">
+            A Maeum Global nasceu do desejo de proporcionar experiências autênticas, profundas e transformadoras na Coreia do Sul. 
+            <br/><br/>
+            Acreditamos que cada viagem é única e deve refletir a essência de quem viaja. Por isso, cada roteiro é cuidadosamente planejado, com curadoria premium e atenção a cada detalhe.
           </p>
-          <Link href="/coreia-do-sul/jornadas" className="flex items-center gap-2 bg-transparent border border-[#C8A27C] text-[#C8A27C] hover:bg-[#C8A27C]/10 font-bold text-xs py-3.5 px-8 rounded-xl transition-all w-fit uppercase tracking-wider">
-            CONHEÇA NOSSAS JORNADAS
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-
-        {/* Right side — Maeum logo overlay */}
-        <div className="absolute right-8 md:right-24 top-1/2 -translate-y-1/2 z-10 hidden md:flex flex-col items-center gap-2 opacity-80">
-          <div className="w-16 h-16 text-[#C8A27C]">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="7" height="7" rx="1" />
-              <rect x="14" y="3" width="7" height="7" rx="1" />
-              <rect x="3" y="14" width="7" height="7" rx="1" />
-              <rect x="14" y="14" width="7" height="7" rx="1" />
-            </svg>
-          </div>
-          <span className="text-[#C8A27C] font-bold tracking-[0.3em] text-sm uppercase">MAEUM</span>
-          <span className="text-[#C8A27C] font-light tracking-[0.4em] text-xs uppercase">GLOBAL</span>
-          <div className="flex flex-col items-center mt-2 gap-0.5">
-            <div className="h-px w-10 bg-[#C8A27C]/50" />
-            <span className="text-[8px] text-[#C8A27C]/70 tracking-widest uppercase">COREIA • EXPERIÊNCIAS • MEMÓRIAS</span>
-            <div className="h-px w-10 bg-[#C8A27C]/50" />
+          <div className="mt-4">
+            <Link href="/coreia-do-sul/jornadas" className="flex items-center justify-center gap-3 bg-transparent border border-[#C8A27C] text-[#C8A27C] hover:bg-[#C8A27C] hover:text-[#0F0A08] font-bold text-[10px] py-4 px-8 rounded-none transition-all group uppercase tracking-widest">
+              CONHEÇA NOSSAS JORNADAS
+              <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            </Link>
           </div>
         </div>
       </section>
