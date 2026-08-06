@@ -111,9 +111,46 @@ export default function AuthModal({ isOpen, onClose, onSuccess, defaultMode = 'l
           </div>
         )}
 
-        {/* Tab Selector Removido (Apenas Super Admin pode cadastrar contas) */}
+        {/* Tab Selector */}
+        {mode !== 'recovery' && (
+          <div className="flex bg-muted rounded-full p-1 mb-6 border border-border">
+            <button
+              onClick={() => setMode('login')}
+              className={`flex-1 text-center py-2 rounded-full font-bold uppercase tracking-wider text-[10px] transition-all ${
+                mode === 'login' ? 'bg-primary text-white shadow-md' : 'hover:text-secondary'
+              }`}
+            >
+              Login
+            </button>
+            <button
+              onClick={() => setMode('register')}
+              className={`flex-1 text-center py-2 rounded-full font-bold uppercase tracking-wider text-[10px] transition-all ${
+                mode === 'register' ? 'bg-primary text-white shadow-md' : 'hover:text-secondary'
+              }`}
+            >
+              Cadastrar
+            </button>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          {mode === 'register' && (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-semibold text-secondary">Nome Completo</label>
+              <div className="relative">
+                <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground/60" />
+                <Input
+                  required
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder="Seu Nome Completo"
+                  className="pl-9 bg-background border-border text-secondary rounded-xl text-xs h-10"
+                />
+              </div>
+            </div>
+          )}
+
+
 
           <div className="flex flex-col gap-1.5">
             <label className="text-[10px] font-semibold text-secondary">E-mail</label>

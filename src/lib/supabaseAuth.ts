@@ -25,6 +25,15 @@ export const authService = {
         }
       });
       if (error) throw error;
+      
+      const sessionUser = { id: data.user?.id, email, name, role };
+      localStorage.setItem('maeum_session', JSON.stringify(sessionUser));
+      
+      if (data.user) {
+        (data.user as any).role = role;
+        (data.user as any).name = name;
+      }
+      
       return data;
     } else {
       // Local fallback simulation
@@ -41,6 +50,24 @@ export const authService = {
         password: password || 'password123'
       });
       if (error) throw error;
+      
+      // Fetch role and name from public table
+      const { data: userProfile } = await supabase
+        .from('maeum_users')
+        .select('role, name')
+        .eq('email', email)
+        .single();
+        
+      const role = userProfile?.role || data.user.user_metadata?.role || 'customer';
+      const name = userProfile?.name || data.user.user_metadata?.name || email.split('@')[0];
+      
+      const sessionUser = { id: data.user.id, email, name, role };
+      localStorage.setItem('maeum_session', JSON.stringify(sessionUser));
+      
+      // Inject into data.user for AuthContext
+      (data.user as any).role = role;
+      (data.user as any).name = name;
+      
       return data;
     } else {
       // Local fallback search matching seed list

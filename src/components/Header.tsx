@@ -9,12 +9,15 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { FlagES, FlagPT, FlagEN } from '@/components/Flags';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
+import AuthModal from '@/components/AuthModal';
 
 export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const { user: currentUser, logout } = useAuth();
   const { locale, setLocale, t, isModalOpen, setIsModalOpen } = useLanguage();
 
@@ -56,8 +59,9 @@ export default function Header() {
   ];
 
   return (
-<header className="sticky top-0 z-50 w-full border-b border-border/40 px-4 md:px-8 py-3 bg-transparent relative">
-      <div className="absolute inset-0 -z-10 bg-background/95 backdrop-blur" />
+    <>
+      <header className="sticky top-0 z-50 w-full border-b border-border/40 px-4 md:px-8 py-3 bg-transparent relative">
+        <div className="absolute inset-0 -z-10 bg-background/95 backdrop-blur" />
       <div className="mx-auto flex max-w-7xl items-center justify-between relative z-10">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 relative">
@@ -179,18 +183,18 @@ export default function Header() {
             </div>
           ) : (
             <div className="flex items-center gap-2.5">
-              <Link
-                href="/login"
+              <button
+                onClick={() => { setAuthMode('login'); setShowAuthModal(true); }}
                 className="text-xs font-semibold text-foreground/80 hover:text-primary px-3 py-1.5 transition-colors"
               >
                 {t('Entrar')}
-              </Link>
-              <Link
-                href="/login"
+              </button>
+              <button
+                onClick={() => { setAuthMode('register'); setShowAuthModal(true); }}
                 className="bg-primary hover:bg-accent-hover text-white text-xs font-semibold px-4 py-2 rounded-full shadow-sm transition-transform hover:scale-105"
               >
                 {t('Cadastrar')}
-              </Link>
+              </button>
             </div>
           )}
 
@@ -281,18 +285,18 @@ export default function Header() {
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3">
-              <Link
-                href="/login"
+              <button
+                onClick={() => { setAuthMode('login'); setShowAuthModal(true); setMobileMenuOpen(false); }}
                 className="text-center border border-border hover:bg-muted text-secondary font-bold text-xs py-2.5 rounded-xl transition-all"
               >
                 {t('Entrar')}
-              </Link>
-              <Link
-                href="/login"
+              </button>
+              <button
+                onClick={() => { setAuthMode('register'); setShowAuthModal(true); setMobileMenuOpen(false); }}
                 className="text-center bg-primary hover:bg-accent-hover text-white font-bold text-xs py-2.5 rounded-xl transition-all"
               >
                 {t('Cadastrar')}
-              </Link>
+              </button>
             </div>
           )}
 
@@ -305,5 +309,13 @@ export default function Header() {
       )}
 
     </header>
+      
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)} 
+        onSuccess={() => setShowAuthModal(false)} 
+        defaultMode={authMode} 
+      />
+    </>
   );
 }
