@@ -26,6 +26,17 @@ export const authService = {
       });
       if (error) throw error;
       
+      // Also insert into public.maeum_users table
+      if (data.user) {
+        await supabase.from('maeum_users').insert([{
+          id: data.user.id,
+          email: email,
+          name: name,
+          role: role,
+          is_active: true
+        }]);
+      }
+      
       const sessionUser = { id: data.user?.id, email, name, role };
       localStorage.setItem('maeum_session', JSON.stringify(sessionUser));
       

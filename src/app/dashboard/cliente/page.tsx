@@ -166,7 +166,7 @@ export default function ClienteDashboard() {
             </div>
             <div>
               <span className="text-xs font-semibold text-primary uppercase tracking-wider">Painel do Cliente</span>
-              <h1 className="font-heading text-3xl font-light text-secondary">Olá, Bruno Almeida</h1>
+              <h1 className="font-heading text-3xl font-light text-secondary">Olá, {currentUser?.name || 'Bruno Almeida'}</h1>
             </div>
           </div>
           <div className="bg-primary/10 border border-primary/20 rounded-xl px-4 py-2 flex items-center gap-2">
