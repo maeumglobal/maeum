@@ -208,11 +208,6 @@ export default function Header() {
             </div>
           )}
 
-          <Link href="/contato">
-            <Button size="sm" className="bg-primary hover:bg-accent-hover text-white text-xs font-semibold rounded-full px-5">
-              {t('SOLICITAR ORÇAMENTO')}
-            </Button>
-          </Link>
         </div>
 
         {/* Mobile menu trigger */}
@@ -310,11 +305,6 @@ export default function Header() {
             </div>
           )}
 
-          <Link href="/contato" onClick={() => setMobileMenuOpen(false)}>
-            <Button className="w-full bg-primary hover:bg-accent-hover text-white rounded-full">
-              {t('SOLICITAR ORÇAMENTO')}
-            </Button>
-          </Link>
         </div>
       )}
 
