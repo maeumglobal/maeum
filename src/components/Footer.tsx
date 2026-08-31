@@ -5,9 +5,16 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Phone, Mail, MapPin, Send } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useMedia } from '@/contexts/SiteContentContext';
 
 export default function Footer() {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
+  const siteLogo = useMedia('site_logo');
+
+  const lp = (path: string) => {
+    if (locale === 'pt' || path === '/') return path;
+    return `/${locale}${path}`;
+  };
 
   return (
     <footer className="w-full border-t border-border/40 bg-background text-white py-16 px-4 md:px-8 mt-auto">
@@ -16,7 +23,7 @@ export default function Footer() {
         {/* Column 1 - Brand Info */}
         <div className="col-span-2 flex flex-col gap-4">
           <Image
-            src="/images/logo.png"
+            src={siteLogo || '/images/logo.png'}
             alt="MAEUM Logo"
             width={150}
             height={50}
@@ -40,7 +47,7 @@ export default function Footer() {
               <svg className="h-4.5 w-4.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.017 0C5.396 0 0 5.397 0 12.017c0 5.078 3.158 9.41 7.61 11.173-.105-.951-.2-2.41.041-3.447.218-.934 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.17-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.204 0 1.031.397 2.138.893 2.738.098.119.112.224.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.22 7.464-1.215 0-2.358-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12.017 24c6.62 0 12.016-5.396 12.016-12.017C24.033 5.397 18.637 0 12.017 0z"></path></svg>
             </a>
             {/* WhatsApp */}
-            <a href="https://wa.me/5541987094799" target="_blank" rel="noreferrer" className="hover:text-accent transition-colors text-gray-400">
+            <a href="https://wa.me/821024836078" target="_blank" rel="noreferrer" className="hover:text-accent transition-colors text-gray-400">
               <svg className="h-4.5 w-4.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
             </a>
           </div>
@@ -50,10 +57,10 @@ export default function Footer() {
         <div className="flex flex-col gap-4">
           <h3 className="text-[10px] font-bold uppercase tracking-wider text-accent">{t('Coreia do Sul')}</h3>
           <ul className="flex flex-col gap-2.5 text-gray-400">
-            <li><Link href="/coreia-do-sul" className="hover:text-accent transition-colors">{t('Visão geral')}</Link></li>
-            <li><Link href="/coreia-do-sul/experiencias" className="hover:text-accent transition-colors">{t('Experiências')}</Link></li>
-            <li><Link href="/coreia-do-sul/k-beauty" className="hover:text-accent transition-colors">{t('K-Beauty')}</Link></li>
-            <li><Link href="/coreia-do-sul/intercambio" className="hover:text-accent transition-colors">{t('Intercâmbio')}</Link></li>
+            <li><Link href={lp('/coreia-do-sul')} className="hover:text-accent transition-colors">{t('Visão geral')}</Link></li>
+            <li><Link href={lp('/coreia-do-sul/experiencias')} className="hover:text-accent transition-colors">{t('Experiências')}</Link></li>
+            <li><Link href={lp('/coreia-do-sul/k-beauty')} className="hover:text-accent transition-colors">{t('K-Beauty')}</Link></li>
+            <li><Link href={lp('/coreia-do-sul/intercambio')} className="hover:text-accent transition-colors">{t('Intercâmbio')}</Link></li>
           </ul>
         </div>
 
@@ -61,10 +68,10 @@ export default function Footer() {
         <div className="flex flex-col gap-4">
           <h3 className="text-[10px] font-bold uppercase tracking-wider text-accent">{t('Jornadas')}</h3>
           <ul className="flex flex-col gap-2.5 text-gray-400">
-            <li><Link href="/coreia-do-sul/jornadas" className="hover:text-accent transition-colors">{t('Próximas saídas')}</Link></li>
-            <li><Link href="/coreia-do-sul/jornadas" className="hover:text-accent transition-colors">{t('Cheotnun')}</Link></li>
-            <li><Link href="/coreia-do-sul/jornadas" className="hover:text-accent transition-colors">{t('Projeto ARMY')}</Link></li>
-            <li><Link href="/coreia-do-sul/jornadas" className="hover:text-accent transition-colors">{t('Caravana de Verão')}</Link></li>
+            <li><Link href={lp('/coreia-do-sul/jornadas')} className="hover:text-accent transition-colors">{t('Próximas saídas')}</Link></li>
+            <li><Link href={lp('/coreia-do-sul/jornadas')} className="hover:text-accent transition-colors">{t('Cheotnun')}</Link></li>
+            <li><Link href={lp('/coreia-do-sul/jornadas')} className="hover:text-accent transition-colors">{t('Projeto ARMY')}</Link></li>
+            <li><Link href={lp('/coreia-do-sul/jornadas')} className="hover:text-accent transition-colors">{t('Caravana de Verão')}</Link></li>
           </ul>
         </div>
 
@@ -72,7 +79,7 @@ export default function Footer() {
         <div className="flex flex-col gap-4">
           <h3 className="text-[10px] font-bold uppercase tracking-wider text-accent">{t('Destinos')}</h3>
           <ul className="flex flex-col gap-2.5 text-gray-400">
-            <li><Link href="/destinos" className="hover:text-accent transition-colors">{t('Coreia do Sul')}</Link></li>
+            <li><Link href={lp('/destinos')} className="hover:text-accent transition-colors">{t('Coreia do Sul')}</Link></li>
           </ul>
         </div>
 
@@ -80,10 +87,10 @@ export default function Footer() {
         <div className="flex flex-col gap-4">
           <h3 className="text-[10px] font-bold uppercase tracking-wider text-accent">{t('Journal')}</h3>
           <ul className="flex flex-col gap-2.5 text-gray-400">
-            <li><Link href="/journal" className="hover:text-accent transition-colors">{t('Todos os vídeos')}</Link></li>
-            <li><Link href="/journal" className="hover:text-accent transition-colors">{t('Guias completos')}</Link></li>
-            <li><Link href="/journal" className="hover:text-accent transition-colors">{t('Bastidores')}</Link></li>
-            <li><Link href="/journal" className="hover:text-accent transition-colors">{t('Vlogs')}</Link></li>
+            <li><Link href={lp('/journal')} className="hover:text-accent transition-colors">{t('Todos os vídeos')}</Link></li>
+            <li><Link href={lp('/journal')} className="hover:text-accent transition-colors">{t('Guias completos')}</Link></li>
+            <li><Link href={lp('/journal')} className="hover:text-accent transition-colors">{t('Bastidores')}</Link></li>
+            <li><Link href={lp('/journal')} className="hover:text-accent transition-colors">{t('Vlogs')}</Link></li>
           </ul>
         </div>
 
@@ -92,8 +99,12 @@ export default function Footer() {
           <h3 className="text-[10px] font-bold uppercase tracking-wider text-accent">{t('Contato')}</h3>
           <ul className="flex flex-col gap-2.5 text-gray-400">
             <li className="hover:text-accent transition-colors">contato@maeumglobal.com.br</li>
-            <li className="hover:text-accent transition-colors">+55 (41) 98709-4799</li>
-            <li className="hover:text-accent transition-colors">{t('Atendimento via WhatsApp')}</li>
+            <li className="hover:text-accent transition-colors">+82 10-2483-6078</li>
+            <li>
+              <a href="https://wa.me/821024836078" target="_blank" rel="noreferrer" className="hover:text-accent transition-colors">
+                {t('Atendimento via WhatsApp')}
+              </a>
+            </li>
           </ul>
         </div>
       </div>
@@ -105,9 +116,9 @@ export default function Footer() {
           <a className="font-semibold text-gray-200 hover:text-accent transition-colors duration-200" href="https://www.voltris.com.br" target="_blank" rel="noreferrer">Voltris</a>
         </div>
         <div className="flex gap-6 mt-4 sm:mt-0">
-          <Link href="/politica-de-privacidade" className="hover:text-accent transition-colors">{t('Política de Privacidade')}</Link>
-          <Link href="/termos-de-uso" className="hover:text-accent transition-colors">{t('Termos de Uso')}</Link>
-          <Link href="/reembolso" className="hover:text-accent transition-colors">{t('Reembolso')}</Link>
+          <Link href={lp('/politica-de-privacidade')} className="hover:text-accent transition-colors">{t('Política de Privacidade')}</Link>
+          <Link href={lp('/termos-de-uso')} className="hover:text-accent transition-colors">{t('Termos de Uso')}</Link>
+          <Link href={lp('/reembolso')} className="hover:text-accent transition-colors">{t('Reembolso')}</Link>
         </div>
       </div>
       

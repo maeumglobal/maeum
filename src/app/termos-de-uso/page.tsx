@@ -5,22 +5,25 @@ import Link from 'next/link';
 import { FileText, CheckCircle, AlertCircle, Shield, CreditCard, Calendar, ChevronRight } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function TermosUsoPage() {
+  const { t, locale } = useLanguage();
+  const lp = (path: string) => (locale === 'pt' || path === '/' ? path : `/${locale}${path}`);
   const sections = [
     {
       icon: FileText,
-      title: '1. Aceitação dos Termos',
-      content: `Ao acessar e utilizar o site maeumglobal.com.br, você concorda com estes Termos de Uso. 
+      title: t('1. Aceitação dos Termos'),
+      content: t(`Ao acessar e utilizar o site maeumglobal.com.br, você concorda com estes Termos de Uso. 
       Se não concordar com qualquer parte destes termos, não utilize nossos serviços.
       
       Estes termos podem ser modificados a qualquer momento. O uso continuado do site após alterações 
-      constitui aceitação dos novos termos.`
+      constitui aceitação dos novos termos.`)
     },
     {
       icon: Shield,
-      title: '2. Nossos Serviços',
-      content: `A MaeumGlobal oferece:
+      title: t('2. Nossos Serviços'),
+      content: t(`A MaeumGlobal oferece:
       
       • Planejamento e organização de viagens personalizadas para a Ásia
       • Roteiros turísticos customizados
@@ -29,24 +32,24 @@ export default function TermosUsoPage() {
       • Acompanhamento de grupos em viagens
       • Consultoria especializada em destinos asiáticos
       
-      Os serviços exatos serão definidos em contrato específico para cada cliente.`
+      Os serviços exatos serão definidos em contrato específico para cada cliente.`)
     },
     {
-      icon: CreditCard,
-      title: '3. Pagamentos e Valores',
-      content: `• Todos os valores estão em Reais (BRL) salvo indicação contrária
+icon: CreditCard,
+      title: t('3. Pagamentos e Valores'),
+      content: t(`• Todos os valores estão em Reais (BRL) salvo indicação contrária
       • Pagamentos podem ser realizados via cartão de crédito, transferência ou PIX
       • Parcelamento disponível conforme condições contratuais
       • Valores podem sofrer alteração até confirmação final da reserva
       • Taxas cambiais podem impactar valores de serviços internacionais
       • Pagamentos devem ser realizados nas datas estipuladas em contrato
       
-      O não pagamento nas datas acordadas pode resultar em cancelamento da reserva.`
+      O não pagamento nas datas acordadas pode resultar em cancelamento da reserva.`)
     },
     {
       icon: Calendar,
-      title: '4. Reservas e Cancelamentos',
-      content: `Política de cancelamento:
+      title: t('4. Reservas e Cancelamentos'),
+      content: t(`Política de cancelamento:
       
       • Cancelamento com mais de 60 dias da viagem: reembolso integral (exceto taxa administrativa de 5%)
       • Cancelamento entre 30-60 dias: 50% de reembolso
@@ -54,12 +57,12 @@ export default function TermosUsoPage() {
       • Cancelamento com menos de 15 dias: sem reembolso
       
       Casos de força maior (doença, problemas documentais, eventos climáticos) serão analisados 
-      individualmente e podem ter condições especiais.`
+      individualmente e podem ter condições especiais.`)
     },
     {
       icon: AlertCircle,
-      title: '5. Responsabilidades do Cliente',
-      content: `O cliente é responsável por:
+      title: t('5. Responsabilidades do Cliente'),
+      content: t(`O cliente é responsável por:
       
       • Fornecer informações verdadeiras e completas
       • Possuir documentação necessária (passaporte, vistos, vacinas)
@@ -68,12 +71,12 @@ export default function TermosUsoPage() {
       • Comunicar necessidades especiais ou restrições
       • Contratar seguro viagem (obrigatório para intercâmbios)
       
-      A MaeumGlobal não se responsabiliza por problemas decorrentes do descumprimento.`
+      A MaeumGlobal não se responsabiliza por problemas decorrentes do descumprimento.`)
     },
     {
       icon: Shield,
-      title: '6. Limitação de Responsabilidade',
-      content: `A MaeumGlobal atua como intermediária entre cliente e fornecedores (hotéis, companhias aéreas, 
+      title: t('6. Limitação de Responsabilidade'),
+      content: t(`A MaeumGlobal atua como intermediária entre cliente e fornecedores (hotéis, companhias aéreas, 
       prestadores de serviços). Não nos responsabilizamos por:
       
       • Alterações unilaterais feitas por fornecedores
@@ -83,34 +86,34 @@ export default function TermosUsoPage() {
       • Perda ou extravio de bagagem
       • Situações de força maior ou caso fortuito
       
-      Faremos o melhor para auxiliar na resolução de quaisquer problemas.`
+      Faremos o melhor para auxiliar na resolução de quaisquer problemas.`)
     },
     {
       icon: FileText,
-      title: '7. Propriedade Intelectual',
-      content: `Todo o conteúdo do site (textos, imagens, logotipos, vídeos, roteiros) é de propriedade 
+      title: t('7. Propriedade Intelectual'),
+      content: t(`Todo o conteúdo do site (textos, imagens, logotipos, vídeos, roteiros) é de propriedade 
       da MaeumGlobal e protegido por leis de direitos autorais.
       
       É proibida a reprodução, distribuição ou uso comercial sem autorização prévia por escrito.
       
-      O uso é permitido apenas para fins pessoais e não comerciais.`
+      O uso é permitido apenas para fins pessoais e não comerciais.`)
     },
     {
       icon: AlertCircle,
-      title: '8. Conduta do Usuário',
-      content: `Ao utilizar nosso site e serviços, você concorda em:
+      title: t('8. Conduta do Usuário'),
+      content: t(`Ao utilizar nosso site e serviços, você concorda em:
       
       • Não usar o site para fins ilegais ou não autorizados
       • Não tentar acessar sistemas ou dados restritos
       • Não interferir no funcionamento adequado do site
       • Não copiar, modificar ou distribuir conteúdo sem permissão
       • Não se passar por outra pessoa ou entidade
-      • Fornecer informações de contato válidas e atualizadas`
+      • Fornecer informações de contato válidas e atualizadas`)
     },
     {
       icon: FileText,
-      title: '9. Intercâmbios e Programas Educacionais',
-      content: `Para programas de intercâmbio:
+      title: t('9. Intercâmbios e Programas Educacionais'),
+      content: t(`Para programas de intercâmbio:
       
       • Matrículas são pessoais e intransferíveis
       • Visto de estudante é responsabilidade do aluno (com nossa orientação)
@@ -119,18 +122,18 @@ export default function TermosUsoPage() {
       • Hospedagem está sujeita aos termos do fornecedor parceiro
       • Seguro saúde é obrigatório durante todo o período
       
-      Consulte condições específicas de cada programa.`
+      Consulte condições específicas de cada programa.`)
     },
     {
       icon: Shield,
-      title: '10. Lei Aplicável e Foro',
-      content: `Estes termos são regidos pelas leis da República Federativa do Brasil.
+      title: t('10. Lei Aplicável e Foro'),
+      content: t(`Estes termos são regidos pelas leis da República Federativa do Brasil.
       
       Fica eleito o foro da Comarca de Curitiba/PR para resolução de quaisquer 
       questões decorrentes destes termos, com renúncia a qualquer outro, 
       por mais privilegiado que seja.
       
-      Em caso de dúvidas, entre em contato: juridico@maeumglobal.com.br`
+      Em caso de dúvidas, entre em contato: juridico@maeumglobal.com.br`)
     }
   ];
 
@@ -148,17 +151,16 @@ export default function TermosUsoPage() {
           <div className="inline-flex items-center gap-2 bg-primary/20 backdrop-blur border border-primary/45 rounded-full px-4 py-2 mb-6">
             <FileText className="h-4 w-4 text-accent" />
             <span className="text-xs uppercase tracking-widest text-primary font-bold">
-              Termos e Condições
+              {t('Termos e Condições')}
             </span>
           </div>
           
           <h1 className="font-heading text-4xl md:text-5xl font-light text-primary mb-4">
-            Termos de Uso
+            {t('Termos de Uso')}
           </h1>
           
           <p className="text-sm text-gray-400 max-w-2xl mx-auto">
-            Condições gerais de contratação e utilização dos nossos serviços. 
-            Leia atentamente antes de prosseguir.
+            {t('Condições gerais de contratação e utilização dos nossos serviços. Leia atentamente antes de prosseguir.')}
           </p>
         </div>
       </section>
@@ -172,18 +174,17 @@ export default function TermosUsoPage() {
             </div>
             <div className="flex-1 text-center md:text-left">
               <h3 className="text-sm font-semibold text-secondary mb-1">
-                Importante
+                {t('Importante')}
               </h3>
               <p className="text-xs text-muted-foreground">
-                Ao contratar nossos serviços, você declara ter lido, compreendido e aceito 
-                integralmente estes Termos de Uso.
+                {t('Ao contratar nossos serviços, você declara ter lido, compreendido e aceito integralmente estes Termos de Uso.')}
               </p>
             </div>
             <Link
-              href="/contato"
+              href={lp('/contato')}
               className="text-xs font-semibold text-primary hover:text-accent-hover transition-colors flex items-center gap-1.5"
             >
-              Fale Conosco <ChevronRight className="h-3.5 w-3.5" />
+              {t('Fale Conosco')} <ChevronRight className="h-3.5 w-3.5" />
             </Link>
           </div>
         </div>
@@ -222,17 +223,16 @@ export default function TermosUsoPage() {
           {/* CTA */}
           <div className="mt-12 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 rounded-2xl p-8 text-center">
             <h3 className="font-heading text-2xl font-light text-secondary mb-3">
-              Pronto para planejar sua viagem dos sonhos?
+              {t('Pronto para planejar sua viagem dos sonhos?')}
             </h3>
             <p className="text-sm text-muted-foreground mb-6 max-w-xl mx-auto">
-              Entre em contato com nossa equipe e descubra como podemos transformar 
-              sua experiência na Ásia em realidade.
+              {t('Entre em contato com nossa equipe e descubra como podemos transformar sua experiência na Ásia em realidade.')}
             </p>
             <Link
-              href="/contato"
+              href={lp('/contato')}
               className="inline-flex items-center gap-2 bg-primary hover:bg-accent-hover text-white text-xs font-semibold px-6 py-3 rounded-full shadow-md transition-all hover:scale-105"
             >
-              Solicitar Orçamento
+              {t('Solicitar Orçamento')}
               <ChevronRight className="h-3.5 w-3.5" />
             </Link>
           </div>
@@ -240,19 +240,19 @@ export default function TermosUsoPage() {
           {/* Navigation */}
           <div className="mt-12 pt-8 border-t border-border/60 flex items-center justify-between">
             <Link
-              href="/"
+              href={lp('/')}
               className="text-xs font-medium text-primary hover:text-accent-hover transition-colors flex items-center gap-2"
             >
-              ← Voltar ao início
+              ← {t('Voltar ao início')}
             </Link>
             
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
-              <Link href="/politica-de-privacidade" className="hover:text-primary transition-colors">
-                Política de Privacidade
+              <Link href={lp('/politica-de-privacidade')} className="hover:text-primary transition-colors">
+                {t('Política de Privacidade')}
               </Link>
               <span>•</span>
-              <Link href="/reembolso" className="hover:text-primary transition-colors">
-                Política de Reembolso
+              <Link href={lp('/reembolso')} className="hover:text-primary transition-colors">
+                {t('Política de Reembolso')}
               </Link>
             </div>
           </div>

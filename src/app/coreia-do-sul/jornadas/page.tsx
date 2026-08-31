@@ -7,8 +7,13 @@ import { Calendar, Map, Users, ArrowRight, Clock } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { db } from '@/lib/db';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useMedia } from '@/contexts/SiteContentContext';
 
 export default function JornadasPage() {
+  const { t, locale } = useLanguage();
+  const hero = useMedia('ks_jornadas_hero');
+  const lp = (path: string) => (locale === 'pt' || path === '/' ? path : `/${locale}${path}`);
   const [journeys, setJourneys] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -68,10 +73,10 @@ export default function JornadasPage() {
       <Header />
 
       <main className="flex-1 w-full">
-        <section className="relative h-[70vh] min-h-[500px] w-full overflow-hidden">
+        <section className="relative min-h-[100dvh] w-full overflow-hidden">
           <Image
-            src="https://images.unsplash.com/photo-1540959733332-eab4deceeaf7?q=80&w=1920"
-            alt="Coreia do Sul"
+            src={hero}
+            alt={t('Coreia do Sul')}
             fill
             className="object-cover"
             priority
@@ -81,33 +86,29 @@ export default function JornadasPage() {
           <div className="absolute inset-0 flex flex-col justify-end p-8 md:p-16 max-w-7xl mx-auto w-full">
             <div className="max-w-3xl text-white">
               <span className="text-xs font-bold uppercase tracking-widest text-primary bg-primary/10 border border-primary/20 rounded-full px-4 py-1.5 backdrop-blur-sm inline-block mb-4">
-                Coreia do Sul
+                {t('Coreia do Sul')}
               </span>
               <h1 className="font-heading text-5xl sm:text-7xl font-light tracking-wide uppercase leading-tight">
-                Jornadas Maeum Global
+                {t('Jornadas Maeum Global')}
               </h1>
               <p className="text-sm sm:text-base text-white/80 mt-4 max-w-xl font-light leading-relaxed">
-                Viagens em grupo com curadoria exclusiva
+                {t('Viagens em grupo com curadoria exclusiva')}
               </p>
             </div>
           </div>
         </section>
 
         <section className="py-20 px-4 md:px-8 max-w-4xl mx-auto w-full text-center">
-          <span className="text-xs uppercase tracking-widest text-primary font-bold">Jornadas em Grupo</span>
+          <span className="text-xs uppercase tracking-widest text-primary font-bold">{t('Jornadas em Grupo')}</span>
           <h2 className="font-heading text-3xl sm:text-4xl font-light text-secondary mt-3 leading-tight">
-            Uma nova forma de viajar
+            {t('Uma nova forma de viajar')}
           </h2>
           <div className="mt-8 space-y-4 text-sm text-muted-foreground leading-relaxed max-w-3xl mx-auto font-light">
             <p>
-              Nossas jornadas em grupo são muito mais que roteiros turísticos — são experiências
-              cuidadosamente desenhadas para conectar você com a essência da Coreia do Sul ao lado
-              de outras viajantes que compartilham dos mesmos sonhos.
+              {t('Nossas jornadas em grupo são muito mais que roteiros turísticos — são experiências cuidadosamente desenhadas para conectar você com a essência da Coreia do Sul ao lado de outras viajantes que compartilham dos mesmos sonhos.')}
             </p>
             <p>
-              Cada jornada inclui acompanhamento exclusivo Maeum, hospedagem selecionada,
-              experiências curadas e todo o suporte para que você viva cada momento com
-              profundidade e significado.
+              {t('Cada jornada inclui acompanhamento exclusivo Maeum, hospedagem selecionada, experiências curadas e todo o suporte para que você viva cada momento com profundidade e significado.')}
             </p>
           </div>
         </section>
@@ -118,9 +119,9 @@ export default function JornadasPage() {
               <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
                 <Map className="h-6 w-6 text-muted-foreground" />
               </div>
-              <h3 className="font-heading text-xl font-light text-secondary">Nenhuma jornada disponível no momento</h3>
+              <h3 className="font-heading text-xl font-light text-secondary">{t('Nenhuma jornada disponível no momento')}</h3>
               <p className="text-xs text-muted-foreground mt-2">
-                Novas jornadas estão sendo preparadas. Volte em breve.
+                {t('Novas jornadas estão sendo preparadas. Volte em breve.')}
               </p>
             </div>
           ) : (
@@ -141,7 +142,7 @@ export default function JornadasPage() {
                           ? 'bg-purple-600/90 text-white border-purple-500/30'
                           : 'bg-primary/90 text-white border-primary/30'
                       }`}>
-                        {journey.category === 'army' ? 'ARMY' : 'Premium'}
+                        {journey.category === 'army' ? 'ARMY' : t('Premium')}
                       </span>
                     </div>
                   </div>
@@ -157,7 +158,7 @@ export default function JornadasPage() {
                       <div className="flex items-center gap-4 mt-3 text-[11px] text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Clock className="h-3.5 w-3.5 text-accent" />
-                          {journey.duration_days} dias
+                          {journey.duration_days} {t('dias')}
                         </span>
                         {journey.nextDeparture && (
                           <span className="flex items-center gap-1">
@@ -169,7 +170,7 @@ export default function JornadasPage() {
                       {journey.nextDeparture && (
                         <div className="flex items-center gap-1 mt-2 text-[11px] text-muted-foreground">
                           <Users className="h-3.5 w-3.5 text-accent" />
-                          <span>{journey.nextDeparture.available_spots} vagas disponíveis</span>
+                          <span>{journey.nextDeparture.available_spots} {t('vagas disponíveis')}</span>
                         </div>
                       )}
                     </div>
@@ -178,13 +179,13 @@ export default function JornadasPage() {
                         <span className="font-heading text-lg font-bold text-secondary">
                           R$ {journey.price_per_person.toLocaleString('pt-BR')}
                         </span>
-                        <span className="text-[10px] text-muted-foreground ml-1">/ pessoa</span>
+                        <span className="text-[10px] text-muted-foreground ml-1">/ {t('pessoa')}</span>
                       </div>
                       <Link
-                        href={`/coreia-do-sul/jornadas/${journey.slug}`}
+                        href={lp(`/coreia-do-sul/jornadas/${journey.slug}`)}
                         className="inline-flex items-center gap-1.5 bg-primary hover:bg-accent-hover text-white transition-all text-[10px] font-bold py-2.5 px-5 rounded-xl uppercase tracking-wider shadow-sm"
                       >
-                        CONHECER JORNADA
+                        {t('CONHECER JORNADA')}
                         <ArrowRight className="h-3.5 w-3.5" />
                       </Link>
                     </div>

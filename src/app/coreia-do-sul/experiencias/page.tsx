@@ -7,8 +7,11 @@ import { Heart, MapPin, Clock, Filter, X, Search, SlidersHorizontal } from 'luci
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { db } from '@/lib/db';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function CoreiaExperienciasPage() {
+  const { t, locale } = useLanguage();
+  const lp = (path: string) => (locale === 'pt' || path === '/' ? path : `/${locale}${path}`);
   const allExperiences = db.get('experiences');
   const categories = db.get('categories');
 
@@ -89,7 +92,7 @@ export default function CoreiaExperienciasPage() {
 
   if (searchQuery) {
     activeFilterTags.push({
-      label: `Busca: "${searchQuery}"`,
+      label: `${t('Busca')}: "${searchQuery}"`,
       onRemove: () => setSearchQuery(''),
     });
   }
@@ -106,7 +109,7 @@ export default function CoreiaExperienciasPage() {
 
   if (cityFilter) {
     activeFilterTags.push({
-      label: `Cidade: ${cityFilter}`,
+      label: `${t('Cidade')}: ${cityFilter}`,
       onRemove: () => setCityFilter(''),
     });
   }
@@ -120,7 +123,7 @@ export default function CoreiaExperienciasPage() {
 
   if (durationFilter) {
     activeFilterTags.push({
-      label: `Duração: ${durationLabels[durationFilter] || durationFilter}`,
+      label: `${t('Duração')}: ${t(durationLabels[durationFilter] || durationFilter)}`,
       onRemove: () => setDurationFilter(''),
     });
   }
@@ -134,7 +137,7 @@ export default function CoreiaExperienciasPage() {
 
   if (priceFilter) {
     activeFilterTags.push({
-      label: `Preço: ${priceLabels[priceFilter] || priceFilter}`,
+      label: `${t('Preço')}: ${t(priceLabels[priceFilter] || priceFilter)}`,
       onRemove: () => setPriceFilter(''),
     });
   }
@@ -154,11 +157,11 @@ export default function CoreiaExperienciasPage() {
                 Maeum Global
               </span>
               <h1 className="font-heading text-4xl sm:text-5xl md:text-6xl font-light text-secondary leading-tight">
-                Experiências na{' '}
-                <span className="text-primary">Coreia do Sul</span>
+                {t('Experiências na')}{' '}
+                <span className="text-primary">{t('Coreia do Sul')}</span>
               </h1>
               <p className="text-sm sm:text-base text-muted-foreground mt-4 max-w-xl leading-relaxed">
-                Explore experiências cuidadosamente selecionadas em Seul — de rituais de bem-estar a tours gastronômicos, cada momento é desenhado para transformar sua viagem.
+                {t('Explore experiências cuidadosamente selecionadas em Seul — de rituais de bem-estar a tours gastronômicos, cada momento é desenhado para transformar sua viagem.')}
               </p>
             </div>
           </div>
@@ -171,7 +174,7 @@ export default function CoreiaExperienciasPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <input
                   type="text"
-                  placeholder="Buscar experiências..."
+                  placeholder={t('Buscar experiências...')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-9 pr-3 py-2 bg-muted/50 border border-border rounded-xl text-xs placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary/30 transition-all"
@@ -183,7 +186,7 @@ export default function CoreiaExperienciasPage() {
                 onChange={(e) => setCityFilter(e.target.value)}
                 className="px-3 py-2 bg-muted/50 border border-border rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary/30 transition-all appearance-none cursor-pointer min-w-[140px]"
               >
-                <option value="">Todas as regiões</option>
+                <option value="">{t('Todas as regiões')}</option>
                 {cities.map((city) => (
                   <option key={city} value={city}>{city}</option>
                 ))}
@@ -194,11 +197,11 @@ export default function CoreiaExperienciasPage() {
                 onChange={(e) => setDurationFilter(e.target.value)}
                 className="px-3 py-2 bg-muted/50 border border-border rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary/30 transition-all appearance-none cursor-pointer min-w-[140px]"
               >
-                <option value="">Qualquer duração</option>
-                <option value="2">Até 2h</option>
-                <option value="2-4">2-4h</option>
-                <option value="4-8">4-8h</option>
-                <option value="8">8h+</option>
+                <option value="">{t('Qualquer duração')}</option>
+                <option value="2">{t('Até 2h')}</option>
+                <option value="2-4">{t('2-4h')}</option>
+                <option value="4-8">{t('4-8h')}</option>
+                <option value="8">{t('8h+')}</option>
               </select>
 
               <select
@@ -206,11 +209,11 @@ export default function CoreiaExperienciasPage() {
                 onChange={(e) => setPriceFilter(e.target.value)}
                 className="px-3 py-2 bg-muted/50 border border-border rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary/30 transition-all appearance-none cursor-pointer min-w-[140px]"
               >
-                <option value="">Qualquer valor</option>
-                <option value="500">Até R$500</option>
-                <option value="500-800">R$500-R$800</option>
-                <option value="800-1200">R$800-R$1.200</option>
-                <option value="1200">R$1.200+</option>
+                <option value="">{t('Qualquer valor')}</option>
+                <option value="500">{t('Até R$500')}</option>
+                <option value="500-800">{t('R$500-R$800')}</option>
+                <option value="800-1200">{t('R$800-R$1.200')}</option>
+                <option value="1200">{t('R$1.200+')}</option>
               </select>
 
               {hasActiveFilters && (
@@ -219,7 +222,7 @@ export default function CoreiaExperienciasPage() {
                   className="flex items-center gap-1.5 px-3 py-2 text-xs text-muted-foreground hover:text-destructive transition-colors"
                 >
                   <X className="h-3.5 w-3.5" />
-                  Limpar
+                  {t('Limpar')}
                 </button>
               )}
             </div>
@@ -261,7 +264,7 @@ export default function CoreiaExperienciasPage() {
                   </span>
                 ))}
                 <span className="text-[10px] text-muted-foreground">
-                  {filteredExperiences.length} resultado{filteredExperiences.length !== 1 ? 's' : ''}
+                  {filteredExperiences.length} {t(filteredExperiences.length !== 1 ? 'resultados' : 'resultado')}
                 </span>
               </div>
             )}
@@ -279,7 +282,7 @@ export default function CoreiaExperienciasPage() {
                   return (
                     <Link
                       key={exp.id}
-                      href={`/coreia-do-sul/experiencias/${exp.slug}`}
+                      href={lp(`/coreia-do-sul/experiencias/${exp.slug}`)}
                       className="group block"
                     >
                       <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 h-full flex flex-col">
@@ -305,7 +308,7 @@ export default function CoreiaExperienciasPage() {
                               e.stopPropagation();
                             }}
                             className="absolute top-3 right-3 p-2 bg-white/80 backdrop-blur-sm rounded-full hover:bg-white transition-all shadow-sm hover:scale-105"
-                            aria-label="Favoritar"
+                            aria-label={t('Favoritar')}
                           >
                             <Heart className="h-4 w-4 text-secondary/70 hover:text-red-500 transition-colors" />
                           </button>
@@ -339,7 +342,7 @@ export default function CoreiaExperienciasPage() {
                               <span className="font-heading text-base font-bold text-secondary">
                                 {formatPrice(exp.price_per_person)}
                               </span>
-                              <span className="text-[10px] text-muted-foreground ml-1">/pessoa</span>
+                              <span className="text-[10px] text-muted-foreground ml-1">{t('/pessoa')}</span>
                             </div>
                             <span
                               className={`text-[10px] font-bold px-3 py-1 rounded-full ${
@@ -348,7 +351,7 @@ export default function CoreiaExperienciasPage() {
                                   : 'bg-muted text-muted-foreground'
                               }`}
                             >
-                              {exp.booking_type === 'direct' ? 'Reservar' : 'Solicitar'}
+                              {exp.booking_type === 'direct' ? t('Reservar') : t('Solicitar')}
                             </span>
                           </div>
                         </div>
@@ -363,16 +366,16 @@ export default function CoreiaExperienciasPage() {
                   <Search className="h-6 w-6 text-muted-foreground" />
                 </div>
                 <h3 className="font-heading text-xl text-secondary mb-1">
-                  Nenhuma experiência encontrada
+                  {t('Nenhuma experiência encontrada')}
                 </h3>
                 <p className="text-sm text-muted-foreground max-w-xs">
-                  Tente ajustar os filtros ou buscar por outros termos.
+                  {t('Tente ajustar os filtros ou buscar por outros termos.')}
                 </p>
                 <button
                   onClick={clearFilters}
                   className="mt-6 px-5 py-2 bg-primary text-primary-foreground text-xs font-semibold rounded-xl hover:bg-accent-hover transition-all"
                 >
-                  Limpar Filtros
+                  {t('Limpar Filtros')}
                 </button>
               </div>
             )}

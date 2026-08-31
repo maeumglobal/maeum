@@ -11,9 +11,12 @@ import { db } from '@/lib/db';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { submitLeadAction } from '@/actions/crmActions';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function PacoteDetailPage() {
   const { slug } = useParams();
+  const { t, locale } = useLanguage();
+  const lp = (path: string) => (locale === 'pt' || path === '/' ? path : `/${locale}${path}`);
   const [pack, setPack] = useState<any>(null);
   const [destination, setDestination] = useState<any>(null);
   
@@ -45,7 +48,7 @@ export default function PacoteDetailPage() {
       phone,
       email,
       interest: pack.title,
-      origin: 'Formulário Pacote: ' + pack.title
+      origin: t('Formulário Pacote: ') + pack.title
     });
     setLoading(false);
     if (res.success) {
@@ -62,9 +65,9 @@ export default function PacoteDetailPage() {
       <div className="flex flex-col min-h-screen bg-background">
         <Header />
         <main className="flex-1 flex flex-col items-center justify-center p-12 text-center">
-          <h2 className="font-heading text-3xl font-light text-secondary">Paquete no encontrado</h2>
-          <Link href="/pacotes" className="mt-4 text-primary hover:underline text-xs font-bold uppercase tracking-wider flex items-center gap-1">
-            <ArrowLeft className="h-4 w-4" /> Volver a los Paquetes
+          <h2 className="font-heading text-3xl font-light text-secondary">{t('Pacote não encontrado')}</h2>
+          <Link href={lp('/pacotes')} className="mt-4 text-primary hover:underline text-xs font-bold uppercase tracking-wider flex items-center gap-1">
+            <ArrowLeft className="h-4 w-4" /> {t('Voltar para Pacotes')}
           </Link>
         </main>
         <Footer />
@@ -77,8 +80,8 @@ export default function PacoteDetailPage() {
       <Header />
 
       <main className="flex-1 w-full py-12 px-4 md:px-8 max-w-7xl mx-auto">
-        <Link href="/pacotes" className="text-xs uppercase font-bold text-muted-foreground hover:text-primary tracking-wider flex items-center gap-1.5 mb-8">
-          <ArrowLeft className="h-4 w-4" /> Volver a todos los paquetes
+        <Link href={lp('/pacotes')} className="text-xs uppercase font-bold text-muted-foreground hover:text-primary tracking-wider flex items-center gap-1.5 mb-8">
+          <ArrowLeft className="h-4 w-4" /> {t('Voltar para todos os pacotes')}
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
@@ -86,7 +89,7 @@ export default function PacoteDetailPage() {
           <div className="lg:col-span-2 flex flex-col gap-8">
             <div>
               <span className="text-xs font-bold uppercase tracking-widest text-primary">
-                {destination ? destination.name : 'Viaje Exclusivo'}
+                {destination ? destination.name : t('Viagem Exclusiva')}
               </span>
               <h1 className="font-heading text-3xl sm:text-5xl font-light text-secondary mt-2 leading-tight uppercase">
                 {pack.title}
@@ -107,14 +110,14 @@ export default function PacoteDetailPage() {
             {pack.itinerary && pack.itinerary.length > 0 && (
               <div className="mt-4">
                 <h3 className="font-heading text-2xl font-light text-secondary uppercase tracking-wider border-b border-border pb-4 mb-6">
-                  Roteiro Día a Día
+                  {t('Roteiro Dia a Dia')}
                 </h3>
                 <div className="flex flex-col gap-6 pl-4 border-l border-primary/20 relative">
                   {pack.itinerary.map((day: any) => (
                     <div key={day.day} className="relative flex flex-col gap-1 pb-4">
                       {/* Node point */}
                       <span className="absolute -left-[21px] top-0 h-2.5 w-2.5 rounded-full bg-primary ring-4 ring-background" />
-                      <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Día {day.day}</span>
+                      <span className="text-[10px] font-bold text-primary uppercase tracking-wider">{t('Dia')} {day.day}</span>
                       <h4 className="font-heading text-lg font-bold text-secondary leading-tight mt-0.5">{day.title}</h4>
                       <p className="text-xs text-muted-foreground font-light leading-relaxed mt-1">{day.description}</p>
                     </div>
@@ -127,7 +130,7 @@ export default function PacoteDetailPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-border pt-8 mt-4">
               <div className="flex flex-col gap-3">
                 <h4 className="text-xs font-bold text-secondary uppercase tracking-widest flex items-center gap-1.5">
-                  <CheckCircle2 className="h-4.5 w-4.5 text-green-600" /> Qué está incluido
+                  <CheckCircle2 className="h-4.5 w-4.5 text-green-600" /> {t('O que está incluso')}
                 </h4>
                 <ul className="flex flex-col gap-2 text-xs text-muted-foreground">
                   {pack.included && pack.included.map((item: string, idx: number) => (
@@ -140,7 +143,7 @@ export default function PacoteDetailPage() {
 
               <div className="flex flex-col gap-3">
                 <h4 className="text-xs font-bold text-secondary uppercase tracking-widest flex items-center gap-1.5">
-                  <XCircle className="h-4.5 w-4.5 text-red-500" /> Qué no está incluido
+                  <XCircle className="h-4.5 w-4.5 text-red-500" /> {t('O que não está incluso')}
                 </h4>
                 <ul className="flex flex-col gap-2 text-xs text-muted-foreground">
                   {pack.not_included && pack.not_included.map((item: string, idx: number) => (
@@ -157,10 +160,10 @@ export default function PacoteDetailPage() {
           <div className="flex flex-col gap-6">
             <div className="border border-border rounded-3xl p-8 bg-card shadow-sm flex flex-col gap-6 h-fit">
               <div>
-                <span className="text-[10px] uppercase font-bold text-primary tracking-widest">Inversión del Viaje</span>
+                <span className="text-[10px] uppercase font-bold text-primary tracking-widest">{t('Investimento do Viajante')}</span>
                 <div className="flex items-baseline gap-1 mt-1">
                   <span className="font-heading text-3xl font-bold text-primary">US$ {pack.price.toLocaleString()}</span>
-                  <span className="text-xs text-muted-foreground">/ por persona</span>
+                  <span className="text-xs text-muted-foreground">{t('/ por pessoa')}</span>
                 </div>
               </div>
 
@@ -168,30 +171,30 @@ export default function PacoteDetailPage() {
 
               <div className="flex flex-col gap-2.5 text-xs text-muted-foreground">
                 <div className="flex justify-between">
-                  <span>Duración:</span>
-                  <span className="font-bold text-secondary">{pack.duration || '10 Dias'}</span>
+                  <span>{t('Duração:')}</span>
+                  <span className="font-bold text-secondary">{pack.duration || t('10 Dias')}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Próximas salidas:</span>
+                  <span>{t('Próximas saídas:')}</span>
                   <span className="font-bold text-secondary">
-                    {pack.start_dates?.map((d: string) => new Date(d).toLocaleDateString('pt-BR')).join(' / ') || 'A definir'}
+                    {pack.start_dates?.map((d: string) => new Date(d).toLocaleDateString('pt-BR')).join(' / ') || t('A definir')}
                   </span>
                 </div>
               </div>
 
               {/* Inquiry form */}
               <div className="mt-2">
-                <h4 className="text-[10px] uppercase font-bold text-secondary tracking-widest mb-3">Solicitar Presupuesto</h4>
+                <h4 className="text-[10px] uppercase font-bold text-secondary tracking-widest mb-3">{t('Solicitar Orçamento')}</h4>
                 
                 {formSuccess ? (
                   <div className="bg-green-50 border border-green-200 text-green-800 text-xs rounded-xl p-3.5 text-center font-bold">
-                    ✓ ¡Solicitud recibida! Te contactaremos en breve.
+                    {t('✓ Solicitação recebida! Entraremos em contato em breve.')}
                   </div>
                 ) : (
                   <form onSubmit={handleInquirySubmit} className="flex flex-col gap-3 text-xs">
                     <Input
                       required
-                      placeholder="Nombre Completo"
+                      placeholder={t('Nome Completo')}
                       value={name}
                       onChange={e => setName(e.target.value)}
                       className="rounded-xl h-10 border-border"
@@ -199,37 +202,37 @@ export default function PacoteDetailPage() {
                     <Input
                       required
                       type="email"
-                      placeholder="E-mail de contacto"
+                      placeholder={t('E-mail de contato')}
                       value={email}
                       onChange={e => setEmail(e.target.value)}
                       className="rounded-xl h-10 border-border"
                     />
                     <Input
                       required
-                      placeholder="Teléfono (WhatsApp)"
+                      placeholder={t('Telefone (WhatsApp)')}
                       value={phone}
                       onChange={e => setPhone(e.target.value)}
                       className="rounded-xl h-10 border-border"
                     />
                     <Button type="submit" disabled={loading} className="w-full bg-primary hover:bg-accent-hover text-white rounded-xl py-3 font-bold uppercase tracking-wider text-[10px]">
-                      {loading ? 'Enviando...' : 'ENVIAR SOLICITUD'}
+                      {loading ? t('Enviando...') : t('Enviar Solicitação')}
                     </Button>
                   </form>
                 )}
               </div>
 
               <div className="flex items-center justify-center gap-1.5 text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-2 border-t border-border pt-4">
-                Ou converse agora pelo
+                {t('Ou converse agora pelo')}
               </div>
 
               <a
-                href={`https://wa.me/5541987094799?text=Olá,%20gostaria%20de%20saber%20mais%20sobre%20o%20pacote%20${encodeURIComponent(pack.title)}`}
+                href={`https://wa.me/5541987094799?text=${encodeURIComponent(t('Olá, gostaria de saber mais sobre o pacote '))}${encodeURIComponent(pack.title)}`}
                 target="_blank"
                 rel="noreferrer"
                 className="w-full flex items-center justify-center gap-2 bg-[#25d366] hover:bg-[#20ba5a] text-white text-xs font-bold py-3.5 rounded-xl uppercase tracking-wider shadow-sm"
               >
                 <PhoneCall className="h-4 w-4" />
-                WhatsApp Directo
+                {t('WhatsApp Directo')}
               </a>
             </div>
           </div>

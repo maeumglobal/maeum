@@ -5,8 +5,10 @@ import Image from 'next/image';
 import { Users, Search, Paperclip, Send, CheckCheck, MessageCircle, ArrowRight, Phone, Video, MoreVertical, User } from 'lucide-react';
 import { initClientChat, sendMessage, getChatMessages } from '@/actions/chatActions';
 import { getUsers } from '@/actions/usersActions';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function ClientChatWidget() {
+  const { t } = useLanguage();
   const [consultants, setConsultants] = useState<any[]>([]);
   const [activeConsultant, setActiveConsultant] = useState<any | null>(null);
   
@@ -61,7 +63,7 @@ export default function ClientChatWidget() {
     if (!formData.name || !formData.email) return;
     
     setIsStarting(true);
-    const initialMessage = `Olá, meu nome é ${formData.name}. Gostaria de iniciar um atendimento!`;
+    const initialMessage = `${t('Olá, meu nome é')} ${formData.name}. ${t('Gostaria de iniciar um atendimento!')}`;
     
     const res = await initClientChat({
       name: formData.name,
@@ -79,7 +81,7 @@ export default function ClientChatWidget() {
         createdAt: new Date().toISOString()
       }]);
     } else {
-      alert(res.error || 'Erro ao iniciar chat.');
+      alert(res.error || t('Erro ao iniciar chat.'));
     }
     setIsStarting(false);
   };
@@ -126,11 +128,11 @@ export default function ClientChatWidget() {
             </div>
             <div>
               <h3 className="text-[10px] sm:text-[11px] font-bold text-white tracking-widest uppercase">
-                {activeConsultant ? `CHAT COM ${activeConsultant.name.split(' ')[0]}` : 'CHAT COM NOSSAS CONSULTORAS'}
+                {activeConsultant ? `${t('CHAT COM')} ${activeConsultant.name.split(' ')[0]}` : t('CHAT COM NOSSAS CONSULTORAS')}
               </h3>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
-                <span className="text-[8px] sm:text-[9px] text-gray-400">Online agora</span>
+                <span className="text-[8px] sm:text-[9px] text-gray-400">{t('Online agora')}</span>
               </div>
             </div>
          </div>
@@ -167,19 +169,19 @@ export default function ClientChatWidget() {
                    <MessageCircle className="w-5 h-5 text-[#C8A27C]" />
                  </div>
                  
-                 <h3 className="text-sm font-heading text-white mt-4 mb-2">Olá! Sou a {activeConsultant?.name?.split(' ')[0] || 'Consultora'}.</h3>
-                 <p className="text-[10px] text-gray-400 mb-6">Para iniciarmos nosso atendimento, por favor, me diga seu nome e e-mail.</p>
+                 <h3 className="text-sm font-heading text-white mt-4 mb-2">{t('Olá! Sou a')} {activeConsultant?.name?.split(' ')[0] || t('Consultora')}.</h3>
+                 <p className="text-[10px] text-gray-400 mb-6">{t('Para iniciarmos nosso atendimento, por favor, me diga seu nome e e-mail.')}</p>
                  
                  <form onSubmit={handleStartChat} className="flex flex-col gap-3 text-left">
                    <div>
-                     <label className="block text-[9px] text-gray-400 uppercase tracking-widest mb-1 pl-1">Seu Nome</label>
+                     <label className="block text-[9px] text-gray-400 uppercase tracking-widest mb-1 pl-1">{t('Seu Nome')}</label>
                      <input 
                        required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})}
                        className="w-full bg-[#0F0A08] border border-[#3D2620] rounded-md p-2.5 text-[11px] text-white focus:border-[#C8A27C] outline-none"
                      />
                    </div>
                    <div>
-                     <label className="block text-[9px] text-gray-400 uppercase tracking-widest mb-1 pl-1">E-mail</label>
+                     <label className="block text-[9px] text-gray-400 uppercase tracking-widest mb-1 pl-1">{t('E-mail')}</label>
                      <input 
                        required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})}
                        className="w-full bg-[#0F0A08] border border-[#3D2620] rounded-md p-2.5 text-[11px] text-white focus:border-[#C8A27C] outline-none"
@@ -189,7 +191,7 @@ export default function ClientChatWidget() {
                      type="submit" disabled={isStarting}
                      className="w-full bg-[#C8A27C] hover:bg-[#B8906C] disabled:opacity-50 text-[#0F0A08] font-bold text-[10px] py-3 rounded-md transition-all uppercase tracking-widest mt-2"
                    >
-                     {isStarting ? 'Conectando...' : 'Começar a Conversar'}
+                     {isStarting ? t('Conectando...') : t('Começar a Conversar')}
                    </button>
                  </form>
                </div>
@@ -229,7 +231,7 @@ export default function ClientChatWidget() {
                   <div className="flex-1 bg-[#0F0A08] border border-[#3D2620] rounded-full px-4 py-2.5 flex items-center">
                      <input 
                        type="text" 
-                       placeholder="Digite sua mensagem..." 
+                       placeholder={t('Digite sua mensagem...')} 
                        value={inputText}
                        onChange={e => setInputText(e.target.value)}
                        className="w-full bg-transparent text-[11px] text-white focus:outline-none" 

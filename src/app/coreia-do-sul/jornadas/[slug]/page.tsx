@@ -9,9 +9,12 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { db } from '@/lib/db';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function JornadaDetailPage() {
   const { slug } = useParams();
+  const { t, locale } = useLanguage();
+  const lp = (path: string) => (locale === 'pt' || path === '/' ? path : `/${locale}${path}`);
   const [journey, setJourney] = useState<any>(null);
   const [departures, setDepartures] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
@@ -94,12 +97,12 @@ export default function JornadaDetailPage() {
       <div className="flex flex-col min-h-screen bg-background">
         <Header />
         <main className="flex-1 flex flex-col items-center justify-center p-12 text-center">
-          <h2 className="font-heading text-3xl font-light text-secondary">Jornada não encontrada</h2>
+          <h2 className="font-heading text-3xl font-light text-secondary">{t('Jornada não encontrada')}</h2>
           <Link
-            href="/coreia-do-sul/jornadas"
+            href={lp('/coreia-do-sul/jornadas')}
             className="mt-4 text-primary hover:underline text-xs font-bold uppercase tracking-wider flex items-center gap-1"
           >
-            <ChevronLeft className="h-4 w-4" /> Voltar para Jornadas
+            <ChevronLeft className="h-4 w-4" /> {t('Voltar para Jornadas')}
           </Link>
         </main>
         <Footer />
@@ -121,7 +124,7 @@ export default function JornadaDetailPage() {
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-primary transition-colors"
           >
             <ChevronLeft className="h-4 w-4" />
-            <span>Voltar para Jornadas</span>
+            <span>{t('Voltar para Jornadas')}</span>
           </Link>
         </div>
 
@@ -144,7 +147,7 @@ export default function JornadaDetailPage() {
                       ? 'bg-purple-600/90 text-white border-purple-500/30'
                       : 'bg-primary/90 text-white border-primary/30'
                   }`}>
-                    {journey.category === 'army' ? 'ARMY' : 'Premium'}
+                    {journey.category === 'army' ? 'ARMY' : t('Premium')}
                   </span>
                 )}
                 <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl font-light tracking-wide leading-tight">
@@ -162,7 +165,7 @@ export default function JornadaDetailPage() {
                   </span>
                   <span className="flex items-center gap-1.5">
                     <Clock className="h-4 w-4 text-accent" />
-                    {journey.duration_days} dias
+                    {journey.duration_days} {t('Dias')}
                   </span>
                 </div>
               </div>
@@ -176,7 +179,7 @@ export default function JornadaDetailPage() {
             {/* Conceito */}
             {journey.concept && (
               <div>
-                <h2 className="font-heading text-2xl font-light text-secondary mb-4">Conceito da Viagem</h2>
+                <h2 className="font-heading text-2xl font-light text-secondary mb-4">{t('Conceito da Viagem')}</h2>
                 <p className="text-sm text-muted-foreground leading-relaxed">{journey.concept}</p>
               </div>
             )}
@@ -184,17 +187,17 @@ export default function JornadaDetailPage() {
             {/* Datas e Saídas */}
             {departures.length > 0 && (
               <div>
-                <h2 className="font-heading text-2xl font-light text-secondary mb-4">Datas e Saídas</h2>
+                <h2 className="font-heading text-2xl font-light text-secondary mb-4">{t('Datas e Saídas')}</h2>
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs border-collapse">
                     <thead>
                       <tr className="border-b border-border">
-                        <th className="text-left font-bold text-secondary py-3 pr-4 uppercase tracking-wider">Data Inicial</th>
-                        <th className="text-left font-bold text-secondary py-3 pr-4 uppercase tracking-wider">Data Final</th>
-                        <th className="text-left font-bold text-secondary py-3 pr-4 uppercase tracking-wider">Vagas Totais</th>
-                        <th className="text-left font-bold text-secondary py-3 pr-4 uppercase tracking-wider">Vagas Disponíveis</th>
-                        <th className="text-left font-bold text-secondary py-3 pr-4 uppercase tracking-wider">Status</th>
-                        <th className="text-left font-bold text-secondary py-3 uppercase tracking-wider">Observações</th>
+                        <th className="text-left font-bold text-secondary py-3 pr-4 uppercase tracking-wider">{t('Data Inicial')}</th>
+                        <th className="text-left font-bold text-secondary py-3 pr-4 uppercase tracking-wider">{t('Data Final')}</th>
+                        <th className="text-left font-bold text-secondary py-3 pr-4 uppercase tracking-wider">{t('Vagas Totais')}</th>
+                        <th className="text-left font-bold text-secondary py-3 pr-4 uppercase tracking-wider">{t('Vagas Disponíveis')}</th>
+                        <th className="text-left font-bold text-secondary py-3 pr-4 uppercase tracking-wider">{t('Status')}</th>
+                        <th className="text-left font-bold text-secondary py-3 uppercase tracking-wider">{t('Observações')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -210,7 +213,7 @@ export default function JornadaDetailPage() {
                                 ? 'bg-green-50 text-green-700'
                                 : 'bg-red-50 text-red-700'
                             }`}>
-                              {dep.status === 'available' ? 'Disponível' : 'Esgotada'}
+                              {dep.status === 'available' ? t('Disponível') : t('Esgotada')}
                             </span>
                           </td>
                           <td className="py-3 text-muted-foreground">{dep.notes || '-'}</td>
@@ -225,7 +228,7 @@ export default function JornadaDetailPage() {
             {/* Destaques */}
             {journey.highlights && journey.highlights.length > 0 && (
               <div>
-                <h2 className="font-heading text-2xl font-light text-secondary mb-6">Destaques da Jornada</h2>
+                <h2 className="font-heading text-2xl font-light text-secondary mb-6">{t('Destaques da Jornada')}</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   {journey.highlights.map((h: any, idx: number) => (
                     <div key={idx} className="bg-card border border-border rounded-2xl overflow-hidden group">
@@ -251,7 +254,7 @@ export default function JornadaDetailPage() {
             {/* Roteiro */}
             {journey.itinerary && journey.itinerary.length > 0 && (
               <div>
-                <h2 className="font-heading text-2xl font-light text-secondary mb-6">Roteiro</h2>
+                <h2 className="font-heading text-2xl font-light text-secondary mb-6">{t('Roteiro')}</h2>
                 <div className="space-y-0">
                   {journey.itinerary.map((day: any, idx: number) => (
                     <div key={idx} className="flex gap-5 pb-8 relative">
@@ -276,7 +279,7 @@ export default function JornadaDetailPage() {
             {/* Inclusões */}
             {journey.included && journey.included.length > 0 && (
               <div>
-                <h2 className="font-heading text-2xl font-light text-secondary mb-4">Inclusões</h2>
+                <h2 className="font-heading text-2xl font-light text-secondary mb-4">{t('Inclusões')}</h2>
                 <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {journey.included.map((item: string, idx: number) => (
                     <li key={idx} className="flex items-start gap-3 text-sm text-muted-foreground">
@@ -293,7 +296,7 @@ export default function JornadaDetailPage() {
             {/* Não Inclusões */}
             {journey.not_included && journey.not_included.length > 0 && (
               <div>
-                <h2 className="font-heading text-2xl font-light text-secondary mb-4">Não Inclusões</h2>
+                <h2 className="font-heading text-2xl font-light text-secondary mb-4">{t('Não Inclusões')}</h2>
                 <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {journey.not_included.map((item: string, idx: number) => (
                     <li key={idx} className="flex items-start gap-3 text-sm text-muted-foreground">
@@ -310,7 +313,7 @@ export default function JornadaDetailPage() {
             {/* Categorias (Caravana Liberty / Prestige) */}
             {hasCategories && (
               <div>
-                <h2 className="font-heading text-2xl font-light text-secondary mb-6">Categorias da Caravana</h2>
+                <h2 className="font-heading text-2xl font-light text-secondary mb-6">{t('Categorias da Caravana')}</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {journey.categories.map((cat: any, idx: number) => (
                     <div
@@ -347,7 +350,7 @@ export default function JornadaDetailPage() {
             {/* Galeria */}
             {allImages.length > 1 && (
               <div>
-                <h2 className="font-heading text-2xl font-light text-secondary mb-4">Galeria</h2>
+                <h2 className="font-heading text-2xl font-light text-secondary mb-4">{t('Galeria')}</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                   {allImages.slice(0, 6).map((img: string, idx: number) => (
                     <div
@@ -373,12 +376,12 @@ export default function JornadaDetailPage() {
 
             {/* Vídeo */}
             <div>
-              <h2 className="font-heading text-2xl font-light text-secondary mb-4">Vídeo</h2>
+              <h2 className="font-heading text-2xl font-light text-secondary mb-4">{t('Vídeo')}</h2>
               {journey.video_url ? (
                 <div className="relative aspect-video rounded-2xl overflow-hidden bg-black">
                   <iframe
                     src={journey.video_embed || journey.video_url.replace('watch?v=', 'embed/')}
-                    title="Jornada em vídeo"
+                    title={t('Jornada em vídeo')}
                     className="absolute inset-0 w-full h-full"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
@@ -391,7 +394,7 @@ export default function JornadaDetailPage() {
                       <path d="M8 5v14l11-7z" />
                     </svg>
                   </div>
-                  <p className="text-xs text-muted-foreground font-medium">Em breve: vídeo exclusivo desta jornada</p>
+                  <p className="text-xs text-muted-foreground font-medium">{t('Em breve: vídeo exclusivo desta jornada')}</p>
                 </div>
               )}
             </div>
@@ -405,14 +408,14 @@ export default function JornadaDetailPage() {
                 <span className="font-heading text-3xl font-bold text-secondary">
                   R$ {formatCurrency(displayPrice())}
                 </span>
-                <span className="text-sm text-muted-foreground">/ pessoa</span>
+                <span className="text-sm text-muted-foreground">{t('/ pessoa')}</span>
               </div>
 
               {/* Category selector */}
               {hasCategories && (
                 <div className="mb-6 mt-4">
                   <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2 block">
-                    Categoria
+                    {t('Categoria')}
                   </label>
                   <div className="flex gap-2">
                     {journey.categories.map((cat: any) => (
@@ -432,8 +435,8 @@ export default function JornadaDetailPage() {
                   {journey.categories.length === 2 && selectedCategory && (
                     <p className="text-[11px] text-muted-foreground mt-2 text-center">
                       {selectedCategory === journey.categories[0].name
-                        ? `Economize R$ ${(journey.categories[1].price - journey.categories[0].price).toLocaleString('pt-BR')} com a categoria ${journey.categories[0].name}`
-                        : `Upgrade para ${journey.categories[1].name} por apenas R$ ${(journey.categories[1].price - journey.categories[0].price).toLocaleString('pt-BR')} a mais`}
+                        ? t('Economize R$') + ' R$ ' + (journey.categories[1].price - journey.categories[0].price).toLocaleString('pt-BR') + ' ' + t('com a categoria') + ' ' + journey.categories[0].name
+                        : t('Upgrade para') + ' ' + journey.categories[1].name + ' ' + t('por apenas') + ' R$ ' + (journey.categories[1].price - journey.categories[0].price).toLocaleString('pt-BR') + ' ' + t('a mais')}
                     </p>
                   )}
                 </div>
@@ -444,7 +447,7 @@ export default function JornadaDetailPage() {
                 {nextAvailableDeparture && (
                   <div className="bg-muted/50 rounded-xl p-4">
                     <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
-                      Próxima saída disponível
+                      {t('Próxima saída disponível')}
                     </div>
                     <div className="flex items-center gap-2 text-sm text-secondary font-medium">
                       <Calendar className="h-4 w-4 text-accent" />
@@ -452,22 +455,22 @@ export default function JornadaDetailPage() {
                     </div>
                     <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                       <Users className="h-3.5 w-3.5 text-accent" />
-                      <span>{nextAvailableDeparture.available_spots} vagas restantes</span>
+                      <span>{nextAvailableDeparture.available_spots} {t('vagas restantes')}</span>
                     </div>
                   </div>
                 )}
 
                 <Button className="w-full bg-primary hover:bg-accent-hover text-white text-sm font-bold py-3.5 rounded-xl transition-all shadow-sm hover:shadow-md active:scale-[0.98] h-auto">
-                  SOLICITAR RESERVA
+                  {t('SOLICITAR RESERVA')}
                 </Button>
 
                 {/* Payment info */}
                 <div className="text-center space-y-1.5">
                   <p className="text-[10px] text-muted-foreground leading-relaxed">
-                    Aceitamos Pix, boleto em até 48x e cartão em até 24x sem juros
+                    {t('Aceitamos Pix, boleto em até 48x e cartão em até 24x sem juros')}
                   </p>
                   <p className="text-[10px] text-muted-foreground leading-relaxed">
-                    Entre 25 e 48 vezes possuem acréscimo simples de 5%
+                    {t('Entre 25 e 48 vezes possuem acréscimo simples de 5%')}
                   </p>
                 </div>
               </div>
@@ -483,10 +486,10 @@ export default function JornadaDetailPage() {
             <span className="font-heading text-xl font-bold text-secondary">
               R$ {formatCurrency(displayPrice())}
             </span>
-            <span className="text-xs text-muted-foreground ml-1">/ pessoa</span>
+            <span className="text-xs text-muted-foreground ml-1">{t('/ pessoa')}</span>
           </div>
           <Button className="bg-primary hover:bg-accent-hover text-white text-sm font-bold px-6 py-3 rounded-xl transition-all shadow-sm active:scale-[0.98] h-auto">
-            SOLICITAR RESERVA
+            {t('SOLICITAR RESERVA')}
           </Button>
         </div>
       </div>

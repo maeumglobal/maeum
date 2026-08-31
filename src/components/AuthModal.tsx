@@ -5,6 +5,7 @@ import { X, Mail, Lock, User, Shield, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { authService } from '@/lib/supabaseAuth';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ interface AuthModalProps {
 }
 
 export default function AuthModal({ isOpen, onClose, onSuccess, defaultMode = 'login' }: AuthModalProps) {
+  const { t } = useLanguage();
   const [mode, setMode] = useState<'login' | 'register' | 'recovery'>(defaultMode);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -30,13 +32,13 @@ export default function AuthModal({ isOpen, onClose, onSuccess, defaultMode = 'l
     setErrorMsg('');
     try {
       await authService.signInWithGoogle();
-      setSuccessMsg('✓ Conexão com Google simulada / autorizada!');
+      setSuccessMsg('✓ ' + t('Conexão com Google autorizada!'));
       setTimeout(() => {
         onSuccess();
         onClose();
       }, 1500);
     } catch (err: any) {
-      setErrorMsg(err.message || 'Erro na autenticação com Google');
+      setErrorMsg(err.message || t('Erro na autenticação com Google'));
     } finally {
       setLoading(false);
     }
@@ -51,18 +53,18 @@ export default function AuthModal({ isOpen, onClose, onSuccess, defaultMode = 'l
     try {
       if (mode === 'login') {
         await authService.signIn(email, password);
-        setSuccessMsg('✓ Sessão iniciada com sucesso!');
+        setSuccessMsg('✓ ' + t('Sessão iniciada com sucesso!'));
       } else if (mode === 'register') {
         if (!name) {
-          setErrorMsg('O nome é obrigatório.');
+          setErrorMsg(t('O nome é obrigatório.'));
           setLoading(false);
           return;
         }
         await authService.signUp(email, password, name, role);
-        setSuccessMsg('✓ Cadastro realizado com sucesso!');
+        setSuccessMsg('✓ ' + t('Cadastro realizado com sucesso!'));
       } else {
         // Recovery
-        setSuccessMsg('✓ Link de recuperação enviado para o seu e-mail!');
+        setSuccessMsg('✓ ' + t('Link de recuperação enviado para o seu e-mail!'));
       }
       
       setTimeout(() => {
@@ -70,7 +72,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, defaultMode = 'l
         onClose();
       }, 1500);
     } catch (err: any) {
-      setErrorMsg(err.message || 'Erro ao processar requisição.');
+      setErrorMsg(err.message || t('Erro ao processar requisição.'));
     } finally {
       setLoading(false);
     }
@@ -94,7 +96,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, defaultMode = 'l
             MAEUM PORTAL
           </span>
           <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground mt-1 block">
-            {mode === 'login' ? 'Entrar na Conta' : mode === 'register' ? 'Criar Nova Conta' : 'Recuperar Senha'}
+            {mode === 'login' ? t('Entrar na Conta') : mode === 'register' ? t('Criar Nova Conta') : t('Recuperar Senha')}
           </span>
         </div>
 
@@ -120,7 +122,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, defaultMode = 'l
                 mode === 'login' ? 'bg-primary text-white shadow-md' : 'hover:text-secondary'
               }`}
             >
-              Login
+              {t('Login')}
             </button>
             <button
               onClick={() => setMode('register')}
@@ -128,7 +130,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, defaultMode = 'l
                 mode === 'register' ? 'bg-primary text-white shadow-md' : 'hover:text-secondary'
               }`}
             >
-              Cadastrar
+              {t('Cadastrar')}
             </button>
           </div>
         )}
@@ -136,14 +138,14 @@ export default function AuthModal({ isOpen, onClose, onSuccess, defaultMode = 'l
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {mode === 'register' && (
             <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-semibold text-secondary">Nome Completo</label>
+              <label className="text-[10px] font-semibold text-secondary">{t('Nome Completo')}</label>
               <div className="relative">
                 <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground/60" />
                 <Input
                   required
                   value={name}
                   onChange={e => setName(e.target.value)}
-                  placeholder="Seu Nome Completo"
+                  placeholder={t('Seu Nome Completo')}
                   className="pl-9 bg-background border-border text-secondary rounded-xl text-xs h-10"
                 />
               </div>
@@ -153,7 +155,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, defaultMode = 'l
 
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-semibold text-secondary">E-mail</label>
+            <label className="text-[10px] font-semibold text-secondary">{t('E-mail')}</label>
             <div className="relative">
               <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground/60" />
               <Input
@@ -170,14 +172,14 @@ export default function AuthModal({ isOpen, onClose, onSuccess, defaultMode = 'l
           {mode !== 'recovery' && (
             <div className="flex flex-col gap-1.5">
               <div className="flex justify-between items-center">
-                <label className="text-[10px] font-semibold text-secondary">Senha</label>
+                <label className="text-[10px] font-semibold text-secondary">{t('Senha')}</label>
                 {mode === 'login' && (
                   <button
                     type="button"
                     onClick={() => setMode('recovery')}
                     className="text-[9px] hover:underline text-primary font-bold"
                   >
-                    Esqueceu sua senha?
+                    {t('Esqueceu sua senha?')}
                   </button>
                 )}
               </div>
@@ -200,7 +202,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, defaultMode = 'l
             disabled={loading}
             className="bg-primary hover:bg-accent-hover text-white font-bold py-2.5 rounded-xl text-xs mt-2"
           >
-            {loading ? 'Processando...' : mode === 'login' ? 'ENTRAR' : mode === 'register' ? 'CRIAR CONTA' : 'ENVIAR EMAIL'}
+            {loading ? t('Processando...') : mode === 'login' ? t('ENTRAR') : mode === 'register' ? t('CRIAR CONTA') : t('ENVIAR EMAIL')}
           </Button>
         </form>
 
@@ -209,7 +211,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, defaultMode = 'l
           <div className="flex flex-col gap-4 mt-6 border-t border-border pt-6">
             <div className="relative flex py-1 items-center justify-center">
               <div className="flex-grow border-t border-border"></div>
-              <span className="flex-shrink mx-4 text-[9px] uppercase font-bold tracking-wider text-muted-foreground">Ou continuar com</span>
+              <span className="flex-shrink mx-4 text-[9px] uppercase font-bold tracking-wider text-muted-foreground">{t('Ou continuar com')}</span>
               <div className="flex-grow border-t border-border"></div>
             </div>
 
@@ -227,7 +229,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, defaultMode = 'l
                   <path d="M12,6.16c1.32,0 2.5,0.46 3.44,1.36l2.58,-2.58C16.46,3.48 14.42,2.78 12,2.78c-3.48,0 -6.58,1.84 -8.08,4.82l4.04,3.26c0.71,-2.12 2.7,-3.7 5.04,-3.7Z" fill="#EA4335" />
                 </g>
               </svg>
-              Continuar com Google
+              {t('Continuar com Google')}
             </Button>
           </div>
         )}
@@ -237,7 +239,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, defaultMode = 'l
             onClick={() => setMode('login')}
             className="w-full text-center hover:underline text-primary mt-4 text-[10px] font-bold"
           >
-            Voltar para o login
+            {t('Voltar para o login')}
           </button>
         )}
       </div>

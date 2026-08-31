@@ -7,8 +7,13 @@ import { db } from '@/lib/db';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Sparkles, Clock, MapPin, Check, Star } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useMedia } from '@/contexts/SiteContentContext';
 
 export default function KBeautyPage() {
+  const { t, locale } = useLanguage();
+  const hero = useMedia('kbeauty_hero');
+  const lp = (path: string) => (locale === 'pt' || path === '/' ? path : `/${locale}${path}`);
   const [kbeautyExp, setKbeautyExp] = useState<any>(null);
   const [partners, setPartners] = useState<any[]>([]);
   const [kbeautyExperiences, setKbeautyExperiences] = useState<any[]>([]);
@@ -33,10 +38,10 @@ export default function KBeautyPage() {
 
       <main className="flex-1 w-full">
         {/* Hero */}
-        <section className="relative h-[70vh] min-h-[500px] w-full overflow-hidden">
+        <section className="relative min-h-[100dvh] w-full overflow-hidden">
           <Image
-            src="https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?q=80&w=1920"
-            alt="K-Beauty"
+            src={hero}
+            alt={t('K-Beauty')}
             fill
             className="object-cover"
             priority
@@ -46,13 +51,13 @@ export default function KBeautyPage() {
           <div className="absolute inset-0 flex flex-col justify-end p-8 md:p-16 max-w-7xl mx-auto w-full">
             <div className="max-w-3xl text-white">
               <span className="text-xs font-bold uppercase tracking-widest text-primary bg-primary/10 border border-primary/20 rounded-full px-4 py-1.5 backdrop-blur-sm inline-block mb-4">
-                Coreia do Sul
+                {t('Coreia do Sul')}
               </span>
               <h1 className="font-heading text-5xl sm:text-7xl font-light tracking-wide uppercase leading-tight">
-                K-Beauty Experiences
+                {t('K-Beauty Experiences')}
               </h1>
               <p className="text-sm sm:text-base text-white/80 mt-4 max-w-xl font-light leading-relaxed">
-                Uma curadoria exclusiva de experiências de beleza coreana — da rotina de skincare aos rituais de bem-estar que transformam a forma como você cuida de si.
+                {t('Uma curadoria exclusiva de experiências de beleza coreana — da rotina de skincare aos rituais de bem-estar que transformam a forma como você cuida de si.')}
               </p>
             </div>
           </div>
@@ -60,21 +65,16 @@ export default function KBeautyPage() {
 
         {/* Introduction */}
         <section className="py-20 px-4 md:px-8 max-w-4xl mx-auto w-full text-center">
-          <span className="text-xs uppercase tracking-widest text-primary font-bold">A Essência da Beleza Coreana</span>
+<span className="text-xs uppercase tracking-widest text-primary font-bold">{t('A Essência da Beleza Coreana')}</span>
           <h2 className="font-heading text-3xl sm:text-4xl font-light text-secondary mt-3 leading-tight">
-            A Coreia não inventou o skincare — ela o aperfeiçoou como forma de arte.
+            {t('A Coreia não inventou o skincare — ela o aperfeiçoou como forma de arte.')}
           </h2>
           <div className="mt-8 space-y-4 text-sm text-muted-foreground leading-relaxed max-w-3xl mx-auto font-light">
             <p>
-              Na Maeum Global, acreditamos que a verdadeira beleza coreana vai além dos 10 passos. 
-              É sobre o ritual, a intenção e o conhecimento transmitido entre gerações. 
-              Nossas experiências K-Beauty são desenhadas para oferecer um mergulho autêntico 
-              no universo da estética coreana — seja através de consultas com especialistas, 
-              workshops de skincare personalizados ou vivências imersivas em clínicas e estúdios selecionados.
+              {t('Na Maeum Global, acreditamos que a verdadeira beleza coreana vai além dos 10 passos. É sobre o ritual, a intenção e o conhecimento transmitido entre gerações. Nossas experiências K-Beauty são desenhadas para oferecer um mergulho autêntico no universo da estética coreana — seja através de consultas com especialistas, workshops de skincare personalizados ou vivências imersivas em clínicas e estúdios selecionados.')}
             </p>
             <p>
-              Cada experiência é individualmente contratável e pode ser adicionada ao seu roteiro, 
-              permitindo que você construa a jornada de beleza que faz sentido para você.
+              {t('Cada experiência é individualmente contratável e pode ser adicionada ao seu roteiro, permitindo que você construa a jornada de beleza que faz sentido para você.')}
             </p>
           </div>
         </section>
@@ -83,8 +83,8 @@ export default function KBeautyPage() {
         {kbeautyExp && (
           <section className="py-16 px-4 md:px-8 max-w-7xl mx-auto w-full">
             <div className="text-center mb-12">
-              <span className="text-xs uppercase tracking-widest text-primary font-bold">Experiência em Destaque</span>
-              <h2 className="font-heading text-3xl font-light text-secondary mt-2">K-Beauty Signature</h2>
+              <span className="text-xs uppercase tracking-widest text-primary font-bold">{t('Experiência em Destaque')}</span>
+              <h2 className="font-heading text-3xl font-light text-secondary mt-2">{t('K-Beauty Signature')}</h2>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center bg-card border border-border rounded-3xl overflow-hidden shadow-sm">
@@ -138,7 +138,7 @@ export default function KBeautyPage() {
 
                 {kbeautyExp.included && kbeautyExp.included.length > 0 && (
                   <div className="flex flex-col gap-2">
-                    <span className="text-[10px] uppercase font-bold text-primary tracking-widest">Incluso</span>
+                    <span className="text-[10px] uppercase font-bold text-primary tracking-widest">{t('Incluso')}</span>
                     <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                       {kbeautyExp.included.map((item: string, idx: number) => (
                         <li key={idx} className="flex items-start gap-2 text-[11px] text-muted-foreground">
@@ -151,10 +151,10 @@ export default function KBeautyPage() {
                 )}
 
                 <Link
-                  href={`/coreia-do-sul/experiencias/${kbeautyExp.slug}`}
+                  href={lp(`/coreia-do-sul/experiencias/${kbeautyExp.slug}`)}
                   className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-accent-hover text-white transition-all text-xs font-bold py-3.5 px-8 rounded-xl uppercase tracking-wider shadow-sm w-fit mt-2"
                 >
-                  Solicitar reserva
+                  {t('Solicitar reserva')}
                 </Link>
               </div>
             </div>
@@ -164,14 +164,14 @@ export default function KBeautyPage() {
         {/* Partners Section */}
         <section className="py-20 px-4 md:px-8 max-w-7xl mx-auto w-full">
           <div className="text-center mb-12">
-            <span className="text-xs uppercase tracking-widest text-primary font-bold">Parceiros</span>
-            <h2 className="font-heading text-3xl font-light text-secondary mt-2">Empresas Parceiras</h2>
+            <span className="text-xs uppercase tracking-widest text-primary font-bold">{t('Parceiros')}</span>
+            <h2 className="font-heading text-3xl font-light text-secondary mt-2">{t('Empresas Parceiras')}</h2>
           </div>
 
           <div className="bg-card border border-border rounded-3xl p-8 md:p-12 text-center">
             <Star className="h-8 w-8 text-accent/40 mx-auto mb-4" />
             <p className="text-sm text-muted-foreground font-light leading-relaxed max-w-2xl mx-auto">
-              Em breve: experiências K-Beauty por empresas parceiras selecionadas.
+              {t('Em breve: experiências K-Beauty por empresas parceiras selecionadas.')}
             </p>
           </div>
         </section>
@@ -179,20 +179,18 @@ export default function KBeautyPage() {
         {/* K-Beauty in Journeys */}
         <section className="py-20 bg-muted/20 border-t border-border w-full">
           <div className="max-w-7xl mx-auto px-4 md:px-8 text-center">
-            <span className="text-xs uppercase tracking-widest text-primary font-bold">Jornadas em Grupo</span>
+            <span className="text-xs uppercase tracking-widest text-primary font-bold">{t('Jornadas em Grupo')}</span>
             <h2 className="font-heading text-3xl font-light text-secondary mt-2 leading-tight">
-              K-Beauty nas Jornadas Cheotnun
+              {t('K-Beauty nas Jornadas Cheotnun')}
             </h2>
             <p className="text-sm text-muted-foreground font-light leading-relaxed max-w-3xl mx-auto mt-6">
-              As experiências K-Beauty também estão incluídas em nossas jornadas em grupo Cheotnun, 
-              onde o cuidado com a pele e o bem-estar fazem parte da experiência completa de imersão na Coreia. 
-              Descubra como a beleza coreana se integra a cada momento da sua viagem.
+              {t('As experiências K-Beauty também estão incluídas em nossas jornadas em grupo Cheotnun, onde o cuidado com a pele e o bem-estar fazem parte da experiência completa de imersão na Coreia. Descubra como a beleza coreana se integra a cada momento da sua viagem.')}
             </p>
             <Link
-              href="/coreia-do-sul/jornadas"
+              href={lp('/coreia-do-sul/jornadas')}
               className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-accent-hover text-white transition-all text-xs font-bold py-3.5 px-8 rounded-xl uppercase tracking-wider shadow-sm mt-8"
             >
-              Conhecer Jornadas
+              {t('Conhecer Jornadas')}
             </Link>
           </div>
         </section>

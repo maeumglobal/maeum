@@ -17,6 +17,7 @@ import AdminBlogHome from '@/components/admin/content/AdminBlogHome';
 import AdminTestimonialsFaqHome from '@/components/admin/content/AdminTestimonialsFaqHome';
 import AdminLogsHome from '@/components/admin/logs/AdminLogsHome';
 import AdminSiteConfigHome from '@/components/admin/config/AdminSiteConfigHome';
+import AdminSiteContentHome from '@/components/admin/content/AdminSiteContentHome';
 
 export default function AdminDashboard() {
   const [activeSubTab, setActiveSubTab] = useState('dashboard_home');
@@ -40,6 +41,7 @@ export default function AdminDashboard() {
           {activeSubTab === 'blog' && <AdminBlogHome />}
           {activeSubTab === 'depoimentos_faq' && <AdminTestimonialsFaqHome />}
           {activeSubTab === 'logs' && <AdminLogsHome />}
+          {activeSubTab === 'sitecontent' && <AdminSiteContentHome />}
           {activeSubTab === 'visual' && <AdminSiteConfigHome />}
         </main>
       </div>

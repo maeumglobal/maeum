@@ -10,6 +10,7 @@ import { FlagES, FlagPT, FlagEN } from '@/components/Flags';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import AuthModal from '@/components/AuthModal';
+import { useMedia } from '@/contexts/SiteContentContext';
 
 export default function Header() {
   const pathname = usePathname();
@@ -20,6 +21,12 @@ export default function Header() {
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const { user: currentUser, logout } = useAuth();
   const { locale, setLocale, t, isModalOpen, setIsModalOpen } = useLanguage();
+  const siteLogo = useMedia('site_logo');
+
+  const lp = (path: string) => {
+    if (locale === 'pt' || path === '/') return path;
+    return `/${locale}${path}`;
+  };
 
   // Close modals when clicking outside
   useEffect(() => {
@@ -67,7 +74,7 @@ export default function Header() {
     { label: t('Jornadas'), href: '/jornadas' },
     { label: t('Sobre Nós'), href: '/sobre' },
     { label: t('Contato'), href: '/contato' }
-  ];
+  ].map((item) => ({ ...item, href: lp(item.href) }));
 
   return (
     <>
@@ -75,30 +82,25 @@ export default function Header() {
         {scrolled && <div className="absolute inset-0 -z-10 bg-background/95 backdrop-blur" />}
       <div className="mx-auto flex max-w-7xl items-center justify-between relative z-10">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 relative">
-          <span className="opacity-0 font-heading text-2xl font-bold tracking-widest select-none" aria-hidden="true">
-            MAEUM
-          </span>
-          <div className="absolute inset-0 flex items-center">
-            <Image
-              src="/images/logo.png"
-              alt="MAEUM Logo"
-              width={160}
-              height={60}
-              className="h-[60px] w-auto object-contain"
-              priority
-            />
-          </div>
+        <Link href="/" className="flex items-center shrink-0 py-1">
+          <Image
+            src={siteLogo || '/images/logo.png'}
+            alt="MAEUM Logo"
+            width={170}
+            height={55}
+            className="h-10 sm:h-12 w-auto object-contain"
+            priority
+          />
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-8">
+        <nav className="hidden lg:flex items-center gap-3 xl:gap-6 2xl:gap-8 flex-nowrap">
           {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className={`text-[10px] font-bold uppercase tracking-widest transition-colors hover:text-primary ${
-                pathname === item.href ? 'text-primary' : 'text-foreground/80'
+              className={`text-[10px] xl:text-[11px] font-bold uppercase tracking-widest whitespace-nowrap transition-colors hover:text-[#C8A27C] ${
+                pathname === item.href ? 'text-[#C8A27C]' : 'text-foreground/80'
               }`}
             >
               {item.label}
@@ -107,7 +109,7 @@ export default function Header() {
         </nav>
 
         {/* Action Buttons */}
-        <div className="hidden md:flex items-center gap-4">
+        <div className="hidden lg:flex items-center gap-3 xl:gap-4 shrink-0">
           
           {/* Language Selector */}
           <div className="relative">
@@ -213,8 +215,9 @@ export default function Header() {
 
         {/* Mobile menu trigger */}
         <button
-          className="md:hidden text-foreground/80 hover:text-primary"
+          className="lg:hidden text-foreground/80 hover:text-primary p-2"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          aria-label="Toggle menu"
         >
           {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
@@ -222,15 +225,15 @@ export default function Header() {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-x-0 top-[60px] bg-background border-b border-border shadow-lg p-6 flex flex-col gap-6 animate-in fade-in slide-in-from-top-5 duration-200">
+        <div className="lg:hidden fixed inset-x-0 top-[60px] bg-background border-b border-border shadow-lg p-6 flex flex-col gap-6 animate-in fade-in slide-in-from-top-5 duration-200">
           <div className="flex flex-col gap-4">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`text-xs font-bold uppercase tracking-widest hover:text-primary ${
-                  pathname === item.href ? 'text-primary' : 'text-foreground'
+                className={`text-xs font-bold uppercase tracking-widest hover:text-[#C8A27C] ${
+                  pathname === item.href ? 'text-[#C8A27C]' : 'text-foreground'
                 }`}
               >
                 {item.label}

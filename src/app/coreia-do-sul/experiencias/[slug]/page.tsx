@@ -8,9 +8,12 @@ import { MapPin, Clock, Check, ChevronLeft, Calendar, Users, Heart, Share2, Star
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { db } from '@/lib/db';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function ExperienceDetailPage() {
   const { slug } = useParams();
+  const { t, locale } = useLanguage();
+  const lp = (path: string) => (locale === 'pt' || path === '/' ? path : `/${locale}${path}`);
   const [experience, setExperience] = useState<any>(null);
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,12 +58,12 @@ export default function ExperienceDetailPage() {
       <div className="flex flex-col min-h-screen bg-background">
         <Header />
         <main className="flex-1 flex flex-col items-center justify-center p-12 text-center">
-          <h2 className="font-heading text-3xl font-light text-secondary">Experiência não encontrada</h2>
+          <h2 className="font-heading text-3xl font-light text-secondary">{t('Experiência não encontrada')}</h2>
           <Link
-            href="/coreia-do-sul/experiencias"
+            href={lp('/coreia-do-sul/experiencias')}
             className="mt-4 text-primary hover:underline text-xs font-bold uppercase tracking-wider flex items-center gap-1"
           >
-            <ChevronLeft className="h-4 w-4" /> Voltar para Experiências
+            <ChevronLeft className="h-4 w-4" /> {t('Voltar para Experiências')}
           </Link>
         </main>
         <Footer />
@@ -84,11 +87,11 @@ export default function ExperienceDetailPage() {
       <main className="flex-1 w-full pb-32 md:pb-16">
         <div className="max-w-7xl mx-auto px-4 md:px-8 pt-6 pb-2">
           <Link
-            href="/coreia-do-sul/experiencias"
+            href={lp('/coreia-do-sul/experiencias')}
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-primary transition-colors"
           >
             <ChevronLeft className="h-4 w-4" />
-            <span>Voltar para Experiências</span>
+            <span>{t('Voltar para Experiências')}</span>
           </Link>
         </div>
 
@@ -105,7 +108,7 @@ export default function ExperienceDetailPage() {
             {allImages.length > 3 && (
               <button className="absolute bottom-4 right-4 bg-white/90 backdrop-blur text-secondary text-xs font-bold px-4 py-2 rounded-xl shadow-sm hover:bg-white transition-colors flex items-center gap-1.5 z-10">
                 <Share2 className="h-3.5 w-3.5" />
-                Compartilhar
+                {t('Compartilhar')}
               </button>
             )}
           </div>
@@ -165,13 +168,13 @@ export default function ExperienceDetailPage() {
             <div className="h-px bg-border" />
 
             <div>
-              <h2 className="font-heading text-2xl font-light text-secondary mb-4">Sobre esta experiência</h2>
+              <h2 className="font-heading text-2xl font-light text-secondary mb-4">{t('Sobre esta experiência')}</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">{experience.description}</p>
             </div>
 
             {experience.highlights && experience.highlights.length > 0 && (
               <div>
-                <h2 className="font-heading text-2xl font-light text-secondary mb-4">O que você vai viver</h2>
+                <h2 className="font-heading text-2xl font-light text-secondary mb-4">{t('O que você vai viver')}</h2>
                 <ul className="space-y-3">
                   {experience.highlights.map((item: string, idx: number) => (
                     <li key={idx} className="flex items-start gap-3 text-sm text-muted-foreground">
@@ -187,7 +190,7 @@ export default function ExperienceDetailPage() {
 
             {experience.included && experience.included.length > 0 && (
               <div>
-                <h2 className="font-heading text-2xl font-light text-secondary mb-4">O que está incluso</h2>
+                <h2 className="font-heading text-2xl font-light text-secondary mb-4">{t('O que está incluso')}</h2>
                 <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {experience.included.map((item: string, idx: number) => (
                     <li key={idx} className="flex items-start gap-3 text-sm text-muted-foreground">
@@ -205,7 +208,7 @@ export default function ExperienceDetailPage() {
               <>
                 <div className="h-px bg-border" />
                 <div>
-                  <h2 className="font-heading text-2xl font-light text-secondary mb-4">Localização</h2>
+                  <h2 className="font-heading text-2xl font-light text-secondary mb-4">{t('Localização')}</h2>
                   <div className="flex items-start gap-3 text-sm text-muted-foreground">
                     <MapPin className="h-5 w-5 text-accent shrink-0 mt-0.5" />
                     <div>
@@ -221,12 +224,12 @@ export default function ExperienceDetailPage() {
               <>
                 <div className="h-px bg-border" />
                 <div>
-                  <h2 className="font-heading text-2xl font-light text-secondary mb-4">Informações importantes</h2>
+                  <h2 className="font-heading text-2xl font-light text-secondary mb-4">{t('Informações importantes')}</h2>
                   <div className="text-sm text-muted-foreground">
                     {experience.booking_type === 'direct' ? (
-                      <p>Reserva direta disponível — garanta sua vaga agora mesmo.</p>
+                      <p>{t('Reserva direta disponível — garanta sua vaga agora mesmo.')}</p>
                     ) : (
-                      <p>Esta experiência requer solicitação de reserva. Nossa equipe entrará em contato para confirmar disponibilidade.</p>
+                      <p>{t('Esta experiência requer solicitação de reserva. Nossa equipe entrará em contato para confirmar disponibilidade.')}</p>
                     )}
                   </div>
                 </div>
@@ -236,12 +239,12 @@ export default function ExperienceDetailPage() {
             <div className="h-px bg-border" />
 
             <div>
-              <h2 className="font-heading text-2xl font-light text-secondary mb-6">Viva essa experiência comigo</h2>
+              <h2 className="font-heading text-2xl font-light text-secondary mb-6">{t('Viva essa experiência comigo')}</h2>
               {experience.video_url ? (
                 <div className="relative aspect-video rounded-2xl overflow-hidden bg-black">
                   <iframe
                     src={experience.video_embed || experience.video_url.replace('watch?v=', 'embed/')}
-                    title="Experiência em vídeo"
+                    title={t('Experiência em vídeo')}
                     className="absolute inset-0 w-full h-full"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
@@ -254,7 +257,7 @@ export default function ExperienceDetailPage() {
                       <path d="M8 5v14l11-7z" />
                     </svg>
                   </div>
-                  <p className="text-xs text-muted-foreground font-medium">Em breve: vídeo exclusivo desta experiência</p>
+                  <p className="text-xs text-muted-foreground font-medium">{t('Em breve: vídeo exclusivo desta experiência')}</p>
                 </div>
               )}
             </div>
@@ -266,13 +269,13 @@ export default function ExperienceDetailPage() {
                 <span className="font-heading text-3xl font-bold text-secondary">
                   R$ {experience.price_per_person?.toLocaleString('pt-BR')}
                 </span>
-                <span className="text-sm text-muted-foreground">/ pessoa</span>
+                <span className="text-sm text-muted-foreground">{t('/ pessoa')}</span>
               </div>
 
               <div className="space-y-5">
                 <div>
                   <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2 block">
-                    Data
+                    {t('Data')}
                   </label>
                   <div className="relative">
                     <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
@@ -290,7 +293,7 @@ export default function ExperienceDetailPage() {
                   <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2 block">
                     <div className="flex items-center gap-1.5">
                       <Users className="h-3.5 w-3.5" />
-                      <span>Participantes</span>
+                      <span>{t('participantes')}</span>
                     </div>
                   </label>
                   <div className="flex items-center justify-between border border-border rounded-xl px-4 h-10">
@@ -316,7 +319,7 @@ export default function ExperienceDetailPage() {
 
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">
-                    R$ {experience.price_per_person?.toLocaleString('pt-BR')} x {participants} {participants === 1 ? 'pessoa' : 'pessoas'}
+                    R$ {experience.price_per_person?.toLocaleString('pt-BR')} x {participants} {participants === 1 ? t('pessoa') : t('pessoas')}
                   </span>
                   <span className="font-heading font-bold text-lg text-secondary">
                     R$ {totalPrice.toLocaleString('pt-BR')}
@@ -326,13 +329,13 @@ export default function ExperienceDetailPage() {
                 <button
                   className="w-full bg-primary hover:bg-accent-hover text-white text-sm font-bold py-3.5 rounded-xl transition-all shadow-sm hover:shadow-md active:scale-[0.98]"
                 >
-                  {experience.booking_type === 'direct' ? 'Reservar experiência' : 'Solicitar reserva'}
+                  {experience.booking_type === 'direct' ? t('Reservar experiência') : t('Solicitar reserva')}
                 </button>
 
                 <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
                   {experience.booking_type === 'direct'
-                    ? 'Você não será cobrado(a) agora. A confirmação será enviada por e-mail.'
-                    : 'Após solicitar, nossa equipe verificará a disponibilidade e retornará em até 24h.'}
+                    ? t('Você não será cobrado(a) agora. A confirmação será enviada por e-mail.')
+                    : t('Após solicitar, nossa equipe verificará a disponibilidade e retornará em até 24h.')}
                 </p>
               </div>
             </div>
@@ -346,10 +349,10 @@ export default function ExperienceDetailPage() {
             <span className="font-heading text-xl font-bold text-secondary">
               R$ {experience.price_per_person?.toLocaleString('pt-BR')}
             </span>
-            <span className="text-xs text-muted-foreground ml-1">/ pessoa</span>
+            <span className="text-xs text-muted-foreground ml-1">{t('/ pessoa')}</span>
           </div>
           <button className="bg-primary hover:bg-accent-hover text-white text-sm font-bold px-6 py-3 rounded-xl transition-all shadow-sm active:scale-[0.98]">
-            {experience.booking_type === 'direct' ? 'Reservar' : 'Solicitar'}
+            {experience.booking_type === 'direct' ? t('Reservar') : t('Solicitar')}
           </button>
         </div>
       </div>

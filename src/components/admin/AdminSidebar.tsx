@@ -37,7 +37,13 @@ export default function AdminSidebar({ activeTab, onTabChange }: { activeTab: st
       ]
     },
     { id: 'logs', label: 'Auditoria de Logs', icon: Activity },
-    { id: 'visual', label: 'Configurações', icon: Settings },
+    {
+      id: 'config', label: 'Configurações', icon: Settings,
+      subItems: [
+        { id: 'sitecontent', label: 'Conteúdo do Site' },
+        { id: 'visual', label: 'Configurações Gerais' }
+      ]
+    },
   ];
 
   return (

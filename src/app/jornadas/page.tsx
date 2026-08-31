@@ -9,6 +9,8 @@ import {
 } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useMedia } from '@/contexts/SiteContentContext';
 
 const JORNADAS_RECENTES = [
   {
@@ -17,80 +19,56 @@ const JORNADAS_RECENTES = [
     title: 'Primeiros passos em Seul',
     desc: 'Impressões, culturas e descobertas nos primeiros dias na capital coreana.',
     author: 'Juliana M.',
-    role: 'Consultora de Viagens',
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop',
-    image: 'https://images.unsplash.com/photo-1538485399081-7191377e8241?q=80&w=600&h=400&fit=crop'
-  },
+    role: 'Consultora de Viagens',  },
   {
     tag: 'BUKCHON HANOK',
     date: '08 MAI, 2025',
     title: 'Tradição que encanta',
     desc: 'Caminhando entre hanoks e vielas históricas no coração de Bukchon.',
     author: 'Larissa T.',
-    role: 'Consultora de Viagens',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
-    image: 'https://images.unsplash.com/photo-1515091943-9d5c0ad20094?q=80&w=600&h=400&fit=crop'
-  },
+    role: 'Consultora de Viagens',  },
   {
     tag: 'BUSAN',
     date: '02 MAI, 2025',
     title: 'Brisa do mar e alma da cidade',
     desc: 'Do mar de Haeundae aos cafés de Gamcheon, Busan me surpreendeu.',
     author: 'Dayane R.',
-    role: 'Consultora de Viagens',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop',
-    image: 'https://images.unsplash.com/photo-1588667590805-728b74f3ebda?q=80&w=600&h=400&fit=crop'
-  },
+    role: 'Consultora de Viagens',  },
   {
     tag: 'JEJU ISLAND',
     date: '28 ABR, 2025',
     title: 'Jeju: natureza que acolhe',
     desc: 'Paisagens vulcânicas, cachoeiras e o silêncio que renova a alma.',
     author: 'Caroline B.',
-    role: 'Consultora de Viagens',
-    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop',
-    image: 'https://images.unsplash.com/photo-1522020297063-e5dcf4a54c9c?q=80&w=600&h=400&fit=crop'
-  },
+    role: 'Consultora de Viagens',  },
   {
     tag: 'GYEONGBOKGUNG',
     date: '24 ABR, 2025',
     title: 'Entre palácios e histórias',
     desc: 'Visitando Gyeongbokgung e revivendo séculos de história da Coreia.',
     author: 'Juliana M.',
-    role: 'Consultora de Viagens',
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop',
-    image: 'https://images.unsplash.com/photo-1596706935706-95ff817d2bb9?q=80&w=600&h=400&fit=crop'
-  },
+    role: 'Consultora de Viagens',  },
   {
     tag: 'HONGDAE',
     date: '18 ABR, 2025',
     title: 'Arte, música e liberdade',
     desc: 'Hongdae é o lugar onde a juventude coreana pulsa com criatividade.',
     author: 'Larissa T.',
-    role: 'Consultora de Viagens',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
-    image: 'https://images.unsplash.com/photo-1579738753235-51dc5d820468?q=80&w=600&h=400&fit=crop'
-  },
+    role: 'Consultora de Viagens',  },
   {
     tag: 'GANGNAM',
     date: '15 ABR, 2025',
     title: 'O lado moderno da Coreia',
     desc: 'Entre arranha-céus, tecnologia e cafés estilosos: bem-vindo a Gangnam.',
     author: 'Dayane R.',
-    role: 'Consultora de Viagens',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop',
-    image: 'https://images.unsplash.com/photo-1521404176332-901b0669287c?q=80&w=600&h=400&fit=crop'
-  },
+    role: 'Consultora de Viagens',  },
   {
     tag: 'MERCADO GWANGJANG',
     date: '10 ABR, 2025',
     title: 'Sabores que contam histórias',
     desc: 'Explorando o mercado mais tradicional de Seul e seus sabores únicos.',
     author: 'Caroline B.',
-    role: 'Consultora de Viagens',
-    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop',
-    image: 'https://images.unsplash.com/photo-1563242099-0e782be6c97a?q=80&w=600&h=400&fit=crop'
-  },
+    role: 'Consultora de Viagens',  },
 ];
 
 const CATEGORIES = [
@@ -104,23 +82,36 @@ const CATEGORIES = [
 ];
 
 export default function JornadasPage() {
+  const { t, locale } = useLanguage();
+  const heroDesktop = useMedia('jornadas_hero_desktop');
+  const heroMobile = useMedia('jornadas_hero_mobile');
+  const featuredCard = useMedia('jornadas_featured_card');
+  const ctaBanner = useMedia('jornadas_cta_banner');
+  const lp = (path: string) => (locale === 'pt' || path === '/' ? path : `/${locale}${path}`);
+  const jornadaImages = [
+    useMedia('jornadas_recente_1'), useMedia('jornadas_recente_2'), useMedia('jornadas_recente_3'), useMedia('jornadas_recente_4'),
+    useMedia('jornadas_recente_5'), useMedia('jornadas_recente_6'), useMedia('jornadas_recente_7'), useMedia('jornadas_recente_8')
+  ];
+  const avatares = [
+    useMedia('jornadas_avatar_1'), useMedia('jornadas_avatar_2'), useMedia('jornadas_avatar_3'), useMedia('jornadas_avatar_4')
+  ];
   return (
     <div className="flex flex-col min-h-screen bg-[#0F0A08] text-[#EFEBE4] font-sans selection:bg-[#C8A27C] selection:text-[#0F0A08]">
       <Header />
 
       {/* 1. Hero Section */}
-      <section className="relative h-[100dvh] flex flex-col justify-center overflow-hidden border-b border-[#3D2620]">
+      <section className="relative min-h-[100dvh] flex flex-col justify-center overflow-hidden border-b border-[#3D2620]">
         <div className="absolute inset-0 z-0">
           <Image 
-            src="/images/agencia-viagens-coreia-do-sul-maeum-global-jornadas.webp" 
-            alt="Jornadas na Coreia" 
+            src={heroDesktop} 
+            alt={t('Jornadas na Coreia')} 
             fill 
             className="object-cover object-center brightness-75 hidden md:block" 
             priority
           />
           <Image 
-            src="/images/mobile/agencia-viagens-coreia-do-sul-maeum-global-jornadas-mobile.webp" 
-            alt="Jornadas na Coreia Mobile" 
+            src={heroMobile} 
+            alt={t('Jornadas na Coreia Mobile')} 
             fill 
             className="object-cover object-center brightness-75 block md:hidden" 
             priority
@@ -131,19 +122,19 @@ export default function JornadasPage() {
 
         <div className="relative z-10 px-6 sm:px-12 max-w-7xl mx-auto w-full flex flex-col items-start gap-5 pt-20">
           <span className="text-[10px] uppercase tracking-[0.2em] text-[#C8A27C] font-semibold">
-            NOSSAS JORNADAS
+            {t('NOSSAS JORNADAS')}
           </span>
           <h1 className="font-heading text-5xl sm:text-6xl md:text-[70px] font-light tracking-wide leading-[1.1] text-white">
-            Cada jornada <br />
-            conta uma história.<br />
-            <span className="italic text-[#C8A27C]">A nossa, é real.</span>
+            {t('Cada jornada ')} <br />
+            {t('conta uma história.')}<br />
+            <span className="italic text-[#C8A27C]">{t('A nossa, é real.')}</span>
           </h1>
           <p className="text-[12px] sm:text-[13px] text-gray-300 max-w-[500px] font-light text-left leading-relaxed opacity-90 mt-2">
-            Acompanhe relatos autênticos de quem vive a Coreia do Sul de verdade. Dicas, descobertas, cultura, sabores e momentos inesquecíveis registrados em cada passo das nossas experiências.
+            {t('Acompanhe relatos autênticos de quem vive a Coreia do Sul de verdade. Dicas, descobertas, cultura, sabores e momentos inesquecíveis registrados em cada passo das nossas experiências.')}
           </p>
           <div className="mt-4">
-            <Link href="/contato" className="flex items-center justify-center gap-3 bg-transparent border border-[#3D2620] hover:border-[#C8A27C] text-[#C8A27C] font-bold text-[10px] py-4 px-8 rounded-none transition-all group uppercase tracking-widest w-fit">
-              COMPARTILHE SUA JORNADA
+            <Link href={lp('/contato')} className="flex items-center justify-center gap-3 bg-transparent border border-[#3D2620] hover:border-[#C8A27C] text-[#C8A27C] font-bold text-[10px] py-4 px-8 rounded-none transition-all group uppercase tracking-widest w-fit">
+              {t('COMPARTILHE SUA JORNADA')}
               <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
@@ -158,7 +149,7 @@ export default function JornadasPage() {
           <div className="flex-1 flex flex-col gap-8">
             <div className="flex items-center justify-center">
               <span className="text-[10px] uppercase tracking-[0.2em] text-[#C8A27C] font-bold text-center w-full">
-                JORNADAS RECENTES
+                {t('JORNADAS RECENTES')}
               </span>
             </div>
             
@@ -168,37 +159,37 @@ export default function JornadasPage() {
                   {/* Image Container */}
                   <div className="relative h-[180px] w-full overflow-hidden">
                     <Image 
-                      src={jornada.image} 
+                      src={jornadaImages[i]} 
                       alt={jornada.title} 
                       fill 
                       className="object-cover group-hover:scale-105 transition-transform duration-700" 
                     />
                     <div className="absolute top-4 left-4 bg-[#0F0A08] text-white text-[9px] font-bold px-2 py-1 uppercase tracking-widest border border-[#3D2620]">
-                      {jornada.tag}
+                      {t(jornada.tag)}
                     </div>
                   </div>
                   
                   {/* Content Container */}
                   <div className="p-6 flex flex-col flex-1">
                     <span className="text-[10px] text-[#C8A27C] uppercase tracking-widest font-semibold mb-2">
-                      {jornada.date}
+                      {t(jornada.date)}
                     </span>
                     <h3 className="text-xl font-heading text-white font-light leading-snug mb-3 group-hover:text-[#C8A27C] transition-colors">
-                      {jornada.title}
+                      {t(jornada.title)}
                     </h3>
                     <p className="text-[12px] text-gray-400 font-light leading-relaxed mb-6 line-clamp-3">
-                      {jornada.desc}
+                      {t(jornada.desc)}
                     </p>
                     
                     {/* Footer Container */}
                     <div className="mt-auto pt-4 border-t border-[#3D2620] flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="relative w-8 h-8 rounded-full overflow-hidden border border-[#3D2620]">
-                          <Image src={jornada.avatar} alt={jornada.author} fill className="object-cover" />
+                          <Image src={avatares[i % 4]} alt={jornada.author} fill className="object-cover" />
                         </div>
                         <div className="flex flex-col">
                           <span className="text-[11px] text-white font-semibold">{jornada.author}</span>
-                          <span className="text-[9px] text-[#C8A27C]">{jornada.role}</span>
+                          <span className="text-[9px] text-[#C8A27C]">{t(jornada.role)}</span>
                         </div>
                       </div>
                       <ArrowRight className="h-4 w-4 text-[#C8A27C] opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -210,7 +201,7 @@ export default function JornadasPage() {
             
             <div className="flex justify-center mt-6">
               <Link href="#" className="flex items-center justify-center gap-3 bg-transparent border border-[#3D2620] hover:border-[#C8A27C] text-[#C8A27C] font-bold text-[10px] py-4 px-8 rounded-none transition-all group uppercase tracking-widest">
-                VER MAIS JORNADAS
+                {t('VER MAIS JORNADAS')}
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
@@ -223,7 +214,7 @@ export default function JornadasPage() {
             <div className="relative">
               <input 
                 type="text" 
-                placeholder="Buscar jornadas..." 
+                placeholder={t('Buscar jornadas...')} 
                 className="w-full bg-[#150E0C] border border-[#3D2620] text-white text-[12px] px-5 py-4 placeholder:text-gray-500 focus:outline-none focus:border-[#C8A27C] transition-colors rounded-none"
               />
               <Search className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
@@ -232,7 +223,7 @@ export default function JornadasPage() {
             {/* Categories */}
             <div className="flex flex-col gap-4">
               <h4 className="text-[10px] uppercase tracking-[0.2em] text-[#C8A27C] font-bold">
-                CATEGORIAS
+                {t('CATEGORIAS')}
               </h4>
               <ul className="flex flex-col gap-1">
                 {CATEGORIES.map((cat, i) => {
@@ -241,7 +232,7 @@ export default function JornadasPage() {
                     <li key={i}>
                       <Link href="#" className="flex items-center gap-3 py-2 text-[12px] text-gray-300 hover:text-[#C8A27C] transition-colors group">
                         <Icon className="w-4 h-4 text-[#3D2620] group-hover:text-[#C8A27C] transition-colors" />
-                        {cat.label}
+                        {t(cat.label)}
                       </Link>
                     </li>
                   );
@@ -252,51 +243,51 @@ export default function JornadasPage() {
             {/* Newsletter */}
             <div className="flex flex-col gap-4 pt-4 border-t border-[#3D2620]">
               <h4 className="text-[10px] uppercase tracking-[0.2em] text-[#C8A27C] font-bold">
-                CONTEÚDOS EXCLUSIVOS
+                {t('CONTEÚDOS EXCLUSIVOS')}
               </h4>
               <p className="text-[12px] text-gray-400 font-light">
-                Receba novas jornadas, dicas e experiências direto no seu e-mail.
+                {t('Receba novas jornadas, dicas e experiências direto no seu e-mail.')}
               </p>
               <form className="flex flex-col gap-3">
                 <input 
                   type="email" 
-                  placeholder="Seu melhor e-mail" 
+                  placeholder={t('Seu melhor e-mail')} 
                   className="w-full bg-[#150E0C] border border-[#3D2620] text-white text-[12px] px-4 py-3 placeholder:text-gray-500 focus:outline-none focus:border-[#C8A27C] transition-colors rounded-none"
                 />
                 <button 
                   type="submit" 
                   className="w-full bg-[#C8A27C] hover:bg-[#B8906C] text-[#0F0A08] font-bold text-[10px] py-3.5 px-4 rounded-none transition-all uppercase tracking-widest"
                 >
-                  ASSINAR NEWSLETTER
+                  {t('ASSINAR NEWSLETTER')}
                 </button>
               </form>
               <p className="text-[9px] text-gray-500 mt-1">
-                Respeitamos sua privacidade. Sem spam. Você pode sair quando quiser.
+                {t('Respeitamos sua privacidade. Sem spam. Você pode sair quando quiser.')}
               </p>
             </div>
 
             {/* Featured Journey */}
             <div className="flex flex-col gap-4 pt-4 border-t border-[#3D2620]">
               <h4 className="text-[10px] uppercase tracking-[0.2em] text-[#C8A27C] font-bold">
-                JORNADA EM DESTAQUE
+                {t('JORNADA EM DESTAQUE')}
               </h4>
               <div className="group cursor-pointer">
                 <div className="relative h-[160px] w-full overflow-hidden border border-[#3D2620] mb-4">
                   <Image 
-                    src="https://images.unsplash.com/photo-1546874177-9e66487e671c?q=80&w=600&h=400&fit=crop" 
-                    alt="Seul ao Entardecer" 
+                    src={featuredCard} 
+                    alt={t('Seul ao Entardecer')} 
                     fill 
                     className="object-cover group-hover:scale-105 transition-transform duration-700" 
                   />
                 </div>
                 <h5 className="text-white font-heading text-xl font-light mb-2 group-hover:text-[#C8A27C] transition-colors">
-                  Seul ao Entardecer
+                  {t('Seul ao Entardecer')}
                 </h5>
                 <p className="text-[12px] text-gray-400 font-light mb-3">
-                  Um roteiro perfeito para encerrar o dia com beleza e paz.
+                  {t('Um roteiro perfeito para encerrar o dia com beleza e paz.')}
                 </p>
                 <div className="flex items-center gap-2 text-[#C8A27C] text-[10px] font-bold uppercase tracking-widest">
-                  LER JORNADA <ArrowRight className="h-3 w-3" />
+                  {t('LER JORNADA')} <ArrowRight className="h-3 w-3" />
                 </div>
               </div>
             </div>
@@ -312,8 +303,8 @@ export default function JornadasPage() {
           {/* Left Side Image */}
           <div className="relative w-full md:w-[45%] min-h-[300px] md:min-h-full">
             <Image 
-              src="https://images.unsplash.com/photo-1601584989635-c337b51b3152?q=80&w=800" 
-              alt="Pessoas em Seul" 
+              src={ctaBanner} 
+              alt={t('Pessoas em Seul')} 
               fill 
               className="object-cover object-center" 
             />
@@ -323,21 +314,21 @@ export default function JornadasPage() {
           {/* Right side content */}
           <div className="w-full md:w-[55%] flex flex-col items-start justify-center text-left p-10 md:p-16 gap-6 relative z-10">
             <span className="text-[10px] uppercase tracking-[0.2em] text-[#C8A27C] font-bold">
-              VIVA SUA PRÓPRIA JORNADA
+              {t('VIVA SUA PRÓPRIA JORNADA')}
             </span>
             <h2 className="font-heading text-4xl sm:text-5xl font-light text-white leading-[1.1]">
-              Sua história na Coreia <br className="hidden lg:block" />
-              <span className="italic text-[#C8A27C]">também pode inspirar outros.</span>
+              {t('Sua história na Coreia')} <br className="hidden lg:block" />
+              <span className="italic text-[#C8A27C]">{t('também pode inspirar outros.')}</span>
             </h2>
             <p className="text-[13px] text-gray-400 font-light max-w-lg leading-relaxed">
-              Viaje com a Maeum Global e compartilhe sua jornada com o mundo. Vamos transformar sua experiência em memória, conexão e inspiração.
+              {t('Viaje com a Maeum Global e compartilhe sua jornada com o mundo. Vamos transformar sua experiência em memória, conexão e inspiração.')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 mt-2 w-full sm:w-auto">
-              <Link href="/contato" className="flex items-center justify-center bg-[#C8A27C] hover:bg-[#B8906C] text-[#0F0A08] font-bold text-[10px] py-4 px-8 rounded-none transition-all uppercase tracking-widest w-full sm:w-auto">
-                QUERO VIVER ESSA EXPERIÊNCIA
+              <Link href={lp('/contato')} className="flex items-center justify-center bg-[#C8A27C] hover:bg-[#B8906C] text-[#0F0A08] font-bold text-[10px] py-4 px-8 rounded-none transition-all uppercase tracking-widest w-full sm:w-auto">
+                {t('QUERO VIVER ESSA EXPERIÊNCIA')}
               </Link>
-              <Link href="/contato" className="flex items-center justify-center bg-transparent border border-[#C8A27C]/30 hover:border-[#C8A27C] text-[#C8A27C] font-bold text-[10px] py-4 px-8 rounded-none transition-all uppercase tracking-widest w-full sm:w-auto">
-                FALE COM CONSULTORA
+              <Link href={lp('/contato')} className="flex items-center justify-center bg-transparent border border-[#C8A27C]/30 hover:border-[#C8A27C] text-[#C8A27C] font-bold text-[10px] py-4 px-8 rounded-none transition-all uppercase tracking-widest w-full sm:w-auto">
+                {t('FALE COM CONSULTORA')}
               </Link>
             </div>
           </div>
@@ -357,7 +348,7 @@ export default function JornadasPage() {
           ].map((item, i) => (
             <div key={i} className="flex items-center gap-3 text-white">
               <item.icon className="h-5 w-5 text-[#C8A27C]" strokeWidth={1.5} />
-              <span className="text-[9px] font-bold uppercase tracking-widest">{item.label}</span>
+              <span className="text-[9px] font-bold uppercase tracking-widest">{t(item.label)}</span>
             </div>
           ))}
         </div>

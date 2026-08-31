@@ -5,34 +5,37 @@ import Link from 'next/link';
 import { DollarSign, Calendar, CheckCircle, AlertCircle, FileText, Phone, Mail, ChevronRight } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function ReembolsoPage() {
+  const { t, locale } = useLanguage();
+  const lp = (path: string) => (locale === 'pt' || path === '/' ? path : `/${locale}${path}`);
   const policies = [
     {
-      period: 'Mais de 60 dias',
+      period: t('Mais de 60 dias'),
       percentage: '95%',
-      description: 'Reembolso integral menos taxa administrativa de 5%',
+      description: t('Reembolso integral menos taxa administrativa de 5%'),
       icon: CheckCircle,
       color: 'text-green-500'
     },
     {
-      period: '30 a 60 dias',
+      period: t('30 a 60 dias'),
       percentage: '50%',
-      description: 'Metade do valor pago será reembolsado',
+      description: t('Metade do valor pago será reembolsado'),
       icon: AlertCircle,
       color: 'text-yellow-500'
     },
     {
-      period: '15 a 30 dias',
+      period: t('15 a 30 dias'),
       percentage: '25%',
-      description: 'Um quarto do valor pago será reembolsado',
+      description: t('Um quarto do valor pago será reembolsado'),
       icon: AlertCircle,
       color: 'text-orange-500'
     },
     {
-      period: 'Menos de 15 dias',
+      period: t('Menos de 15 dias'),
       percentage: '0%',
-      description: 'Sem reembolso disponível',
+      description: t('Sem reembolso disponível'),
       icon: AlertCircle,
       color: 'text-red-500'
     }
@@ -41,23 +44,23 @@ export default function ReembolsoPage() {
   const steps = [
     {
       number: '01',
-      title: 'Solicitação',
-      description: 'Envie sua solicitação de cancelamento por e-mail ou WhatsApp com número do contrato e motivo.'
+      title: t('Solicitação'),
+      description: t('Envie sua solicitação de cancelamento por e-mail ou WhatsApp com número do contrato e motivo.')
     },
     {
       number: '02',
-      title: 'Análise',
-      description: 'Nossa equipe analisará seu caso e confirmará a elegibilidade conforme a política de cancelamento.'
+      title: t('Análise'),
+      description: t('Nossa equipe analisará seu caso e confirmará a elegibilidade conforme a política de cancelamento.')
     },
     {
       number: '03',
-      title: 'Documentação',
-      description: 'Você receberá um formulário de cancelamento que deverá ser preenchido e assinado.'
+      title: t('Documentação'),
+      description: t('Você receberá um formulário de cancelamento que deverá ser preenchido e assinado.')
     },
     {
       number: '04',
-      title: 'Processamento',
-      description: 'Após aprovação, o reembolso será processado em até 30 dias úteis na mesma forma de pagamento.'
+      title: t('Processamento'),
+      description: t('Após aprovação, o reembolso será processado em até 30 dias úteis na mesma forma de pagamento.')
     }
   ];
 
@@ -75,17 +78,16 @@ export default function ReembolsoPage() {
           <div className="inline-flex items-center gap-2 bg-primary/20 backdrop-blur border border-primary/45 rounded-full px-4 py-2 mb-6">
             <DollarSign className="h-4 w-4 text-accent" />
             <span className="text-xs uppercase tracking-widest text-primary font-bold">
-              Cancelamento & Reembolso
+              {t('Cancelamento & Reembolso')}
             </span>
           </div>
           
           <h1 className="font-heading text-4xl md:text-5xl font-light text-primary mb-4">
-            Política de Reembolso
+            {t('Política de Reembolso')}
           </h1>
           
           <p className="text-sm text-gray-400 max-w-2xl mx-auto">
-            Transparência e justiça em nossos processos de cancelamento. 
-            Conheça seus direitos e nossas condições.
+            {t('Transparência e justiça em nossos processos de cancelamento. Conheça seus direitos e nossas condições.')}
           </p>
         </div>
       </section>
@@ -95,11 +97,10 @@ export default function ReembolsoPage() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="font-heading text-3xl font-light text-secondary mb-3">
-              Percentual de Reembolso por Período
+              {t('Percentual de Reembolso por Período')}
             </h2>
             <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
-              O valor reembolsado varia de acordo com a antecedência do cancelamento 
-              em relação à data de início da viagem ou intercâmbio.
+              {t('O valor reembolsado varia de acordo com a antecedência do cancelamento em relação à data de início da viagem ou intercâmbio.')}
             </p>
           </div>
 
@@ -135,10 +136,10 @@ export default function ReembolsoPage() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="font-heading text-3xl font-light text-secondary mb-3">
-              Como Solicitar Reembolso
+              {t('Como Solicitar Reembolso')}
             </h2>
             <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
-              Siga os passos abaixo para iniciar o processo de cancelamento e reembolso.
+              {t('Siga os passos abaixo para iniciar o processo de cancelamento e reembolso.')}
             </p>
           </div>
 
@@ -169,24 +170,24 @@ export default function ReembolsoPage() {
       <section className="py-16 px-4 md:px-8 bg-background">
         <div className="max-w-4xl mx-auto">
           <h2 className="font-heading text-3xl font-light text-secondary mb-8 text-center">
-            Informações Importantes
+            {t('Informações Importantes')}
           </h2>
 
           <div className="space-y-6">
             <div className="bg-card border border-border/60 rounded-2xl p-6 md:p-8">
               <h3 className="font-heading text-lg font-semibold text-secondary mb-4 flex items-center gap-2">
                 <FileText className="h-5 w-5 text-accent" />
-                Prazos de Processamento
+{t('Prazos de Processamento')}
               </h3>
               <div className="text-sm text-muted-foreground leading-relaxed space-y-3">
                 <p>
-                  • <strong>Cartão de crédito:</strong> 1-2 faturas, dependendo da data de fechamento
+                  • <strong>{t('Cartão de crédito: 1-2 faturas')}</strong>
                 </p>
                 <p>
-                  • <strong>PIX ou transferência:</strong> até 10 dias úteis
+                  • <strong>{t('PIX ou transferência: até 10 dias úteis')}</strong>
                 </p>
                 <p>
-                  • <strong>Boleto bancário:</strong> até 15 dias úteis após compensação
+                  • <strong>{t('Boleto bancário: até 15 dias úteis após compensação')}</strong>
                 </p>
               </div>
             </div>
@@ -194,17 +195,17 @@ export default function ReembolsoPage() {
             <div className="bg-card border border-border/60 rounded-2xl p-6 md:p-8">
               <h3 className="font-heading text-lg font-semibold text-secondary mb-4 flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-accent" />
-                Casos Especiais
+{t('Casos Especiais')}
               </h3>
               <div className="text-sm text-muted-foreground leading-relaxed space-y-3">
                 <p>
-                  <strong>Doença ou acidente:</strong> Com apresentação de atestado médico, analisamos condições especiais mesmo dentro do período de 15 dias.
+                  <strong>{t('Doença ou acidente:')}</strong> {t('Com apresentação de atestado médico, analisamos condições especiais mesmo dentro do período de 15 dias.')}
                 </p>
                 <p>
-                  <strong>Problemas documentais:</strong> Vistos negados por motivos não atribuíveis à MaeumGlobal seguem a tabela padrão.
+                  <strong>{t('Problemas documentais:')}</strong> {t('Vistos negados por motivos não atribuíveis à MaeumGlobal seguem a tabela padrão.')}
                 </p>
                 <p>
-                  <strong>Força maior:</strong> Situações extraordinárias (pandemia, desastres naturais, conflitos) serão analisadas caso a caso.
+                  <strong>{t('Força maior:')}</strong> {t('Situações extraordinárias (pandemia, desastres naturais, conflitos) serão analisadas caso a caso.')}
                 </p>
               </div>
             </div>
@@ -212,23 +213,23 @@ export default function ReembolsoPage() {
             <div className="bg-card border border-border/60 rounded-2xl p-6 md:p-8">
               <h3 className="font-heading text-lg font-semibold text-secondary mb-4 flex items-center gap-2">
                 <AlertCircle className="h-5 w-5 text-accent" />
-                Taxas Não Reembolsáveis
+                {t('Taxas Não Reembolsáveis')}
               </h3>
               <div className="text-sm text-muted-foreground leading-relaxed space-y-3">
                 <p>
-                  Alguns valores não são reembolsáveis pois já foram pagos a fornecedores no momento da reserva:
+                  {t('Alguns valores não são reembolsáveis pois já foram pagos a fornecedores no momento da reserva:')}
                 </p>
                 <p className="ml-4">
-                  • Taxas de emissão de passagens aéreas (após emissão)
+                  • {t('Taxas de emissão de passagens aéreas (após emissão)')}
                 </p>
                 <p className="ml-4">
-                  • Reservas de hospedagem em alta temporada
+                  • {t('Reservas de hospedagem em alta temporada')}
                 </p>
                 <p className="ml-4">
-                  • Taxas de matrícula em escolas de intercâmbio
+                  • {t('Taxas de matrícula em escolas de intercâmbio')}
                 </p>
                 <p className="ml-4">
-                  • Seguros viagem já contratados
+                  • {t('Seguros viagem já contratados')}
                 </p>
               </div>
             </div>
@@ -240,11 +241,10 @@ export default function ReembolsoPage() {
       <section className="py-16 px-4 md:px-8 bg-muted/30">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="font-heading text-3xl font-light text-secondary mb-4">
-            Dúvidas sobre Reembolso?
+            {t('Dúvidas sobre Reembolso?')}
           </h2>
           <p className="text-sm text-muted-foreground mb-8 max-w-xl mx-auto">
-            Nossa equipe financeira está disponível para esclarecer quaisquer 
-            questões sobre o processo de cancelamento e reembolso.
+            {t('Nossa equipe financeira está disponível para esclarecer qualquer questão sobre o processo de cancelamento e reembolso.')}
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -273,19 +273,19 @@ export default function ReembolsoPage() {
       <section className="py-12 px-4 md:px-8 bg-background border-t border-border/60">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <Link
-            href="/"
+            href={lp('/')}
             className="text-xs font-medium text-primary hover:text-accent-hover transition-colors flex items-center gap-2"
           >
-            ← Voltar ao início
+            ← {t('Voltar ao início')}
           </Link>
           
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <Link href="/politica-de-privacidade" className="hover:text-primary transition-colors">
-              Política de Privacidade
+            <Link href={lp('/politica-de-privacidade')} className="hover:text-primary transition-colors">
+              {t('Política de Privacidade')}
             </Link>
             <span>•</span>
-            <Link href="/termos-de-uso" className="hover:text-primary transition-colors">
-              Termos de Uso
+            <Link href={lp('/termos-de-uso')} className="hover:text-primary transition-colors">
+              {t('Termos de Uso')}
             </Link>
           </div>
         </div>

@@ -1,60 +1,74 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
-import { translations, Language } from './translations'
+import { usePathname, useRouter } from 'next/navigation'
+import { getLocaleFromPathname, stripLocalePrefix, localizedPath, type Locale } from '@/i18n/config'
+import { getDictionary } from '@/i18n'
+import { useSiteContent } from '@/contexts/SiteContentContext'
 
 interface LanguageContextType {
-  locale: Language
-  setLocale: (l: Language) => void
+  locale: Locale
+  setLocale: (l: Locale) => void
   t: (key: string) => string
+  dict: Record<string, string>
   isModalOpen: boolean
   setIsModalOpen: (open: boolean) => void
 }
 
 const LanguageContext = createContext<LanguageContextType | null>(null)
 
-export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Language>('pt') // Default to pt
+type LanguageProviderProps = {
+  children: ReactNode
+  /** Locale resolved on the server from the x-maeum-locale header (SEO source of truth). */
+  initialLocale: Locale
+}
+
+export function LanguageProvider({ children, initialLocale }: LanguageProviderProps) {
+  const pathname = usePathname()
+  const router = useRouter()
+  // SSR first paint uses the server-resolved locale → localized HTML for SEO, no hydration gap.
+  const [locale, setLocaleState] = useState<Locale>(initialLocale)
+  const [dict, setDict] = useState<Record<string, string>>(() => getDictionary(initialLocale))
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isMounted, setIsMounted] = useState(false)
+  // Overrides de texto salvos no painel (por idioma). Têm prioridade sobre o dicionário estático.
+  const { text: textOverrides } = useSiteContent()
 
-  useEffect(() => {
-    setIsMounted(true)
-    const stored = localStorage.getItem('maeum_locale') as Language | null
-    if (stored === 'es' || stored === 'pt' || stored === 'en') {
-      setLocaleState(stored)
-    }
-  }, [])
-
-  const setLocale = (l: Language) => {
+  const applyLocale = (l: Locale) => {
     setLocaleState(l)
-    localStorage.setItem('maeum_locale', l)
-    document.cookie = `maeum_locale=${l};path=/;max-age=31536000;SameSite=Lax`
+    setDict(getDictionary(l))
+    try {
+      localStorage.setItem('maeum_locale', l)
+      document.cookie = `maeum_locale=${l};path=/;max-age=31536000;SameSite=Lax`
+    } catch {}
+  }
+
+  // Keep the locale in sync with the URL after navigation (soft navigations do
+  // not re-run the server layout, so we derive the locale from the pathname).
+  useEffect(() => {
+    applyLocale(getLocaleFromPathname(pathname))
+  }, [pathname])
+
+  const setLocale = (l: Locale) => {
+    if (l === getLocaleFromPathname(pathname)) {
+      setIsModalOpen(false)
+      return
+    }
+    // Update UI immediately on the client; the router.push keeps the URL/SEO
+    // consistent. No need to wait for a server round-trip.
+    applyLocale(l)
     setIsModalOpen(false)
+    const target = localizedPath(stripLocalePrefix(pathname), l)
+    if (target !== pathname) router.push(target)
   }
 
   const t = (key: string): string => {
-    if (!isMounted) return key // Evita hydrate mismatch renderizando a chave inicialmente se necessário, embora não ideal. Melhor retornar a chave ou tradução em 'pt'
-    if (translations[locale]?.[key]) {
-      return translations[locale][key]
-    }
-    // Fallback to pt
-    if (translations['pt']?.[key]) {
-      return translations['pt'][key]
-    }
-    return key
-  }
-
-  // To prevent hydration mismatch better, just provide 'pt' on server
-  const serverT = (key: string): string => {
-    if (translations['pt']?.[key]) {
-      return translations['pt'][key]
-    }
-    return key
+    const override = textOverrides?.[locale]?.[key]
+    if (typeof override === 'string' && override.length > 0) return override
+    return typeof dict?.[key] === 'string' ? dict[key] : key
   }
 
   return (
-    <LanguageContext.Provider value={{ locale, setLocale, t: isMounted ? t : serverT, isModalOpen, setIsModalOpen }}>
+    <LanguageContext.Provider value={{ locale, setLocale, t, dict, isModalOpen, setIsModalOpen }}>
       {children}
     </LanguageContext.Provider>
   )
