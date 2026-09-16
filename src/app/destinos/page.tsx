@@ -216,7 +216,7 @@ export default function DestinosPage() {
             </span>
 
             {DESTINATIONS.map((dest, idx) => (
-              <div key={dest.id} className="group bg-[#150E0C] border border-[#3D2620] rounded-sm overflow-hidden flex flex-col md:flex-row hover:border-[#C8A27C]/50 transition-colors cursor-pointer min-h-[220px]">
+              <Link key={dest.id} href={`/coreia-do-sul/experiencias?cidade=${dest.id}`} className="group bg-[#150E0C] border border-[#3D2620] rounded-sm overflow-hidden flex flex-col md:flex-row hover:border-[#C8A27C]/50 transition-colors min-h-[220px]">
                 <div className="relative md:w-[40%] h-[200px] md:h-auto overflow-hidden">
                   <Image src={destImages[idx]} alt={dest.name} fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
                 </div>
@@ -231,19 +231,20 @@ export default function DestinosPage() {
                     {t(dest.desc)}
                   </p>
                   <div className="grid grid-cols-4 gap-2 pt-4 border-t border-[#3D2620]">
-                    {dest.features.map((feat, idx) => {
+                    {dest.features.map((feat, fidx) => {
                       const Icon = feat.icon;
                       return (
-                        <div key={idx} className="flex flex-col items-center gap-2">
+                        <div key={fidx} className="flex flex-col items-center gap-2">
                           <Icon className="w-5 h-5 text-[#C8A27C]" strokeWidth={1.5} />
                           <span className="text-[8px] text-gray-500 font-bold uppercase tracking-widest text-center">{t(feat.label)}</span>
                         </div>
-                      )
+                      );
                     })}
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
+
           </div>
 
         </div>

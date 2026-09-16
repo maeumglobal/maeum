@@ -120,8 +120,13 @@ export default function ContatoPage() {
                <p className="text-[10px] text-gray-400 font-light">{t('Conecte-se com a Maeum Global pelo canal que você preferir.')}</p>
              </div>
 
-             {/* Cards de Canais */}
-             <div className="bg-[#18110F] border border-[#3D2620] p-5 rounded-sm flex items-center justify-between group cursor-pointer hover:border-[#C8A27C]/50 transition-colors">
+             {/* Cards de Canais — agora com links reais */}
+             <a
+               href="https://wa.me/821024836078?text=Ol%C3%A1%2C%20gostaria%20de%20conversar%20sobre%20uma%20viagem%20para%20a%20Coreia%20do%20Sul."
+               target="_blank"
+               rel="noopener noreferrer"
+               className="bg-[#18110F] border border-[#3D2620] p-5 rounded-sm flex items-center justify-between group hover:border-[#C8A27C]/50 transition-colors"
+             >
                 <div className="flex items-center gap-4">
                    <Phone className="w-5 h-5 text-[#C8A27C]" strokeWidth={1.5} />
                    <div>
@@ -130,9 +135,12 @@ export default function ContatoPage() {
                    </div>
                 </div>
                 <ArrowRight className="w-4 h-4 text-[#C8A27C] opacity-0 group-hover:opacity-100 transition-opacity" />
-             </div>
+             </a>
 
-             <div className="bg-[#18110F] border border-[#3D2620] p-5 rounded-sm flex items-center justify-between group cursor-pointer hover:border-[#C8A27C]/50 transition-colors">
+             <a
+               href="mailto:atendimento@maeumglobal.com.br"
+               className="bg-[#18110F] border border-[#3D2620] p-5 rounded-sm flex items-center justify-between group hover:border-[#C8A27C]/50 transition-colors"
+             >
                 <div className="flex items-center gap-4">
                    <Mail className="w-5 h-5 text-[#C8A27C]" strokeWidth={1.5} />
                    <div>
@@ -140,9 +148,15 @@ export default function ContatoPage() {
                      <p className="text-[9px] text-gray-500 font-light">atendimento@maeumglobal.com.br</p>
                    </div>
                 </div>
-             </div>
+                <ArrowRight className="w-4 h-4 text-[#C8A27C] opacity-0 group-hover:opacity-100 transition-opacity" />
+             </a>
 
-             <div className="bg-[#18110F] border border-[#3D2620] p-5 rounded-sm flex items-center justify-between group cursor-pointer hover:border-[#C8A27C]/50 transition-colors">
+             <a
+               href="https://instagram.com/maeumglobal"
+               target="_blank"
+               rel="noopener noreferrer"
+               className="bg-[#18110F] border border-[#3D2620] p-5 rounded-sm flex items-center justify-between group hover:border-[#C8A27C]/50 transition-colors"
+             >
                 <div className="flex items-center gap-4">
                    <Camera className="w-5 h-5 text-[#C8A27C]" strokeWidth={1.5} />
                    <div>
@@ -150,9 +164,13 @@ export default function ContatoPage() {
                      <p className="text-[9px] text-gray-500 font-light">@maeumglobal<br/>{t('Acompanhe e converse pelas redes.')}</p>
                    </div>
                 </div>
-             </div>
+                <ArrowRight className="w-4 h-4 text-[#C8A27C] opacity-0 group-hover:opacity-100 transition-opacity" />
+             </a>
 
-             <div className="bg-[#18110F] border border-[#3D2620] p-5 rounded-sm flex items-center justify-between group cursor-pointer hover:border-[#C8A27C]/50 transition-colors">
+             <a
+               href="tel:+821024836078"
+               className="bg-[#18110F] border border-[#3D2620] p-5 rounded-sm flex items-center justify-between group hover:border-[#C8A27C]/50 transition-colors"
+             >
                 <div className="flex items-center gap-4">
                    <PhoneCall className="w-5 h-5 text-[#C8A27C]" strokeWidth={1.5} />
                    <div>
@@ -160,9 +178,15 @@ export default function ContatoPage() {
                       <p className="text-[9px] text-gray-500 font-light">+82 10-2483-6078<br/>{t('Segunda a Sexta • 09h às 18h')}</p>
                    </div>
                 </div>
-             </div>
+                <ArrowRight className="w-4 h-4 text-[#C8A27C] opacity-0 group-hover:opacity-100 transition-opacity" />
+             </a>
 
-             <div className="bg-[#18110F] border border-[#3D2620] p-5 rounded-sm flex items-center justify-between group cursor-pointer hover:border-[#C8A27C]/50 transition-colors">
+             <a
+               href="https://maps.google.com/?q=Seoul,+South+Korea"
+               target="_blank"
+               rel="noopener noreferrer"
+               className="bg-[#18110F] border border-[#3D2620] p-5 rounded-sm flex items-center justify-between group hover:border-[#C8A27C]/50 transition-colors"
+             >
                 <div className="flex items-center gap-4">
                    <MapPin className="w-5 h-5 text-[#C8A27C]" strokeWidth={1.5} />
                    <div>
@@ -170,7 +194,8 @@ export default function ContatoPage() {
                      <p className="text-[9px] text-gray-500 font-light">{t('Seoul, Coreia do Sul')}<br/>{t('Atendimento online para todo o Brasil.')}</p>
                    </div>
                 </div>
-             </div>
+                <ArrowRight className="w-4 h-4 text-[#C8A27C] opacity-0 group-hover:opacity-100 transition-opacity" />
+             </a>
           </div>
 
           {/* RIGHT MAIN SECTION: Chat Widget */}

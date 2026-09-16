@@ -15,6 +15,18 @@ export async function getPackages() {
   }
 }
 
+export async function getPackageBySlug(slug: string) {
+  try {
+    const pkg = await prisma.package.findUnique({
+      where: { slug }
+    });
+    return { success: true, data: pkg };
+  } catch (error) {
+    console.error('Error fetching package by slug:', error);
+    return { success: false, error: 'Erro ao buscar pacote.' };
+  }
+}
+
 export async function createPackage(data: {
   title: string;
   slug: string;

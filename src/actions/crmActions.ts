@@ -52,6 +52,36 @@ export async function submitLeadAction(data: {
 }
 
 // ─── PROPOSTA ────────────────────────────────────────────────
+export async function getProposalByLinkAction(linkOrId: string) {
+  try {
+    const proposal = await prisma.proposal.findFirst({
+      where: {
+        OR: [
+          { uniqueLink: linkOrId },
+          { id: linkOrId },
+        ],
+      },
+      include: {
+        items: true,
+        consultant: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+          },
+        },
+      },
+    });
+
+    if (!proposal) return { success: false, error: 'Proposta não encontrada.' };
+    return { success: true, proposal };
+  } catch (error: unknown) {
+    console.error('Error fetching proposal:', error);
+    return { success: false, error: String(error) };
+  }
+}
+
 export async function updateProposalStatusAction(
   proposalId: string,
   status: 'approved' | 'changes_requested',

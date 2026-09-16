@@ -9,11 +9,11 @@
     "lint": "eslint",
     "postinstall": "prisma generate",
     "db:migrate": "prisma migrate dev --name init",
-    "db:seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts",
+    "db:seed": "node prisma/seed-dist/seed.js",
     "db:reset": "prisma migrate reset --force"
   },
   "prisma": {
-    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
+    "seed": "node prisma/seed-dist/seed.js"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

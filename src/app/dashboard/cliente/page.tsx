@@ -15,6 +15,13 @@ import {
   submitChatMessageAction,
   uploadDocumentAction
 } from '@/actions/crmActions';
+import {
+  getClientData,
+  sendClientMessage,
+  approveClientProposal,
+  requestProposalChanges,
+  uploadClientDocument
+} from '@/actions/clientActions';
 
 // Import mock db engine client-side
 import { db } from '@/lib/db';
@@ -40,29 +47,93 @@ export default function ClienteDashboard() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Load initial data from local DB
-  const loadData = () => {
+  // Load initial data from PostgreSQL DB (with fallback to local db)
+  const loadData = async () => {
     const user = authService.getCurrentUser();
     const userId = user ? user.id : 'd1eebc99-9c0b-4ef8-bb6d-6bb9bd380a33';
 
-    const trips = db.get('trips');
+    try {
+      const res = await getClientData(userId);
+      if (res.success && res.data) {
+        const { booking, proposal: p, messages: msgs, documents: docs } = res.data;
+        if (booking) {
+          setTrip({
+            id: booking.id,
+            title: booking.package?.title || 'Viagem Personalizada para Coreia do Sul',
+            destination: booking.package?.destination || 'Seul, Coreia do Sul',
+            timeline: (booking.timeline || []).map((tl: any) => ({
+              date: tl.eventDate,
+              time: tl.eventTime || '09:00',
+              title: tl.title,
+              description: tl.description,
+            })),
+            payments: (booking.payments || []).map((pay: any) => ({
+              id: pay.id,
+              amount: pay.amount,
+              due_date: pay.dueDate,
+              status: pay.status,
+            })),
+          });
+        }
+        if (p) {
+          setProposal({
+            id: p.id,
+            title: p.title,
+            total_amount: p.totalValue,
+            status: p.status,
+            version: p.version,
+            items: p.items || [],
+          });
+        }
+        if (msgs && (msgs as any[]).length > 0) {
+          setMessages(
+            (msgs as any[]).map((m: any) => ({
+              id: m.id,
+              chat_id: m.chatId,
+              sender_id: m.senderId,
+              content: m.content,
+              created_at: m.createdAt,
+            }))
+          );
+        }
+        if (docs && (docs as any[]).length > 0) {
+          setDocuments(
+            (docs as any[]).map((d: any) => ({
+              id: d.id,
+              file_name: d.fileName,
+              file_url: d.fileUrl,
+              file_size: d.fileSize || 1048576,
+              category: d.category,
+            }))
+          );
+        }
+        if (booking || p || (msgs as any[])?.length > 0 || (docs as any[])?.length > 0) {
+          return;
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching client data from DB:', err);
+    }
+
+    // Fallback to mock db
+    const trips = db.get('trips') || [];
     const brunoTrip = trips.find((t: any) => t.client_id === userId);
     setTrip(brunoTrip || null);
 
-    const proposals = db.get('proposals');
+    const proposals = db.get('proposals') || [];
     const brunoProposal = proposals.find((p: any) => p.client_id === userId);
     setProposal(brunoProposal || null);
 
-    const chats = db.get('chats');
+    const chats = db.get('chats') || [];
     const brunoChat = chats.find((c: any) => c.client_id === userId);
     if (brunoChat) {
-      const allMessages = db.get('chat_messages');
+      const allMessages = db.get('chat_messages') || [];
       const chatMsgs = allMessages.filter((m: any) => m.chat_id === brunoChat.id);
       setMessages(chatMsgs);
     }
 
-    const docs = db.get('documents');
-    const brunoDocs = docs.filter((d: any) => d.client_id === userId);
+    const docList = db.get('documents') || [];
+    const brunoDocs = docList.filter((d: any) => d.client_id === userId);
     setDocuments(brunoDocs);
   };
 
@@ -88,28 +159,36 @@ export default function ClienteDashboard() {
 
     const user = authService.getCurrentUser();
     const userId = user ? user.id : 'd1eebc99-9c0b-4ef8-bb6d-6bb9bd380a33';
-
-    const chats = db.get('chats');
-    const brunoChat = chats.find((c: any) => c.client_id === userId);
-    if (!brunoChat) return;
-
     const tempMsg = chatInput;
     setChatInput('');
 
+    try {
+      const res = await sendClientMessage({ userId, content: tempMsg });
+      if (res.success) {
+        await loadData();
+        return;
+      }
+    } catch (err) {
+      console.error('DB chat send error, falling back to mock:', err);
+    }
+
+    const chats = db.get('chats') || [];
+    const brunoChat = chats.find((c: any) => c.client_id === userId);
+    if (!brunoChat) return;
+
     const res = await submitChatMessageAction(brunoChat.id, userId, tempMsg);
     if (res.success) {
-      // Reload chat messages
-      const allMessages = db.get('chat_messages');
+      const allMessages = db.get('chat_messages') || [];
       setMessages(allMessages.filter((m: any) => m.chat_id === brunoChat.id));
       
-      // Simular resposta da consultora Mariana após 2 segundos
+      // Simular resposta da consultora Mariana após 2 segundos no mock
       setTimeout(() => {
-        const msgs = db.get('chat_messages');
+        const msgs = db.get('chat_messages') || [];
         msgs.push({
           id: crypto.randomUUID(),
           chat_id: brunoChat.id,
           sender_id: 'c1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22', // Mariana
-          content: 'Entendido, Bruno! Vou verificar essa informação sobre os passeios e te dou um retorno em instantes.',
+          content: 'Entendido! Vou verificar essa informação sobre os passeios e te dou um retorno em instantes.',
           attachment_url: null,
           attachment_type: null,
           read_at: null,
@@ -125,28 +204,57 @@ export default function ClienteDashboard() {
   const handleProposalStatus = async (status: 'approved' | 'changes_requested') => {
     if (!proposal) return;
     setLoadingAction(true);
-    const res = await updateProposalStatusAction(proposal.id, status, status === 'approved' ? 'Aprovado pelo cliente no painel' : 'Solicitado alteração');
-    setLoadingAction(false);
-    if (res.success) {
-      loadData();
+    const user = authService.getCurrentUser();
+    const userId = user ? user.id : 'd1eebc99-9c0b-4ef8-bb6d-6bb9bd380a33';
+
+    try {
+      if (status === 'approved') {
+        await approveClientProposal(proposal.id, userId);
+      } else {
+        await requestProposalChanges(proposal.id, 'Solicitado alteração pelo cliente no painel');
+      }
+    } catch (err) {
+      console.error('Error updating proposal via DB action:', err);
     }
+
+    await updateProposalStatusAction(
+      proposal.id,
+      status,
+      status === 'approved' ? 'Aprovado pelo cliente no painel' : 'Solicitado alteração'
+    );
+    setLoadingAction(false);
+    await loadData();
   };
 
-  // Handle Doc Upload (Mock)
+  // Handle Doc Upload
   const handleDocUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const res = await uploadDocumentAction('d1eebc99-9c0b-4ef8-bb6d-6bb9bd380a33', {
+    const user = authService.getCurrentUser();
+    const userId = user ? user.id : 'd1eebc99-9c0b-4ef8-bb6d-6bb9bd380a33';
+
+    try {
+      await uploadClientDocument({
+        clientId: userId,
+        uploadedById: userId,
+        fileName: file.name,
+        fileUrl: `/uploads/docs/${file.name}`,
+        fileSize: file.size,
+        category: 'passport'
+      });
+    } catch (err) {
+      console.error('Error saving document to DB:', err);
+    }
+
+    await uploadDocumentAction(userId, {
       file_name: file.name,
       file_url: `/uploads/docs/${file.name}`,
       file_size: file.size,
       category: 'passport'
     });
 
-    if (res.success) {
-      loadData();
-    }
+    await loadData();
   };
 
   return (

@@ -9,7 +9,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { updateProposalStatusAction } from '@/actions/crmActions';
+import { updateProposalStatusAction, getProposalByLinkAction } from '@/actions/crmActions';
 import { db } from '@/lib/db';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -22,7 +22,28 @@ export default function PublicProposalPage() {
   const [showChangeForm, setShowChangeForm] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
 
-  const loadProposal = () => {
+  const loadProposal = async () => {
+    if (!unique_link) return;
+    try {
+      const res = await getProposalByLinkAction(unique_link as string);
+      if (res.success && res.proposal) {
+        const p = res.proposal;
+        setProposal({
+          id: p.id,
+          title: p.title,
+          total_amount: p.totalValue,
+          status: p.status,
+          version: p.version,
+          updated_at: p.updatedAt,
+          items: p.items || [],
+          consultant: p.consultant,
+        });
+        return;
+      }
+    } catch (err) {
+      console.error('Error fetching proposal from DB:', err);
+    }
+
     const proposals = db.get('proposals') || [];
     const found = proposals.find((p: any) => p.unique_link === unique_link || p.id === unique_link);
     setProposal(found || null);
@@ -125,7 +146,7 @@ export default function PublicProposalPage() {
             </div>
 
             {/* Accept/Change buttons */}
-            {proposal.status === 'sent' && (
+            {proposal.status !== 'approved' && (
               <div className="flex gap-3 w-full sm:w-auto">
                 <Button
                   onClick={() => handleUpdateStatus('approved')}

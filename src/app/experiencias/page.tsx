@@ -269,9 +269,14 @@ export default function ExperienciasPage() {
                       <span className="font-heading text-sm text-white font-semibold">{exp.price}</span>
                     </div>
                   </div>
-                  <button className="w-full bg-transparent border border-[#3D2620] hover:bg-[#3D2620] text-[#C8A27C] transition-colors py-2.5 text-[8px] font-bold uppercase tracking-widest rounded-sm text-center">
+                  <a
+                    href={`https://wa.me/5541987094799?text=${encodeURIComponent(`Olá! Gostaria de saber mais e reservar a experiência: ${exp.title}.`)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full block bg-transparent border border-[#3D2620] hover:bg-[#3D2620] hover:text-white text-[#C8A27C] transition-colors py-2.5 text-[8px] font-bold uppercase tracking-widest rounded-sm text-center"
+                  >
                     {t('RESERVAR EXPERIÊNCIA')}
-                  </button>
+                  </a>
                 </div>
               </div>
             </div>

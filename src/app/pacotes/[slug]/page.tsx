@@ -11,6 +11,7 @@ import { db } from '@/lib/db';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { submitLeadAction } from '@/actions/crmActions';
+import { getPackageBySlug } from '@/actions/packageActions';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function PacoteDetailPage() {
@@ -28,15 +29,52 @@ export default function PacoteDetailPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const pkgs = db.get('packages') || [];
-    const found = pkgs.find((p: any) => p.slug === slug);
-    setPack(found || null);
+    async function loadPackage() {
+      if (!slug) return;
+      try {
+        const res = await getPackageBySlug(slug as string);
+        if (res.success && res.data) {
+          const p = res.data;
+          let gallery: string[] = [];
+          let itinerary: any[] = [];
+          let included: string[] = [];
+          let not_included: string[] = [];
+          try { gallery = JSON.parse(p.gallery || '[]'); } catch {}
+          try { itinerary = JSON.parse(p.itinerary || '[]'); } catch {}
+          try { included = JSON.parse(p.included || '[]'); } catch {}
+          try { not_included = JSON.parse(p.notIncluded || '[]'); } catch {}
 
-    if (found) {
-      const dests = db.get('destinations') || [];
-      const d = dests.find((dest: any) => dest.id === found.destination_id);
-      setDestination(d || null);
+          setPack({
+            ...p,
+            gallery,
+            itinerary,
+            included,
+            not_included,
+            start_dates: [],
+            duration: '10 Dias'
+          });
+          if (p.destination) {
+            setDestination({ name: p.destination });
+          }
+          return;
+        }
+      } catch (err) {
+        console.error('Error fetching package from DB:', err);
+      }
+
+      // Fallback to local db if not in PostgreSQL
+      const pkgs = db.get('packages') || [];
+      const found = pkgs.find((p: any) => p.slug === slug);
+      setPack(found || null);
+
+      if (found) {
+        const dests = db.get('destinations') || [];
+        const d = dests.find((dest: any) => dest.id === found.destination_id);
+        setDestination(d || null);
+      }
     }
+
+    loadPackage();
   }, [slug]);
 
   const handleInquirySubmit = async (e: React.FormEvent) => {

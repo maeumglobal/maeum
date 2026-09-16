@@ -1,16 +1,17 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { 
   ArrowRight, Search, MapPin, BookOpen, Utensils, 
-  TreePine, ShoppingBag, Star, Users 
+  TreePine, ShoppingBag, Star, Users, Loader2, CheckCircle2
 } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useMedia } from '@/contexts/SiteContentContext';
+import { submitNewsletterAction } from '@/actions/tripPlanActions';
 
 const JORNADAS_RECENTES = [
   {
@@ -248,19 +249,7 @@ export default function JornadasPage() {
               <p className="text-[12px] text-gray-400 font-light">
                 {t('Receba novas jornadas, dicas e experiências direto no seu e-mail.')}
               </p>
-              <form className="flex flex-col gap-3">
-                <input 
-                  type="email" 
-                  placeholder={t('Seu melhor e-mail')} 
-                  className="w-full bg-[#150E0C] border border-[#3D2620] text-white text-[12px] px-4 py-3 placeholder:text-gray-500 focus:outline-none focus:border-[#C8A27C] transition-colors rounded-none"
-                />
-                <button 
-                  type="submit" 
-                  className="w-full bg-[#C8A27C] hover:bg-[#B8906C] text-[#0F0A08] font-bold text-[10px] py-3.5 px-4 rounded-none transition-all uppercase tracking-widest"
-                >
-                  {t('ASSINAR NEWSLETTER')}
-                </button>
-              </form>
+              <NewsletterForm t={t} />
               <p className="text-[9px] text-gray-500 mt-1">
                 {t('Respeitamos sua privacidade. Sem spam. Você pode sair quando quiser.')}
               </p>
@@ -356,5 +345,58 @@ export default function JornadasPage() {
 
       <Footer />
     </div>
+  );
+}
+
+// ─── Newsletter sub-component ────────────────────────────────
+function NewsletterForm({ t }: { t: (s: string) => string }) {
+  const [email, setEmail] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setError('');
+    const result = await submitNewsletterAction(email);
+    setSubmitting(false);
+    if (result.success) {
+      setSuccess(true);
+      setMessage(result.message ?? 'Inscrição realizada!');
+    } else {
+      setError(result.error ?? 'Erro. Tente novamente.');
+    }
+  };
+
+  if (success) {
+    return (
+      <div className="flex items-center gap-3 bg-green-900/20 border border-green-700/30 rounded-sm px-4 py-3">
+        <CheckCircle2 className="h-5 w-5 text-green-400 shrink-0" />
+        <p className="text-[12px] text-green-400">{message}</p>
+      </div>
+    );
+  }
+
+  return (
+    <form className="flex flex-col gap-3" onSubmit={handleSubmit}>
+      <input
+        type="email"
+        required
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder={t('Seu melhor e-mail')}
+        className="w-full bg-[#150E0C] border border-[#3D2620] text-white text-[12px] px-4 py-3 placeholder:text-gray-500 focus:outline-none focus:border-[#C8A27C] transition-colors rounded-none"
+      />
+      {error && <p className="text-[11px] text-red-400">{error}</p>}
+      <button
+        type="submit"
+        disabled={submitting}
+        className="w-full bg-[#C8A27C] hover:bg-[#B8906C] disabled:opacity-60 text-[#0F0A08] font-bold text-[10px] py-3.5 px-4 rounded-none transition-all uppercase tracking-widest flex items-center justify-center gap-2"
+      >
+        {submitting ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Enviando...</> : t('ASSINAR NEWSLETTER')}
+      </button>
+    </form>
   );
 }

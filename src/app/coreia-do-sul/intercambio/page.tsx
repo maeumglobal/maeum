@@ -11,6 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useMedia } from '@/contexts/SiteContentContext';
+import { getExchangeInstitutions } from '@/actions/businessActions';
+import { submitExchangeInquiryAction } from '@/actions/tripPlanActions';
 
 export default function LexisKoreaIntercambioPage() {
   const { t, locale } = useLanguage();
@@ -24,6 +26,8 @@ export default function LexisKoreaIntercambioPage() {
   const [selectedProgram, setSelectedProgram] = useState<string>('intensive-korean');
   const [form, setForm] = useState({
     nome: '',
+    email: '',
+    phone: '',
     pais: '',
     idioma: 'Português',
     idade: '',
@@ -37,22 +41,45 @@ export default function LexisKoreaIntercambioPage() {
     transfer: false,
     observacoes: '',
   });
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
-    const insts = db.get('exchange_institutions') || [];
-    const lexis = insts.find((i: any) => i.slug === 'lexis-korea');
-    setInstitution(lexis || null);
+    async function loadData() {
+      try {
+        const res = await getExchangeInstitutions();
+        if (res.success && res.data && res.data.length > 0) {
+          const lexis = res.data.find((i: any) => i.slug === 'lexis-korea') || res.data[0];
+          setInstitution(lexis);
+          const allCamp = lexis.campuses || [];
+          setCampuses(allCamp);
+          const allProg = allCamp.flatMap((c: any) => c.programs || []);
+          setPrograms(allProg);
+          setLoading(false);
+          return;
+        }
+      } catch (err) {
+        console.error('Error fetching exchange institutions:', err);
+      }
 
-    const allCampuses = db.get('exchange_campuses') || [];
-    const allPrograms = db.get('exchange_programs') || [];
+      // Fallback
+      const insts = db.get('exchange_institutions') || [];
+      const lexis = insts.find((i: any) => i.slug === 'lexis-korea');
+      setInstitution(lexis || null);
 
-    if (lexis) {
-      setCampuses(allCampuses.filter((c: any) => c.institution_id === lexis.id));
-      setPrograms(allPrograms.filter((p: any) => p.institution_id === lexis.id));
+      const allCampuses = db.get('exchange_campuses') || [];
+      const allPrograms = db.get('exchange_programs') || [];
+
+      if (lexis) {
+        setCampuses(allCampuses.filter((c: any) => c.institution_id === lexis.id));
+        setPrograms(allPrograms.filter((p: any) => p.institution_id === lexis.id));
+      }
+
+      setLoading(false);
     }
 
-    setLoading(false);
+    loadData();
   }, []);
 
   const program = programs.find((p: any) => p.slug === selectedProgram);
@@ -61,9 +88,38 @@ export default function LexisKoreaIntercambioPage() {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setErrorMessage('');
+    setSubmitting(true);
+
+    const selectedCampus = campuses.find((c: any) => c.id === form.campus);
+    const selectedProg = programs.find((p: any) => p.id === form.curso);
+
+    const res = await submitExchangeInquiryAction({
+      nome: form.nome,
+      email: form.email,
+      phone: form.phone,
+      pais: form.pais,
+      idioma: form.idioma,
+      idade: form.idade,
+      campusName: selectedCampus ? `${selectedCampus.name} - ${selectedCampus.city}` : undefined,
+      cursoName: selectedProg ? selectedProg.name : undefined,
+      nivel: form.nivel,
+      semanas: form.semanas,
+      periodo: form.periodo,
+      hospedagem: form.hospedagem,
+      seguro: form.seguro,
+      transfer: form.transfer,
+      observacoes: form.observacoes,
+    });
+
+    setSubmitting(false);
+    if (res.success) {
+      setSubmitted(true);
+    } else {
+      setErrorMessage(res.error || t('Erro ao enviar solicitação.'));
+    }
   };
 
   if (loading) {
@@ -375,6 +431,8 @@ src={heroDesktop}
                         setSubmitted(false);
                         setForm({
                           nome: '',
+                          email: '',
+                          phone: '',
                           pais: '',
                           idioma: 'Português',
                           idade: '',
@@ -397,6 +455,11 @@ src={heroDesktop}
                   </div>
                 ) : (
                   <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                    {errorMessage && (
+                      <div className="p-3 bg-red-500/10 border border-red-500/30 text-red-400 text-xs rounded-lg">
+                        {errorMessage}
+                      </div>
+                    )}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="flex flex-col gap-1.5">
                         <label className="text-xs font-semibold text-secondary">{t('Nome Completo *')}</label>
@@ -405,6 +468,28 @@ src={heroDesktop}
                           value={form.nome}
                           onChange={(e) => handleFormChange('nome', e.target.value)}
                           placeholder={t('Seu nome completo')}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-semibold text-secondary">{t('E-mail *')}</label>
+                        <Input
+                          required
+                          type="email"
+                          value={form.email}
+                          onChange={(e) => handleFormChange('email', e.target.value)}
+                          placeholder={t('seu.email@exemplo.com')}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-semibold text-secondary">{t('Telefone / WhatsApp *')}</label>
+                        <Input
+                          required
+                          value={form.phone}
+                          onChange={(e) => handleFormChange('phone', e.target.value)}
+                          placeholder="+55 (11) 99999-9999"
                         />
                       </div>
                       <div className="flex flex-col gap-1.5">
@@ -548,10 +633,11 @@ src={heroDesktop}
 
                     <Button
                       type="submit"
+                      disabled={submitting}
                       className="w-full bg-primary hover:bg-accent-hover text-white py-3 rounded-xl font-bold mt-2"
                     >
                       <Send className="h-4 w-4" />
-                      {t('SOLICITAR PLANEJAMENTO')}
+                      {submitting ? t('Enviando solicitação...') : t('SOLICITAR PLANEJAMENTO')}
                     </Button>
                   </form>
                 )}
