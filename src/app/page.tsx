@@ -49,7 +49,7 @@ export default function HomePage() {
           />
         </div>
 
-        <div className="relative z-10 px-6 sm:px-12 max-w-[1400px] mx-auto w-full flex flex-col items-start gap-5 pt-28 md:pt-36 pb-16 md:pb-24">
+        <div className="relative z-10 px-6 sm:px-12 max-w-[1400px] mx-auto w-full flex flex-col items-start gap-5 pt-32 sm:pt-36 md:pt-40 pb-36 sm:pb-44 md:pb-52">
           <span className="text-[10px] uppercase tracking-[0.2em] text-[#C8A27C] font-semibold">
             {t('COREIA COM PROFUNDIDADE')}
           </span>
@@ -76,7 +76,7 @@ export default function HomePage() {
       </section>
 
       {/* 2. Planning Box */}
-      <section className="relative z-20 px-6 sm:px-12 max-w-[1400px] mx-auto w-full mt-12 sm:mt-16 lg:mt-20 mb-24">
+      <section className="relative z-20 px-6 sm:px-12 max-w-[1400px] mx-auto w-full -mt-20 sm:-mt-24 lg:-mt-28 mb-24">
         <div className="bg-[#150E0C] border border-[#3D2620] rounded-sm p-8 sm:p-12 flex flex-col shadow-2xl">
           
           <div className="flex flex-col lg:flex-row gap-12 mb-10">
