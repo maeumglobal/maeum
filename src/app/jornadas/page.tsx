@@ -1,121 +1,238 @@
-'use client';
-
-import React, { useState } from 'react';
-import Image from 'next/image';
+import type { Metadata } from 'next';
 import Link from 'next/link';
-import { 
-  ArrowRight, Search, MapPin, BookOpen, Utensils, 
-  TreePine, ShoppingBag, Star, Users, Loader2, CheckCircle2
+import {
+  ArrowRight,
+  BookOpen,
+  MapPin,
+  Star,
+  TreePine,
+  Users,
+  type LucideIcon,
 } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { useMedia } from '@/contexts/SiteContentContext';
-import { submitNewsletterAction } from '@/actions/tripPlanActions';
+import SmartImage from '@/components/SmartImage';
+import JsonLd from '@/components/seo/JsonLd';
+import Breadcrumbs from '@/components/seo/Breadcrumbs';
+import { prisma } from '@/lib/prisma';
+import { getMediaMap } from '@/lib/cmsData';
+import { getServerI18n } from '@/lib/serverI18n';
+import { parseStringArray } from '@/lib/validate';
+import { buildMetadata, localizedUrl, truncateMeta } from '@/lib/seo';
+import JourneyExplorer, { type JourneyCard } from './_components/JourneyExplorer';
+import NewsletterForm from './_components/NewsletterForm';
 
-const JORNADAS_RECENTES = [
-  {
-    tag: 'SEUL',
-    date: '12 MAI, 2025',
-    title: 'Primeiros passos em Seul',
-    desc: 'Impressões, culturas e descobertas nos primeiros dias na capital coreana.',
-    author: 'Juliana M.',
-    role: 'Consultora de Viagens',  },
-  {
-    tag: 'BUKCHON HANOK',
-    date: '08 MAI, 2025',
-    title: 'Tradição que encanta',
-    desc: 'Caminhando entre hanoks e vielas históricas no coração de Bukchon.',
-    author: 'Larissa T.',
-    role: 'Consultora de Viagens',  },
-  {
-    tag: 'BUSAN',
-    date: '02 MAI, 2025',
-    title: 'Brisa do mar e alma da cidade',
-    desc: 'Do mar de Haeundae aos cafés de Gamcheon, Busan me surpreendeu.',
-    author: 'Dayane R.',
-    role: 'Consultora de Viagens',  },
-  {
-    tag: 'JEJU ISLAND',
-    date: '28 ABR, 2025',
-    title: 'Jeju: natureza que acolhe',
-    desc: 'Paisagens vulcânicas, cachoeiras e o silêncio que renova a alma.',
-    author: 'Caroline B.',
-    role: 'Consultora de Viagens',  },
-  {
-    tag: 'GYEONGBOKGUNG',
-    date: '24 ABR, 2025',
-    title: 'Entre palácios e histórias',
-    desc: 'Visitando Gyeongbokgung e revivendo séculos de história da Coreia.',
-    author: 'Juliana M.',
-    role: 'Consultora de Viagens',  },
-  {
-    tag: 'HONGDAE',
-    date: '18 ABR, 2025',
-    title: 'Arte, música e liberdade',
-    desc: 'Hongdae é o lugar onde a juventude coreana pulsa com criatividade.',
-    author: 'Larissa T.',
-    role: 'Consultora de Viagens',  },
-  {
-    tag: 'GANGNAM',
-    date: '15 ABR, 2025',
-    title: 'O lado moderno da Coreia',
-    desc: 'Entre arranha-céus, tecnologia e cafés estilosos: bem-vindo a Gangnam.',
-    author: 'Dayane R.',
-    role: 'Consultora de Viagens',  },
-  {
-    tag: 'MERCADO GWANGJANG',
-    date: '10 ABR, 2025',
-    title: 'Sabores que contam histórias',
-    desc: 'Explorando o mercado mais tradicional de Seul e seus sabores únicos.',
-    author: 'Caroline B.',
-    role: 'Consultora de Viagens',  },
+/* ────────────────────────────────────────────────────────────────────────────
+ * SEO
+ * ────────────────────────────────────────────────────────────────────────── */
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { locale, t } = await getServerI18n();
+  return buildMetadata({
+    title: truncateMeta(t('jornadas.seo.title'), 60),
+    description: t('jornadas.seo.description'),
+    path: '/jornadas',
+    locale,
+    image: '/images/agencia-viagens-coreia-do-sul-maeum-global-oficial.webp',
+    imageAlt: t('jornadas.heroImage.desktop'),
+  });
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Helpers
+ * ────────────────────────────────────────────────────────────────────────── */
+
+/** `Journey.category` → chave canônica do rótulo. */
+const JOURNEY_CATEGORY_KEYS: Record<string, string> = {
+  army: 'jornadas.card.category.army',
+  premium: 'jornadas.card.category.premium',
+  essence: 'jornadas.card.category.essence',
+  luxury: 'jornadas.card.category.luxury',
+};
+
+/** Slots de imagem da listagem, reciclados quando o registro não tem `mainImage`. */
+const CARD_SLOTS = [
+  'jornadas_recente_1',
+  'jornadas_recente_2',
+  'jornadas_recente_3',
+  'jornadas_recente_4',
+  'jornadas_recente_5',
+  'jornadas_recente_6',
+  'jornadas_recente_7',
+  'jornadas_recente_8',
+] as const;
+
+const FEATURES: readonly { key: string; Icon: LucideIcon }[] = [
+  { key: 'jornadas.features.1title', Icon: Star },
+  { key: 'jornadas.features.2title', Icon: MapPin },
+  { key: 'jornadas.features.3title', Icon: Users },
+  { key: 'jornadas.features.4title', Icon: TreePine },
+  { key: 'jornadas.features.5title', Icon: BookOpen },
+  { key: 'jornadas.features.6title', Icon: Star },
 ];
 
-const CATEGORIES = [
-  { label: 'Seul', icon: MapPin },
-  { label: 'Cultura', icon: BookOpen },
-  { label: 'Gastronomia', icon: Utensils },
-  { label: 'Natureza', icon: TreePine },
-  { label: 'Compras', icon: ShoppingBag },
-  { label: 'Experiências', icon: Star },
-  { label: 'Vida Local', icon: Users },
-];
+const normalize = (value: string): string =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
 
-export default function JornadasPage() {
-  const { t, locale } = useLanguage();
-  const heroDesktop = useMedia('jornadas_hero_desktop');
-  const heroMobile = useMedia('jornadas_hero_mobile');
-  const featuredCard = useMedia('jornadas_featured_card');
-  const ctaBanner = useMedia('jornadas_cta_banner');
-  const lp = (path: string) => (locale === 'pt' || path === '/' ? path : `/${locale}${path}`);
-  const jornadaImages = [
-    useMedia('jornadas_recente_1'), useMedia('jornadas_recente_2'), useMedia('jornadas_recente_3'), useMedia('jornadas_recente_4'),
-    useMedia('jornadas_recente_5'), useMedia('jornadas_recente_6'), useMedia('jornadas_recente_7'), useMedia('jornadas_recente_8')
+/* ────────────────────────────────────────────────────────────────────────────
+ * Página
+ * ────────────────────────────────────────────────────────────────────────── */
+
+export default async function JornadasPage() {
+  const { t, locale, lp, fill, formatCurrency, formatDate, formatNumber, localizedField } =
+    await getServerI18n();
+
+  const [journeys, media] = await Promise.all([
+    prisma.journey.findMany({
+      where: { status: 'active' },
+      orderBy: [{ isFeatured: 'desc' }, { sortOrder: 'asc' }],
+      take: 24,
+      select: {
+        id: true,
+        slug: true,
+        title: true,
+        titleEn: true,
+        titleEs: true,
+        subtitle: true,
+        subtitleEn: true,
+        subtitleEs: true,
+        concept: true,
+        conceptEn: true,
+        conceptEs: true,
+        category: true,
+        destinations: true,
+        durationDays: true,
+        totalSpots: true,
+        pricePerPerson: true,
+        priceCurrency: true,
+        mainImage: true,
+        isFeatured: true,
+        updatedAt: true,
+        departures: {
+          take: 3,
+          orderBy: { startDate: 'asc' },
+          select: { id: true, startDate: true, endDate: true, availableSpots: true, status: true },
+        },
+      },
+    }),
+    getMediaMap().catch(() => ({}) as Record<string, string>),
+  ]);
+
+  const cards: JourneyCard[] = journeys.map((journey, index) => {
+    const title =
+      localizedField({ pt: journey.title, en: journey.titleEn, es: journey.titleEs }) ?? journey.title;
+    const subtitle =
+      localizedField({ pt: journey.subtitle, en: journey.subtitleEn, es: journey.subtitleEs }) ??
+      localizedField({ pt: journey.concept, en: journey.conceptEn, es: journey.conceptEs }) ??
+      '';
+    const cities = parseStringArray(journey.destinations, 12);
+    const next = journey.departures.find((departure) => departure.status !== 'cancelled') ?? null;
+
+    return {
+      id: journey.id,
+      title,
+      subtitle,
+      tag: JOURNEY_CATEGORY_KEYS[journey.category] ? t(JOURNEY_CATEGORY_KEYS[journey.category]!) : '',
+      isFeatured: journey.isFeatured,
+      days: journey.durationDays,
+      spots: next?.availableSpots ?? 0,
+      totalSpots: journey.totalSpots,
+      price: journey.pricePerPerson,
+      priceLabel: formatCurrency(journey.pricePerPerson, journey.priceCurrency, {
+        maximumFractionDigits: 0,
+      }),
+      departureLabel: next
+        ? `${t('jornadas.card.departureLabel')}: ${formatDate(next.startDate, {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+          })}`
+        : null,
+      image: journey.mainImage ?? '',
+      fallbackImage: media[CARD_SLOTS[index % CARD_SLOTS.length]!] ?? '',
+      url: lp(`/coreia-do-sul/jornadas/${journey.slug}`),
+      cities,
+      searchText: normalize([title, subtitle, ...cities, journey.category].join(' ')),
+    };
+  });
+
+  const featured = cards.find((card) => card.isFeatured) ?? cards[0] ?? null;
+
+  /* ── JSON-LD: ItemList de jornadas como TouristTrip ────────────────────── */
+
+  const itemListJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: t('jornadas.list.sectionTitle'),
+    numberOfItems: cards.length,
+    itemListElement: cards.map((card, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      item: {
+        '@type': 'TouristTrip',
+        name: card.title,
+        description: truncateMeta(card.subtitle || card.title, 300),
+        url: localizedUrl(`/coreia-do-sul/jornadas/${journeys[index]?.slug ?? ''}`, locale),
+        touristType: 'Leisure travelers',
+        ...(card.days > 0 ? { duration: `P${card.days}D` } : {}),
+        ...(card.price > 0
+          ? {
+              offers: {
+                '@type': 'Offer',
+                price: card.price.toFixed(2),
+                priceCurrency: journeys[index]?.priceCurrency || 'BRL',
+                availability: 'https://schema.org/InStock',
+              },
+            }
+          : {}),
+      },
+    })),
+  };
+
+  const filters = [
+    { id: 'all', label: t('jornadas.filter.all') },
+    { id: 'seoul', label: t('jornadas.filter.seoul') },
+    { id: 'busan', label: t('jornadas.filter.busan') },
+    { id: 'daegu', label: t('jornadas.filter.daegu') },
+    { id: 'jeju', label: t('jornadas.filter.jeju') },
   ];
-  const avatares = [
-    useMedia('jornadas_avatar_1'), useMedia('jornadas_avatar_2'), useMedia('jornadas_avatar_3'), useMedia('jornadas_avatar_4')
-  ];
+
   return (
     <div className="flex flex-col min-h-screen bg-[#0F0A08] text-[#EFEBE4] font-sans selection:bg-[#C8A27C] selection:text-[#0F0A08]">
+      <JsonLd id="jornadas-itemlist-jsonld" data={itemListJsonLd} />
+
       <Header />
 
-      {/* 1. Hero Section */}
-      <section className="relative min-h-[100dvh] flex flex-col justify-center overflow-hidden border-b border-[#3D2620]">
+      {/* ── 1. Hero (LCP) ─────────────────────────────────────────────────── */}
+      <section
+        aria-labelledby="jornadas-hero-title"
+        className="relative min-h-[100dvh] flex flex-col justify-center overflow-hidden border-b border-[#3D2620]"
+      >
         <div className="absolute inset-0 z-0">
-          <Image 
-            src={heroDesktop} 
-            alt={t('Jornadas na Coreia')} 
-            fill 
-            className="object-cover object-center brightness-75 hidden md:block" 
+          <SmartImage
+            src={media.jornadas_hero_desktop}
+            alt={t('jornadas.heroImage.desktop')}
+            fill
+            className="object-cover object-center brightness-75 hidden md:block"
+            sizes="100vw"
             priority
+            quality={90}
+            fallbackSrc={media.jornadas_hero_mobile}
+            placeholderLabel={t('jornadas.heroImage.desktop')}
           />
-          <Image 
-            src={heroMobile} 
-            alt={t('Jornadas na Coreia Mobile')} 
-            fill 
-            className="object-cover object-center brightness-75 block md:hidden" 
+          <SmartImage
+            src={media.jornadas_hero_mobile}
+            alt={t('jornadas.heroImage.mobile')}
+            fill
+            className="object-cover object-center brightness-75 block md:hidden"
+            sizes="100vw"
             priority
+            quality={90}
+            fallbackSrc={media.jornadas_hero_desktop}
+            placeholderLabel={t('jornadas.heroImage.mobile')}
           />
           <div className="absolute inset-0 bg-gradient-to-r from-[#0F0A08] via-[#0F0A08]/90 to-transparent w-full sm:w-2/3" />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0F0A08]/20 to-[#0F0A08]" />
@@ -123,280 +240,230 @@ export default function JornadasPage() {
 
         <div className="relative z-10 px-6 sm:px-12 max-w-7xl mx-auto w-full flex flex-col items-start gap-5 pt-20">
           <span className="text-[10px] uppercase tracking-[0.2em] text-[#C8A27C] font-semibold">
-            {t('NOSSAS JORNADAS')}
+            {t('jornadas.hero.kicker')}
           </span>
-          <h1 className="font-heading text-5xl sm:text-6xl md:text-[70px] font-light tracking-wide leading-[1.1] text-white">
-            {t('Cada jornada ')} <br />
-            {t('conta uma história.')}<br />
-            <span className="italic text-[#C8A27C]">{t('A nossa, é real.')}</span>
+          <h1
+            id="jornadas-hero-title"
+            className="font-heading text-5xl sm:text-6xl md:text-[70px] font-light tracking-wide leading-[1.1] text-white"
+          >
+            {t('jornadas.hero.line1')}
+            <br />
+            {t('jornadas.hero.line2')}
+            <br />
+            <span className="italic text-[#C8A27C]">{t('jornadas.hero.line3')}</span>
           </h1>
           <p className="text-[12px] sm:text-[13px] text-gray-300 max-w-[500px] font-light text-left leading-relaxed opacity-90 mt-2">
-            {t('Acompanhe relatos autênticos de quem vive a Coreia do Sul de verdade. Dicas, descobertas, cultura, sabores e momentos inesquecíveis registrados em cada passo das nossas experiências.')}
+            {t('jornadas.hero.description')}
           </p>
           <div className="mt-4">
-            <Link href={lp('/contato')} className="flex items-center justify-center gap-3 bg-transparent border border-[#3D2620] hover:border-[#C8A27C] text-[#C8A27C] font-bold text-[10px] py-4 px-8 rounded-none transition-all group uppercase tracking-widest w-fit">
-              {t('COMPARTILHE SUA JORNADA')}
-              <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            <Link
+              href={lp('/contato')}
+              className="flex items-center justify-center gap-3 bg-transparent border border-[#3D2620] hover:border-[#C8A27C] text-[#C8A27C] font-bold text-[10px] py-4 px-8 transition-all group uppercase tracking-widest w-fit"
+            >
+              {t('jornadas.cta.shareJourney')}
+              <ArrowRight aria-hidden className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
         </div>
       </section>
 
-      {/* 2. Main Layout (Grid + Sidebar) */}
+      <div className="px-6 sm:px-12 max-w-[1400px] mx-auto w-full pt-8">
+        <Breadcrumbs
+          locale={locale}
+          items={[{ name: t('jornadas.list.breadcrumb'), path: '/jornadas' }]}
+          className="text-gray-500"
+        />
+      </div>
+
+      {/* ── 2. Listagem + sidebar ──────────────────────────────────────────── */}
       <section className="py-16 px-6 sm:px-12 max-w-[1400px] mx-auto w-full">
         <div className="flex flex-col xl:flex-row gap-10">
-          
-          {/* Left Side - Grid */}
           <div className="flex-1 flex flex-col gap-8">
-            <div className="flex items-center justify-center">
-              <span className="text-[10px] uppercase tracking-[0.2em] text-[#C8A27C] font-bold text-center w-full">
-                {t('JORNADAS RECENTES')}
+            <div className="text-center">
+              <span className="text-[10px] uppercase tracking-[0.2em] text-[#C8A27C] font-bold block">
+                {t('jornadas.list.sectionKicker')}
               </span>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {JORNADAS_RECENTES.map((jornada, i) => (
-                <div key={i} className="group bg-[#150E0C] border border-[#3D2620] rounded-sm overflow-hidden flex flex-col hover:border-[#C8A27C]/50 transition-colors cursor-pointer">
-                  {/* Image Container */}
-                  <div className="relative h-[180px] w-full overflow-hidden">
-                    <Image 
-                      src={jornadaImages[i]} 
-                      alt={jornada.title} 
-                      fill 
-                      className="object-cover group-hover:scale-105 transition-transform duration-700" 
-                    />
-                    <div className="absolute top-4 left-4 bg-[#0F0A08] text-white text-[9px] font-bold px-2 py-1 uppercase tracking-widest border border-[#3D2620]">
-                      {t(jornada.tag)}
-                    </div>
-                  </div>
-                  
-                  {/* Content Container */}
-                  <div className="p-6 flex flex-col flex-1">
-                    <span className="text-[10px] text-[#C8A27C] uppercase tracking-widest font-semibold mb-2">
-                      {t(jornada.date)}
-                    </span>
-                    <h3 className="text-xl font-heading text-white font-light leading-snug mb-3 group-hover:text-[#C8A27C] transition-colors">
-                      {t(jornada.title)}
-                    </h3>
-                    <p className="text-[12px] text-gray-400 font-light leading-relaxed mb-6 line-clamp-3">
-                      {t(jornada.desc)}
-                    </p>
-                    
-                    {/* Footer Container */}
-                    <div className="mt-auto pt-4 border-t border-[#3D2620] flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="relative w-8 h-8 rounded-full overflow-hidden border border-[#3D2620]">
-                          <Image src={avatares[i % 4]} alt={jornada.author} fill className="object-cover" />
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-[11px] text-white font-semibold">{jornada.author}</span>
-                          <span className="text-[9px] text-[#C8A27C]">{t(jornada.role)}</span>
-                        </div>
-                      </div>
-                      <ArrowRight className="h-4 w-4 text-[#C8A27C] opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            <div className="flex justify-center mt-6">
-              <Link href="#" className="flex items-center justify-center gap-3 bg-transparent border border-[#3D2620] hover:border-[#C8A27C] text-[#C8A27C] font-bold text-[10px] py-4 px-8 rounded-none transition-all group uppercase tracking-widest">
-                {t('VER MAIS JORNADAS')}
-                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </div>
-          </div>
-
-          {/* Right Side - Sidebar */}
-          <div className="w-full lg:w-[320px] shrink-0 flex flex-col gap-10">
-            
-            {/* Search */}
-            <div className="relative">
-              <input 
-                type="text" 
-                placeholder={t('Buscar jornadas...')} 
-                className="w-full bg-[#150E0C] border border-[#3D2620] text-white text-[12px] px-5 py-4 placeholder:text-gray-500 focus:outline-none focus:border-[#C8A27C] transition-colors rounded-none"
-              />
-              <Search className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-            </div>
-
-            {/* Categories */}
-            <div className="flex flex-col gap-4">
-              <h4 className="text-[10px] uppercase tracking-[0.2em] text-[#C8A27C] font-bold">
-                {t('CATEGORIAS')}
-              </h4>
-              <ul className="flex flex-col gap-1">
-                {CATEGORIES.map((cat, i) => {
-                  const Icon = cat.icon;
-                  return (
-                    <li key={i}>
-                      <Link href="#" className="flex items-center gap-3 py-2 text-[12px] text-gray-300 hover:text-[#C8A27C] transition-colors group">
-                        <Icon className="w-4 h-4 text-[#3D2620] group-hover:text-[#C8A27C] transition-colors" />
-                        {t(cat.label)}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-
-            {/* Newsletter */}
-            <div className="flex flex-col gap-4 pt-4 border-t border-[#3D2620]">
-              <h4 className="text-[10px] uppercase tracking-[0.2em] text-[#C8A27C] font-bold">
-                {t('CONTEÚDOS EXCLUSIVOS')}
-              </h4>
-              <p className="text-[12px] text-gray-400 font-light">
-                {t('Receba novas jornadas, dicas e experiências direto no seu e-mail.')}
-              </p>
-              <NewsletterForm t={t} />
-              <p className="text-[9px] text-gray-500 mt-1">
-                {t('Respeitamos sua privacidade. Sem spam. Você pode sair quando quiser.')}
+              <h2 className="font-heading text-3xl sm:text-4xl font-light text-white mt-2">
+                {t('jornadas.list.sectionTitle')}
+              </h2>
+              <p className="text-[12px] text-gray-400 mt-3 font-light max-w-xl mx-auto">
+                {t('jornadas.list.sectionDescription')}
               </p>
             </div>
 
-            {/* Featured Journey */}
-            <div className="flex flex-col gap-4 pt-4 border-t border-[#3D2620]">
-              <h4 className="text-[10px] uppercase tracking-[0.2em] text-[#C8A27C] font-bold">
-                {t('JORNADA EM DESTAQUE')}
-              </h4>
-              <div className="group cursor-pointer">
-                <div className="relative h-[160px] w-full overflow-hidden border border-[#3D2620] mb-4">
-                  <Image 
-                    src={featuredCard} 
-                    alt={t('Seul ao Entardecer')} 
-                    fill 
-                    className="object-cover group-hover:scale-105 transition-transform duration-700" 
-                  />
-                </div>
-                <h5 className="text-white font-heading text-xl font-light mb-2 group-hover:text-[#C8A27C] transition-colors">
-                  {t('Seul ao Entardecer')}
-                </h5>
-                <p className="text-[12px] text-gray-400 font-light mb-3">
-                  {t('Um roteiro perfeito para encerrar o dia com beleza e paz.')}
-                </p>
-                <div className="flex items-center gap-2 text-[#C8A27C] text-[10px] font-bold uppercase tracking-widest">
-                  {t('LER JORNADA')} <ArrowRight className="h-3 w-3" />
-                </div>
+            {cards.length === 0 ? (
+              <div className="border border-[#3D2620] bg-[#150E0C] rounded-sm py-16 px-6 text-center">
+                <MapPin aria-hidden className="w-10 h-10 mx-auto text-[#C8A27C] mb-4" />
+                <h3 className="font-heading text-xl font-light text-white">
+                  {t('jornadas.groups.emptyTitle')}
+                </h3>
+                <p className="text-xs text-gray-400 mt-2">{t('jornadas.groups.emptyDescription')}</p>
+                <Link
+                  href={lp('/contato')}
+                  className="inline-flex items-center gap-2 mt-6 text-[10px] font-bold uppercase tracking-widest text-[#C8A27C] hover:underline"
+                >
+                  {t('jornadas.list.allJourneysLink')}
+                  <ArrowRight aria-hidden className="h-3.5 w-3.5" />
+                </Link>
               </div>
+            ) : (
+              <>
+                <JourneyExplorer
+                  journeys={cards}
+                  filters={filters}
+                  countTemplate={t('jornadas.filter.resultsTemplate')}
+                  countLabelOne={t('jornadas.filter.resultsTemplateOne')}
+                  emptyTitle={t('jornadas.filter.emptyTitle')}
+                  emptyDescription={t('jornadas.filter.emptyDescription')}
+                  searchLabel={t('jornadas.filter.label')}
+                  searchPlaceholder={t('jornadas.list.searchPlaceholder')}
+                  clearLabel={t('jornadas.filter.clear')}
+                  ctaLabel={t('jornadas.card.ctaDetail')}
+                  featuredBadge={t('jornadas.card.badgeFeatured')}
+                  daysTemplate={t('jornadas.card.daysTemplate')}
+                  spotsTemplate={t('jornadas.card.spotsTemplate')}
+                  priceFromLabel={t('jornadas.card.priceFrom')}
+                  priceOnRequestLabel={t('jornadas.card.priceOnRequest')}
+                />
+
+                <div className="flex justify-center mt-2">
+                  <Link
+                    href={lp('/coreia-do-sul/jornadas')}
+                    className="flex items-center justify-center gap-3 bg-transparent border border-[#3D2620] hover:border-[#C8A27C] text-[#C8A27C] font-bold text-[10px] py-4 px-8 transition-all group uppercase tracking-widest"
+                  >
+                    {t('jornadas.list.seeMore')}
+                    <ArrowRight aria-hidden className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Sidebar */}
+          <aside className="w-full lg:w-[320px] shrink-0 flex flex-col gap-10">
+            <div className="flex flex-col gap-4">
+              <h2 className="text-[10px] uppercase tracking-[0.2em] text-[#C8A27C] font-bold">
+                {t('jornadas.newsletter.kicker')}
+              </h2>
+              <p className="text-[12px] text-gray-400 font-light">{t('jornadas.newsletter.description')}</p>
+              <NewsletterForm />
+              <p className="text-[9px] text-gray-500 mt-1">{t('jornadas.newsletter.privacyNote')}</p>
             </div>
 
-          </div>
+            <div className="flex flex-col gap-4 pt-4 border-t border-[#3D2620]">
+              <h2 className="text-[10px] uppercase tracking-[0.2em] text-[#C8A27C] font-bold">
+                {t('jornadas.featured.kicker')}
+              </h2>
+              {featured ? (
+                <article className="group">
+                  <div className="relative h-[160px] w-full overflow-hidden border border-[#3D2620] mb-4">
+                    <SmartImage
+                      src={featured.image}
+                      alt={featured.title}
+                      fill
+                      sizes="320px"
+                      quality={75}
+                      className="object-cover group-hover:scale-105 transition-transform duration-700"
+                      fallbackSrc={featured.fallbackImage || undefined}
+                      placeholderLabel={featured.title}
+                    />
+                  </div>
+                  <h3 className="text-white font-heading text-xl font-light mb-2 group-hover:text-[#C8A27C] transition-colors">
+                    <Link href={featured.url}>{featured.title}</Link>
+                  </h3>
+                  {featured.subtitle ? (
+                    <p className="text-[12px] text-gray-400 font-light mb-3 line-clamp-3">
+                      {featured.subtitle}
+                    </p>
+                  ) : null}
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[9px] text-gray-500 font-semibold uppercase tracking-widest mb-3">
+                    {featured.days > 0 ? (
+                      <span>{fill(t('jornadas.card.daysTemplate'), { n: formatNumber(featured.days) })}</span>
+                    ) : null}
+                    {featured.cities.length > 0 ? <span>{featured.cities.join(' + ')}</span> : null}
+                  </div>
+                  <Link
+                    href={featured.url}
+                    className="flex items-center gap-2 text-[#C8A27C] text-[10px] font-bold uppercase tracking-widest hover:underline"
+                  >
+                    {t('jornadas.featured.cta')}
+                    <ArrowRight aria-hidden className="h-3 w-3" />
+                  </Link>
+                </article>
+              ) : (
+                <div className="border border-[#3D2620] bg-[#150E0C] rounded-sm p-6 text-center">
+                  <Star aria-hidden className="w-8 h-8 mx-auto text-[#C8A27C] mb-3" />
+                  <p className="font-heading text-base font-light text-white">
+                    {t('jornadas.list.featuredFallbackTitle')}
+                  </p>
+                  <p className="text-[11px] text-gray-400 mt-2">{t('jornadas.list.featuredFallbackDescription')}</p>
+                </div>
+              )}
+            </div>
+          </aside>
         </div>
       </section>
 
-      {/* 3. Bottom CTA Section */}
+      {/* ── 3. CTA final ───────────────────────────────────────────────────── */}
       <section className="py-12 px-6 sm:px-12 max-w-[1400px] mx-auto w-full">
         <div className="relative w-full border border-[#3D2620] overflow-hidden rounded-sm flex flex-col md:flex-row bg-[#150E0C]">
-          
-          {/* Left Side Image */}
           <div className="relative w-full md:w-[45%] min-h-[300px] md:min-h-full">
-            <Image 
-              src={ctaBanner} 
-              alt={t('Pessoas em Seul')} 
-              fill 
-              className="object-cover object-center" 
+            <SmartImage
+              src={media.jornadas_cta_banner}
+              alt={t('jornadas.pessoas-em-seul')}
+              fill
+              sizes="(min-width: 768px) 45vw, 100vw"
+              quality={75}
+              placeholderLabel={t('jornadas.pessoas-em-seul')}
             />
             <div className="absolute inset-0 bg-gradient-to-r from-transparent to-[#150E0C]" />
           </div>
 
-          {/* Right side content */}
           <div className="w-full md:w-[55%] flex flex-col items-start justify-center text-left p-10 md:p-16 gap-6 relative z-10">
             <span className="text-[10px] uppercase tracking-[0.2em] text-[#C8A27C] font-bold">
-              {t('VIVA SUA PRÓPRIA JORNADA')}
+              {t('jornadas.share.kicker')}
             </span>
             <h2 className="font-heading text-4xl sm:text-5xl font-light text-white leading-[1.1]">
-              {t('Sua história na Coreia')} <br className="hidden lg:block" />
-              <span className="italic text-[#C8A27C]">{t('também pode inspirar outros.')}</span>
+              {t('jornadas.share.line1')} <br className="hidden lg:block" />
+              <span className="italic text-[#C8A27C]">{t('jornadas.share.line2')}</span>
             </h2>
             <p className="text-[13px] text-gray-400 font-light max-w-lg leading-relaxed">
-              {t('Viaje com a Maeum Global e compartilhe sua jornada com o mundo. Vamos transformar sua experiência em memória, conexão e inspiração.')}
+              {t('jornadas.share.description')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 mt-2 w-full sm:w-auto">
-              <Link href={lp('/contato')} className="flex items-center justify-center bg-[#C8A27C] hover:bg-[#B8906C] text-[#0F0A08] font-bold text-[10px] py-4 px-8 rounded-none transition-all uppercase tracking-widest w-full sm:w-auto">
-                {t('QUERO VIVER ESSA EXPERIÊNCIA')}
+              <Link
+                href={lp('/contato')}
+                className="flex items-center justify-center bg-[#C8A27C] hover:bg-[#B8906C] text-[#0F0A08] font-bold text-[10px] py-4 px-8 transition-all uppercase tracking-widest w-full sm:w-auto"
+              >
+                {t('jornadas.share.cta')}
               </Link>
-              <Link href={lp('/contato')} className="flex items-center justify-center bg-transparent border border-[#C8A27C]/30 hover:border-[#C8A27C] text-[#C8A27C] font-bold text-[10px] py-4 px-8 rounded-none transition-all uppercase tracking-widest w-full sm:w-auto">
-                {t('FALE COM CONSULTORA')}
+              <Link
+                href={lp('/contato')}
+                className="flex items-center justify-center bg-transparent border border-[#C8A27C]/30 hover:border-[#C8A27C] text-[#C8A27C] font-bold text-[10px] py-4 px-8 transition-all uppercase tracking-widest w-full sm:w-auto"
+              >
+                {t('jornadas.share.ctaSecondary')}
               </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Support Info Footer */}
-      <section className="bg-[#150E0C] border-t border-b border-[#3D2620] py-8 px-6">
-        <div className="max-w-[1400px] mx-auto flex flex-wrap items-center justify-between gap-6 opacity-60">
-          {[
-            { label: 'EXPERIÊNCIAS AUTÊNTICAS', icon: Star },
-            { label: 'ROTEIROS PERSONALIZADOS', icon: MapPin },
-            { label: 'ATENDIMENTO HUMANO', icon: Users },
-            { label: 'PARCEIROS NA COREIA', icon: TreePine },
-            { label: 'SUPORTE COMPLETO', icon: Search },
-            { label: 'SEGURANÇA E CONFIANÇA', icon: BookOpen }
-          ].map((item, i) => (
-            <div key={i} className="flex items-center gap-3 text-white">
-              <item.icon className="h-5 w-5 text-[#C8A27C]" strokeWidth={1.5} />
-              <span className="text-[9px] font-bold uppercase tracking-widest">{t(item.label)}</span>
-            </div>
+      {/* ── 4. Faixa de diferenciais ───────────────────────────────────────── */}
+      <section
+        aria-label={t('jornadas.list.sectionKicker')}
+        className="bg-[#150E0C] border-t border-b border-[#3D2620] py-8 px-6"
+      >
+        <ul className="max-w-[1400px] mx-auto flex flex-wrap items-center justify-between gap-6 opacity-60">
+          {FEATURES.map(({ key, Icon }) => (
+            <li key={key} className="flex items-center gap-3 text-white">
+              <Icon aria-hidden className="h-5 w-5 text-[#C8A27C]" strokeWidth={1.5} />
+              <span className="text-[9px] font-bold uppercase tracking-widest">{t(key)}</span>
+            </li>
           ))}
-        </div>
+        </ul>
       </section>
 
       <Footer />
     </div>
-  );
-}
-
-// ─── Newsletter sub-component ────────────────────────────────
-function NewsletterForm({ t }: { t: (s: string) => string }) {
-  const [email, setEmail] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-    setError('');
-    const result = await submitNewsletterAction(email);
-    setSubmitting(false);
-    if (result.success) {
-      setSuccess(true);
-      setMessage(result.message ?? 'Inscrição realizada!');
-    } else {
-      setError(result.error ?? 'Erro. Tente novamente.');
-    }
-  };
-
-  if (success) {
-    return (
-      <div className="flex items-center gap-3 bg-green-900/20 border border-green-700/30 rounded-sm px-4 py-3">
-        <CheckCircle2 className="h-5 w-5 text-green-400 shrink-0" />
-        <p className="text-[12px] text-green-400">{message}</p>
-      </div>
-    );
-  }
-
-  return (
-    <form className="flex flex-col gap-3" onSubmit={handleSubmit}>
-      <input
-        type="email"
-        required
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder={t('Seu melhor e-mail')}
-        className="w-full bg-[#150E0C] border border-[#3D2620] text-white text-[12px] px-4 py-3 placeholder:text-gray-500 focus:outline-none focus:border-[#C8A27C] transition-colors rounded-none"
-      />
-      {error && <p className="text-[11px] text-red-400">{error}</p>}
-      <button
-        type="submit"
-        disabled={submitting}
-        className="w-full bg-[#C8A27C] hover:bg-[#B8906C] disabled:opacity-60 text-[#0F0A08] font-bold text-[10px] py-3.5 px-4 rounded-none transition-all uppercase tracking-widest flex items-center justify-center gap-2"
-      >
-        {submitting ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Enviando...</> : t('ASSINAR NEWSLETTER')}
-      </button>
-    </form>
   );
 }

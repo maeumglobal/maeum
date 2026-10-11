@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 
 export interface ThemeColors {
   primary: string;
@@ -51,60 +51,91 @@ const DEFAULT_THEME: ThemeSettings = {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+const THEME_KEY = 'maeum_theme_v2';
+
+/** Notifica quando outra aba altera o tema salvo. */
+function subscribeToStoredTheme(onStoreChange: () => void) {
+  if (typeof window === 'undefined') return () => {};
+  window.addEventListener('storage', onStoreChange);
+  return () => window.removeEventListener('storage', onStoreChange);
+}
+
+function readStoredTheme(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    return window.localStorage.getItem(THEME_KEY);
+  } catch {
+    // localStorage bloqueado (modo privado / cookies desligados).
+    return null;
+  }
+}
+
+const getStoredThemeServer = () => null;
+
 export function ThemeProvider({ children, initialTheme }: { children: React.ReactNode; initialTheme?: ThemeSettings }) {
   const [theme, setTheme] = useState<ThemeSettings>(initialTheme || DEFAULT_THEME);
 
-  // Apply CSS variables to root element
-  const applyTheme = (t: ThemeSettings) => {
-    if (typeof window === 'undefined') return;
-    const root = document.documentElement;
-    root.style.setProperty('--primary-color', t.colors.primary);
-    root.style.setProperty('--secondary-color', t.colors.secondary);
-    root.style.setProperty('--accent-color', t.colors.accent);
-    root.style.setProperty('--accent-hover', t.colors.accentHover);
-    root.style.setProperty('--text-color', t.colors.text);
-    root.style.setProperty('--background-color', t.colors.background);
-    root.style.setProperty('--card-color', t.colors.card);
+  /*
+   * O tema salvo em outra aba é lido como "external store" em vez de ser
+   * copiado para o estado dentro de um useEffect — evita o render em cascata
+   * que o React 19 sinaliza e mantém o servidor como snapshot inicial.
+   */
+  const storedTheme = useSyncExternalStore(subscribeToStoredTheme, readStoredTheme, getStoredThemeServer);
 
-    // Apply fonts if dynamic loading is configured
-    // For simplicity, we can load fonts dynamically via WebFont or google link tags
-  };
-
-  useEffect(() => {
-    // Try to load custom theme from localStorage first if client side
-    const saved = localStorage.getItem('maeum_theme_v2');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        setTheme(parsed);
-        applyTheme(parsed);
-      } catch (e) {
-        applyTheme(theme);
-      }
-    } else {
-      applyTheme(theme);
+  const resolvedTheme = useMemo<ThemeSettings>(() => {
+    if (!storedTheme) return theme;
+    try {
+      const parsed = JSON.parse(storedTheme) as Partial<ThemeSettings>;
+      return {
+        ...theme,
+        ...parsed,
+        colors: { ...theme.colors, ...parsed.colors },
+        typography: { ...theme.typography, ...parsed.typography },
+      };
+    } catch {
+      return theme;
     }
-  }, []);
+  }, [storedTheme, theme]);
 
-  const updateTheme = (newTheme: Partial<ThemeSettings>) => {
-    setTheme((prev) => {
-      const updated = {
-        ...prev,
-        ...newTheme,
-        colors: { ...prev.colors, ...newTheme.colors },
-        typography: { ...prev.typography, ...newTheme.typography }
-      } as ThemeSettings;
-      localStorage.setItem('maeum_theme_v2', JSON.stringify(updated));
-      applyTheme(updated);
-      return updated;
-    });
-  };
+  // Efeito único: escreve as variáveis CSS no documento (sistema externo).
+  useEffect(() => {
+    const root = document.documentElement;
+    const { colors } = resolvedTheme;
+    root.style.setProperty('--primary-color', colors.primary);
+    root.style.setProperty('--secondary-color', colors.secondary);
+    root.style.setProperty('--accent-color', colors.accent);
+    root.style.setProperty('--accent-hover', colors.accentHover);
+    root.style.setProperty('--text-color', colors.text);
+    root.style.setProperty('--background-color', colors.background);
+    root.style.setProperty('--card-color', colors.card);
+  }, [resolvedTheme]);
 
-  return (
-    <ThemeContext.Provider value={{ theme, updateTheme }}>
-      {children}
-    </ThemeContext.Provider>
+  const updateTheme = useCallback(
+    (newTheme: Partial<ThemeSettings>) => {
+      setTheme((prev) => {
+        const updated: ThemeSettings = {
+          ...prev,
+          ...newTheme,
+          colors: { ...prev.colors, ...newTheme.colors },
+          typography: { ...prev.typography, ...newTheme.typography },
+        };
+        try {
+          window.localStorage.setItem(THEME_KEY, JSON.stringify(updated));
+        } catch {
+          // Sem persistência: o tema ainda vale para a sessão atual.
+        }
+        return updated;
+      });
+    },
+    [],
   );
+
+  const value = useMemo<ThemeContextType>(
+    () => ({ theme: resolvedTheme, updateTheme }),
+    [resolvedTheme, updateTheme],
+  );
+
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
 export function useTheme() {

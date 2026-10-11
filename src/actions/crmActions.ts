@@ -1,215 +1,175 @@
 'use server';
 
-import { prisma } from '@/lib/prisma';
+/**
+ * CRM: assinatura de proposta pelo link público.
+ *
+ * ## Onde a proposta é LIDA
+ *
+ * `src/app/proposta/[unique_link]/page.tsx` é server component e consulta o
+ * Prisma direto por `{ uniqueLink, status: { notIn: ['draft'] } }`. Nunca houve
+ * motivo para duplicar essa leitura numa server action — a versão anterior
+ * (`getProposalByLinkAction`) também casava por `id` cru, o que permitia
+ * enumerar todas as propostas do banco via `/proposta/<uuid>`. Foi removida.
+ *
+ * ## Autorização de `updateProposalStatusAction`
+ *
+ *  - **com sessão**: precisa ser o cliente da proposta, a consultora dela, ou
+ *    super_admin/admin;
+ *  - **sem sessão**: precisa enviar `linkToken` (o `uniqueLink` da URL), que é a
+ *    prova de posse do documento — é o que a página pública sempre envia;
+ *  - **nunca** aceita apenas o `id`.
+ *
+ * ## Duplicatas mortas removidas (nenhum import no projeto)
+ *
+ *  - `submitLeadAction`        -> `tripPlanActions.submitTripPlanAction`
+ *  - `submitChatMessageAction` -> `chatActions.sendVisitorMessage`/`staffSendMessage`
+ *    (a versão removida escrevia em qualquer `chatId`: era um IDOR)
+ *  - `uploadDocumentAction`    -> `clientActions.uploadClientDocument`
+ *  - `createProposalAction`    -> `businessActions.createProposal`
+ */
 import { revalidatePath } from 'next/cache';
+import { prisma } from '@/lib/prisma';
+import { getAuth } from '@/lib/auth';
+import { isStaff } from '@/lib/session';
+import { auditLog } from '@/lib/audit';
+import { notifyUser } from '@/lib/notify';
+import { str } from '@/lib/validate';
+import { fail, failPublic, ok, type ActionResult } from '@/lib/actionKit';
+import { allowFormAction, RATE_LIMIT_MESSAGE } from '@/lib/rateLimit';
 
-// ─── CAPTURA DE LEAD PELO FORMULÁRIO DO SITE ────────────────
-export async function submitLeadAction(data: {
-  name: string;
-  phone: string;
-  email: string;
-  interest: string;
-  origin: string;
-}) {
-  try {
-    // Find default consultant to auto-assign
-    const consultant = await prisma.user.findFirst({ where: { role: 'consultora', isActive: true } });
+/** Transições que o cliente pode pedir pelo link. */
+const PROPOSAL_STATUSES = ['approved', 'changes_requested'] as const;
+type ProposalStatus = (typeof PROPOSAL_STATUSES)[number];
 
-    const newLead = await prisma.lead.create({
-      data: {
-        name: data.name,
-        phone: data.phone,
-        email: data.email,
-        destination: data.interest,
-        origin: data.origin,
-        status: 'novo',
-        consultantId: consultant?.id ?? null,
-        notes: 'Lead captado dinamicamente via formulário da landing page.',
-      },
-    });
+/** Status gravado no banco para cada decisão do cliente. */
+const STATUS_FOR_DECISION: Record<ProposalStatus, string> = {
+  approved: 'approved',
+  changes_requested: 'sent',
+};
 
-    // Notify consultant
-    if (consultant) {
-      await prisma.notification.create({
-        data: {
-          userId: consultant.id,
-          title: 'Novo Lead Captado!',
-          message: `${data.name} demonstrou interesse em ${data.interest}. Contato: ${data.phone}`,
-          type: 'info',
-          category: 'lead',
-          priority: 'high',
-          linkUrl: '/dashboard/admin',
-        },
-      });
-    }
-
-    revalidatePath('/dashboard/admin');
-    return { success: true, lead: newLead };
-  } catch (error: unknown) {
-    console.error('Error submitting lead:', error);
-    return { success: false, error: String(error) };
-  }
+function revalidateCrm() {
+  revalidatePath('/dashboard/admin');
+  revalidatePath('/dashboard/consultora');
+  revalidatePath('/dashboard/cliente');
+  revalidatePath('/proposta/[unique_link]', 'page');
 }
 
-// ─── PROPOSTA ────────────────────────────────────────────────
-export async function getProposalByLinkAction(linkOrId: string) {
-  try {
-    const proposal = await prisma.proposal.findFirst({
-      where: {
-        OR: [
-          { uniqueLink: linkOrId },
-          { id: linkOrId },
-        ],
-      },
-      include: {
-        items: true,
-        consultant: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            phone: true,
-          },
-        },
-      },
-    });
-
-    if (!proposal) return { success: false, error: 'Proposta não encontrada.' };
-    return { success: true, proposal };
-  } catch (error: unknown) {
-    console.error('Error fetching proposal:', error);
-    return { success: false, error: String(error) };
-  }
-}
-
+/**
+ * Aprovar a proposta ou pedir alterações.
+ *
+ * @param proposalId  id da proposta
+ * @param status      'approved' | 'changes_requested'
+ * @param notes       motivo (usado só em 'changes_requested')
+ * @param linkToken   `uniqueLink` da URL — prova de posse quando não há sessão
+ */
 export async function updateProposalStatusAction(
   proposalId: string,
-  status: 'approved' | 'changes_requested',
-  notes?: string
-) {
+  status: string,
+  notes?: string,
+  linkToken?: string,
+): Promise<ActionResult<{ status: string }>> {
   try {
-    const proposal = await prisma.proposal.findUnique({
-      where: { id: proposalId },
-    });
+    const decision = str(status, 40) as ProposalStatus;
+    if (!PROPOSAL_STATUSES.includes(decision)) {
+      return { success: false, error: 'Decisão inválida.' };
+    }
 
+    const id = str(proposalId, 64);
+    if (!id) return { success: false, error: 'Proposta não encontrada.' };
+
+    const reason = str(notes, 2000);
+    if (decision === 'changes_requested' && reason.length < 3) {
+      return { success: false, error: 'Descreva o que precisa ser ajustado.' };
+    }
+
+    // O link público é a única porta sem sessão: limita por IP.
+    const auth = await getAuth();
+    if (!auth && !str(linkToken, 120)) {
+      return { success: false, error: 'Link de proposta inválido.' };
+    }
+    if (!auth && !allowFormAction(`proposal:${id}`)) {
+      return { success: false, error: RATE_LIMIT_MESSAGE };
+    }
+
+    const proposal = await prisma.proposal.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        status: true,
+        customerId: true,
+        consultantId: true,
+        uniqueLink: true,
+        viewedAt: true,
+        validUntil: true,
+        title: true,
+        consultant: { select: { name: true } },
+      },
+    });
     if (!proposal) return { success: false, error: 'Proposta não encontrada.' };
 
-    const updatedProposal = await prisma.proposal.update({
-      where: { id: proposalId },
-      data: {
-        status: status === 'approved' ? 'approved' : 'draft',
-        notes: notes,
-        version: { increment: 1 },
-      },
-    });
-
-    // Update associated lead
-    if (proposal.leadId) {
-      await prisma.lead.update({
-        where: { id: proposal.leadId },
-        data: { status: status === 'approved' ? 'fechado' : 'atendimento' },
-      });
+    // Sem sessão, o token precisa bater com o link real da proposta.
+    if (!auth) {
+      if (!proposal.uniqueLink || proposal.uniqueLink !== str(linkToken, 120)) {
+        return { success: false, error: 'Link de proposta inválido.' };
+      }
+    } else {
+      const isOwner = proposal.customerId === auth.user.id;
+      const isConsultant = proposal.consultantId === auth.user.id;
+      if (!isOwner && !isConsultant && !isStaff(auth.user.role)) {
+        return { success: false, error: 'Você não tem permissão para esta proposta.' };
+      }
+      // Admin e consultora também precisam do token quando não são o dono.
+      if (!isOwner && proposal.uniqueLink && proposal.uniqueLink !== str(linkToken, 120)) {
+        return { success: false, error: 'Link de proposta inválido.' };
+      }
     }
 
-    // Notify the consultant
-    if (proposal.consultantId) {
-      await prisma.notification.create({
-        data: {
-          userId: proposal.consultantId,
-          title: status === 'approved' ? 'Proposta Aprovada!' : 'Revisão Solicitada',
-          message:
-            status === 'approved'
-              ? `Cliente aprovou: ${proposal.title}`
-              : `Cliente solicitou revisão: ${notes?.substring(0, 100) || ''}`,
-          type: status === 'approved' ? 'success' : 'warning',
-          category: 'booking',
-          priority: 'high',
-          linkUrl: '/dashboard/admin',
-        },
-      });
+    if (proposal.status === 'approved') {
+      return { success: false, error: 'Esta proposta já foi aprovada.' };
+    }
+    if (proposal.validUntil && proposal.validUntil < new Date()) {
+      return { success: false, error: 'Esta proposta expirou. Peça uma nova versão.' };
     }
 
-    revalidatePath('/dashboard/admin');
-    revalidatePath('/dashboard/cliente');
-    return { success: true, proposal: updatedProposal };
-  } catch (error: unknown) {
-    console.error('Error updating proposal:', error);
-    return { success: false, error: String(error) };
-  }
-}
-
-// ─── MENSAGEM DE CHAT ────────────────────────────────────────
-export async function submitChatMessageAction(chatId: string, senderId: string, content: string) {
-  try {
-    const message = await prisma.chatMessage.create({
-      data: { chatId, senderId, content },
-    });
-    revalidatePath('/dashboard/cliente');
-    return { success: true, message };
-  } catch (error: unknown) {
-    return { success: false, error: String(error) };
-  }
-}
-
-// ─── UPLOAD DE DOCUMENTO ────────────────────────────────────
-export async function uploadDocumentAction(
-  clientId: string,
-  data: { file_name: string; file_url: string; file_size: number; category: string }
-) {
-  try {
-    const doc = await prisma.document.create({
+    const nextStatus = STATUS_FOR_DECISION[decision];
+    const updated = await prisma.proposal.update({
+      where: { id },
       data: {
-        clientId,
-        uploadedById: clientId,
-        fileName: data.file_name,
-        fileUrl: data.file_url,
-        fileSize: data.file_size,
-        category: data.category,
+        status: nextStatus,
+        notes: reason.length ? reason : proposal.status === 'changes_requested' ? null : undefined,
+        version: decision === 'approved' ? { increment: 1 } : undefined,
+        viewedAt: proposal.viewedAt ?? new Date(),
       },
-    });
-    revalidatePath('/dashboard/cliente');
-    return { success: true, document: doc };
-  } catch (error: unknown) {
-    return { success: false, error: String(error) };
-  }
-}
-
-// ─── CRIAR PROPOSTA ──────────────────────────────────────────
-export async function createProposalAction(
-  clientId: string,
-  consultantId: string,
-  title: string,
-  items: Array<{ name: string; type: string; price: number; details?: string }>,
-  totalAmount: number
-) {
-  try {
-    const uniqueLink =
-      title.toLowerCase()
-        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '') +
-      '-' +
-      Math.floor(Math.random() * 9999);
-
-    const proposal = await prisma.proposal.create({
-      data: {
-        title,
-        consultantId,
-        customerId: clientId,
-        totalValue: totalAmount,
-        uniqueLink,
-        status: 'draft',
-        version: 1,
-        items: {
-          create: items.map(i => ({ name: i.name, type: i.type, price: i.price, details: i.details })),
-        },
-      },
-      include: { items: true },
+      select: { status: true },
     });
 
-    revalidatePath('/dashboard/admin');
-    return { success: true, proposal };
-  } catch (error: unknown) {
-    return { success: false, error: String(error) };
+    auditLog({
+      userId: auth?.user.id ?? proposal.consultantId,
+      action: decision === 'approved' ? 'crm.proposal_approved' : 'crm.proposal_changes_requested',
+      entity: 'Proposal',
+      entityId: id,
+      details: reason.slice(0, 500) || null,
+      result: 'success',
+    });
+
+    // Avisa a consultora responsável.
+    notifyUser(proposal.consultantId, {
+      title: decision === 'approved' ? 'Proposta aprovada!' : 'O cliente pediu ajustes',
+      message:
+        decision === 'approved'
+          ? `${proposal.title} foi aprovada pelo cliente.`
+          : `${proposal.title}: o cliente pediu ajustes.`,
+      type: decision === 'approved' ? 'success' : 'warning',
+      priority: 'high',
+      category: 'proposal',
+      linkUrl: `/dashboard/consultora`,
+    });
+
+    revalidateCrm();
+    return ok({ status: updated.status });
+  } catch (error) {
+    // `auth` está no escopo do try; no catch revalidamos a sessão para não vazar
+    // detalhes internos para quem chegou sem login.
+    return (await getAuth()) ? fail(error) : failPublic('Não foi possível registrar sua decisão.');
   }
 }

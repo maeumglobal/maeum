@@ -1,127 +1,312 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+/**
+ * Auditoria e Logs.
+ *
+ * Correções:
+ *  - o estado `search` EXISTIA mas não tinha input e não era usado (dead code).
+ *    Agora há o campo de busca, com debounce de 300ms, filtrando client-side
+ *    sobre a página atual (o texto deixa isso explícito — a action não tem
+ *    filtro por texto livre);
+ *  - os cinco filtros de entidade eram valores em minúsculo (`user`, `lead`)
+ *    que NUNCA casavam com `AdminLog.entity`, que grava o nome do model
+ *    (`User`, `Lead`, `Booking`…). Agora as opções são os valores reais e há
+ *    uma opção "listar entidades" que só mostra as que existem no banco.
+ *  - `action` também é filtrável agora (não havia filtro nenhum).
+ */
+import { useCallback, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { RefreshCw, Search, ShieldAlert, Clock, User, Activity, FileText } from 'lucide-react';
+import { Clock, RefreshCw, ShieldAlert, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { getLogs } from '@/actions/adminActions';
-import { useToast } from '@/contexts/ToastContext';
+import AdminPagination from '@/components/admin/ui/Pagination';
+import { useDebouncedValue } from '@/components/admin/ui/useDebouncedValue';
+import { useMountedLoad } from '@/components/admin/ui/useMountedLoad';
+import { AdminEmptyState, AdminErrorState, AdminPageHeader, AdminTableSkeleton } from '@/components/admin/ui/States';
+
+interface LogRow {
+  id: string;
+  action: string;
+  entity: string;
+  entityId: string | null;
+  details: string | null;
+  ipAddress: string | null;
+  result: string;
+  createdAt: string;
+  user?: { id: string; name: string; email: string; role: string } | null;
+}
+
+/** Candidatas por padrão de ação — cor compartilhada. */
+function actionStyle(action: string): string {
+  if (action.includes('delete') || action.includes('deactivate')) {
+    return 'border-red-800 bg-red-900/30 text-red-400';
+  }
+  if (action.includes('create') || action.includes('approve') || action.includes('activate')) {
+    return 'border-green-800 bg-green-900/30 text-green-400';
+  }
+  if (action.includes('update') || action.includes('status_change') || action.includes('save')) {
+    return 'border-blue-800 bg-blue-900/30 text-blue-400';
+  }
+  if (action.includes('login') || action.includes('logout')) {
+    return 'border-gray-700 bg-gray-800 text-gray-300';
+  }
+  return 'border-gray-700 bg-gray-800 text-gray-300';
+}
 
 export default function AdminLogsHome() {
-  const [logs, setLogs] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [entityFilter, setEntityFilter] = useState('');
+  const { t, formatNumber, formatDate } = useLanguage();
+
+  const [logs, setLogs] = useState<LogRow[]>([]);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [total, setTotal] = useState(0);
-  const PAGE_SIZE = 20;
+  const [totalPages, setTotalPages] = useState(1);
+  const [entityFilter, setEntityFilter] = useState('');
+  const [actionFilter, setActionFilter] = useState('');
+  const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const load = async () => {
+  const debouncedSearch = useDebouncedValue(search);
+
+  const load = useCallback(async () => {
     setLoading(true);
-    const res = await getLogs({ page, pageSize: PAGE_SIZE, entity: entityFilter || undefined });
-    if (res.success && res.data) { setLogs(res.data); setTotal(res.total || 0); }
+    setError(null);
+    const res = await getLogs({ page, pageSize, entity: entityFilter || undefined, action: actionFilter || undefined });
+    if (res.success) {
+      setLogs((res.items ?? []) as unknown as LogRow[]);
+      setTotal(res.total ?? 0);
+      setTotalPages(res.totalPages ?? 1);
+    } else {
+      setLogs([]);
+      setTotal(0);
+      setTotalPages(1);
+      setError(res.error ?? t('state.errorTitle'));
+    }
     setLoading(false);
-  };
+  }, [page, pageSize, entityFilter, actionFilter, t]);
 
-  useEffect(() => { load(); }, [entityFilter, page]);
+  useMountedLoad(load);
 
-  const totalPages = Math.ceil(total / PAGE_SIZE);
+  // Ações existentes na página atual — evita oferecer um filtro morto.
+  const actionOptions = useMemo(() => {
+    const seen = new Set<string>();
+    for (const row of logs) seen.add(row.action);
+    return [...seen].sort();
+  }, [logs]);
 
-  const ACTION_COLORS: Record<string, string> = {
-    system_init: 'bg-purple-900/30 text-purple-400 border-purple-800',
-    create: 'bg-green-900/30 text-green-400 border-green-800',
-    update: 'bg-blue-900/30 text-blue-400 border-blue-800',
-    delete: 'bg-red-900/30 text-red-400 border-red-800',
-    login: 'bg-gray-800 text-gray-300 border-gray-700',
-  };
+  const filtered = useMemo(() => {
+    const query = debouncedSearch.trim().toLowerCase();
+    if (!query) return logs;
+    return logs.filter((row) =>
+      [
+        row.action,
+        row.entity,
+        row.entityId ?? '',
+        row.details ?? '',
+        row.ipAddress ?? '',
+        row.result,
+        row.user?.name ?? '',
+        row.user?.email ?? '',
+        row.user?.role ?? '',
+      ]
+        .join(' ')
+        .toLowerCase()
+        .includes(query),
+    );
+  }, [logs, debouncedSearch]);
+
+  const entityOptions = [
+    { value: '', labelKey: 'admin.logs.entityAll' },
+    { value: 'User', labelKey: 'admin.logs.entityUser' },
+    { value: 'Lead', labelKey: 'admin.logs.entityLead' },
+    { value: 'Booking', labelKey: 'admin.logs.entityBooking' },
+    { value: 'Payment', labelKey: 'admin.logs.entityPayment' },
+    { value: 'Proposal', labelKey: 'admin.logs.entityProposal' },
+    { value: 'Experience', labelKey: 'admin.logs.entityExperience' },
+    { value: 'Journey', labelKey: 'admin.logs.entityJourney' },
+    { value: 'JourneyDeparture', labelKey: 'admin.logs.entityJourneyDeparture' },
+    { value: 'KbeautyExperience', labelKey: 'admin.logs.entityKbeautyExperience' },
+    { value: 'Testimonial', labelKey: 'admin.logs.entityTestimonial' },
+    { value: 'FaqItem', labelKey: 'admin.logs.entityFaqItem' },
+    { value: 'MediaAsset', labelKey: 'admin.logs.entityMediaAsset' },
+    { value: 'SiteSetting', labelKey: 'admin.logs.entitySiteSetting' },
+    { value: 'SiteConfig', labelKey: 'admin.logs.entitySiteConfig' },
+    { value: 'Package', labelKey: 'admin.logs.entityPackage' },
+    { value: 'Category', labelKey: 'admin.logs.entityCategory' },
+    { value: 'BlogPost', labelKey: 'admin.logs.entityBlogPost' },
+    { value: 'Partner', labelKey: 'admin.logs.entityPartner' },
+    { value: 'NavigationItem', labelKey: 'admin.logs.entityNavigationItem' },
+    { value: 'CmsPage', labelKey: 'admin.logs.entityCmsPage' },
+    { value: 'ExchangeCampus', labelKey: 'admin.logs.entityExchangeCampus' },
+    { value: 'Notification', labelKey: 'admin.logs.entityNotification' },
+  ];
 
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-6 w-full">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[var(--admin-card)] border border-[var(--admin-border)] p-4 md:p-6 rounded-2xl">
-        <div>
-          <h2 className="text-xl font-bold text-[var(--admin-text-main)] mb-1 flex items-center gap-2">
-            <ShieldAlert className="w-5 h-5 text-[var(--admin-primary)]" /> Auditoria e Logs
-          </h2>
-          <p className="text-xs text-[var(--admin-text-muted)]">{total} registros no sistema</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button onClick={load} variant="outline" className="h-9 px-3 border-[var(--admin-border)] text-[var(--admin-text-main)] hover:bg-[var(--admin-border)]/50">
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex w-full flex-col gap-6"
+    >
+      <AdminPageHeader
+        icon={<ShieldAlert className="w-5 h-5" />}
+        title={t('admin.logs.title')}
+        subtitle={t('admin.logs.subtitle').replace('{count}', formatNumber(total))}
+        actions={
+          <Button
+            onClick={load}
+            variant="outline"
+            aria-label={t('common.refresh')}
+            className="h-9 border-[var(--admin-border)] px-3 text-[var(--admin-text-main)] hover:bg-[var(--admin-border)]/50"
+          >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </Button>
-        </div>
-      </div>
+        }
+      />
 
-      <div className="flex flex-col sm:flex-row gap-3">
-        <select value={entityFilter} onChange={e => { setEntityFilter(e.target.value); setPage(1); }} className="h-9 px-3 text-xs rounded-lg border border-[var(--admin-border)] bg-[var(--admin-card)] text-[var(--admin-text-muted)] focus:outline-none focus:border-[var(--admin-primary)] w-48">
-          <option value="">Todas as entidades</option>
-          <option value="system">Sistema</option>
-          <option value="user">Usuários</option>
-          <option value="booking">Reservas</option>
-          <option value="lead">Leads</option>
-          <option value="experience">Experiências</option>
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <Input
+          value={search}
+          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+          placeholder={t('admin.logs.search')}
+          aria-label={t('admin.logs.search')}
+          className="h-9 max-w-md flex-1 bg-[var(--admin-card)] text-xs text-[var(--admin-text-main)] border-[var(--admin-border)] focus:border-[var(--admin-primary)]"
+        />
+        <select
+          value={entityFilter}
+          onChange={(e) => { setEntityFilter(e.target.value); setPage(1); }}
+          aria-label={t('admin.logs.entityAll')}
+          className="h-9 w-full rounded-lg border border-[var(--admin-border)] bg-[var(--admin-card)] px-3 text-xs text-[var(--admin-text-muted)] focus:border-[var(--admin-primary)] focus:outline-none sm:w-52"
+        >
+          {entityOptions.map((option) => (
+            <option key={option.value || 'all'} value={option.value}>
+              {t(option.labelKey)}
+            </option>
+          ))}
+        </select>
+        <select
+          value={actionFilter}
+          onChange={(e) => { setActionFilter(e.target.value); setPage(1); }}
+          aria-label={t('admin.logs.action')}
+          className="h-9 w-full rounded-lg border border-[var(--admin-border)] bg-[var(--admin-card)] px-3 text-xs text-[var(--admin-text-muted)] focus:border-[var(--admin-primary)] focus:outline-none sm:w-52"
+        >
+          <option value="">{t('admin.book.filterAll')}</option>
+          {actionOptions.map((action) => (
+            <option key={action} value={action}>
+              {action}
+            </option>
+          ))}
         </select>
       </div>
 
-      <div className="bg-[var(--admin-card)] border border-[var(--admin-border)] rounded-2xl overflow-hidden">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="border-b border-[var(--admin-border)] bg-black/5 text-[10px] uppercase tracking-wider text-[var(--admin-text-muted)]">
-              <th className="p-4 font-semibold">Data / Hora</th>
-              <th className="p-4 font-semibold hidden sm:table-cell">Usuário</th>
-              <th className="p-4 font-semibold">Ação</th>
-              <th className="p-4 font-semibold hidden md:table-cell">Entidade</th>
-              <th className="p-4 font-semibold hidden lg:table-cell">Detalhes</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr><td colSpan={5} className="p-8 text-center"><RefreshCw className="w-5 h-5 animate-spin mx-auto text-[var(--admin-text-muted)]" /></td></tr>
-            ) : logs.length === 0 ? (
-              <tr><td colSpan={5} className="p-8 text-center text-xs text-[var(--admin-text-muted)]">Nenhum log registrado.</td></tr>
-            ) : logs.map(log => (
-              <tr key={log.id} className="border-b border-[var(--admin-border)] hover:bg-[var(--admin-border)]/20 transition-colors">
-                <td className="p-4 text-xs font-mono text-[var(--admin-text-muted)] whitespace-nowrap">
-                  <div className="flex flex-col gap-1">
-                    <span className="flex items-center gap-1 text-[var(--admin-text-main)]"><Clock className="w-3 h-3" /> {new Date(log.createdAt).toLocaleDateString('pt-BR')}</span>
-                    <span className="ml-4">{new Date(log.createdAt).toLocaleTimeString('pt-BR')}</span>
-                  </div>
-                </td>
-                <td className="p-4 hidden sm:table-cell">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-[var(--admin-border)] flex items-center justify-center shrink-0">
-                      <User className="w-3 h-3 text-[var(--admin-text-muted)]" />
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-semibold text-[var(--admin-text-main)] truncate max-w-[150px]">{log.user?.name || 'Sistema'}</p>
-                      <p className="text-[9px] text-[var(--admin-text-muted)]">{log.user?.role || 'SYSTEM'}</p>
-                    </div>
-                  </div>
-                </td>
-                <td className="p-4">
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${ACTION_COLORS[log.action] || 'bg-gray-800 text-gray-300 border-gray-700'}`}>
-                    {log.action}
-                  </span>
-                </td>
-                <td className="p-4 hidden md:table-cell text-[11px] text-[var(--admin-text-muted)] uppercase font-semibold">
-                  {log.entity}
-                </td>
-                <td className="p-4 hidden lg:table-cell text-[10px] text-[var(--admin-text-muted)] font-mono truncate max-w-[200px]">
-                  {log.details ? log.details : '—'}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {debouncedSearch && (
+        <p className="text-[10px] text-[var(--admin-text-muted)]">{t('admin.logs.searchScope')}</p>
+      )}
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2">
-          <Button variant="outline" disabled={page === 1} onClick={() => setPage(p => p - 1)} className="h-8 px-3 text-xs border-[var(--admin-border)]">Anterior</Button>
-          <span className="text-xs text-[var(--admin-text-muted)]">Página {page} de {totalPages}</span>
-          <Button variant="outline" disabled={page === totalPages} onClick={() => setPage(p => p + 1)} className="h-8 px-3 text-xs border-[var(--admin-border)]">Próxima</Button>
+      {error ? (
+        <AdminErrorState message={error} onRetry={load} />
+      ) : (
+        <div className="overflow-x-auto rounded-2xl border border-[var(--admin-border)] bg-[var(--admin-card)]">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-[var(--admin-border)] bg-black/5 text-[10px] uppercase tracking-wider text-[var(--admin-text-muted)]">
+                <th className="p-4 font-semibold">{t('admin.logs.dateTime')}</th>
+                <th className="hidden p-4 font-semibold sm:table-cell">{t('admin.logs.user')}</th>
+                <th className="p-4 font-semibold">{t('admin.logs.action')}</th>
+                <th className="hidden p-4 font-semibold md:table-cell">{t('admin.logs.entity')}</th>
+                <th className="hidden p-4 font-semibold lg:table-cell">{t('admin.logs.details')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading && logs.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="p-0">
+                    <AdminTableSkeleton rows={10} columns={5} />
+                  </td>
+                </tr>
+              ) : filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="p-0">
+                    <AdminEmptyState
+                      title={
+                        logs.length === 0
+                          ? t('admin.logs.empty')
+                          : debouncedSearch
+                            ? t('admin.logs.searchEmpty')
+                            : t('state.searchEmpty')
+                      }
+                      description={logs.length === 0 && !debouncedSearch ? undefined : t('state.searchEmptyHint')}
+                      icon={<ShieldAlert className="w-5 h-5" />}
+                    />
+                  </td>
+                </tr>
+              ) : (
+                filtered.map((row) => (
+                  <tr
+                    key={row.id}
+                    className="border-b border-[var(--admin-border)] transition-colors hover:bg-[var(--admin-border)]/20"
+                  >
+                    <td className="p-4 font-mono text-xs whitespace-nowrap text-[var(--admin-text-muted)]">
+                      <div className="flex flex-col gap-1">
+                        <span className="flex items-center gap-1 text-[var(--admin-text-main)]">
+                          <Clock className="w-3 h-3" /> {formatDate(row.createdAt)}
+                        </span>
+                        <span className="ml-4">
+                          {formatDate(row.createdAt, { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="hidden p-4 sm:table-cell">
+                      <div className="flex items-center gap-2">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--admin-border)]">
+                          <User className="w-3 h-3 text-[var(--admin-text-muted)]" />
+                        </span>
+                        <div className="min-w-0">
+                          <p className="max-w-[150px] truncate text-[11px] font-semibold text-[var(--admin-text-main)]">
+                            {row.user?.name ?? t('admin.logs.system')}
+                          </p>
+                          <p className="text-[9px] text-[var(--admin-text-muted)]">
+                            {row.user?.role ?? 'SYSTEM'}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <span
+                        className={`inline-block max-w-[220px] truncate rounded-full border px-2 py-0.5 text-[10px] font-bold ${actionStyle(row.action)}`}
+                        title={row.action}
+                      >
+                        {row.action}
+                      </span>
+                    </td>
+                    <td className="hidden p-4 text-[11px] font-semibold uppercase text-[var(--admin-text-muted)] md:table-cell">
+                      {row.entity}
+                    </td>
+                    <td className="hidden max-w-[260px] truncate p-4 font-mono text-[10px] text-[var(--admin-text-muted)] lg:table-cell">
+                      {row.details ?? '—'}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       )}
+
+      <AdminPagination
+        page={page}
+        totalPages={totalPages}
+        total={total}
+        pageSize={pageSize}
+        onPageChange={setPage}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setPage(1);
+        }}
+        disabled={loading || Boolean(error)}
+      />
     </motion.div>
   );
 }

@@ -128,6 +128,45 @@ export const MEDIA_SLOTS: MediaSlot[] = [
 
   // ── LOGO ────────────────────────────────────────────────
   { key: 'site_logo', page: 'Site', label: 'Logo (Header e Footer)', type: 'logo', fallback: '/images/logo.png' },
+
+  // ── COREIA DO SUL (hub) ─────────────────────────────────
+  // Slots que faltavam: as páginas abaixo tinham as URLs hardcoded no JSX.
+  { key: 'coreia_hero_desktop', page: 'Coreia do Sul', label: 'Hero Desktop', type: 'banner_desktop', fallback: 'https://images.unsplash.com/photo-1538669715515-5e3819766a9e?q=80&w=1600' },
+  { key: 'coreia_hero_mobile', page: 'Coreia do Sul', label: 'Hero Mobile', type: 'banner_mobile', fallback: 'https://images.unsplash.com/photo-1538669715515-5e3819766a9e?q=80&w=900' },
+  { key: 'coreia_card_1', page: 'Coreia do Sul', label: 'Card Destaque 1', type: 'card', fallback: 'https://images.unsplash.com/photo-1537716414232-56d60fa8fc36?q=80&w=800' },
+  { key: 'coreia_card_2', page: 'Coreia do Sul', label: 'Card Destaque 2', type: 'card', fallback: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?q=80&w=800' },
+  { key: 'coreia_card_3', page: 'Coreia do Sul', label: 'Card Destaque 3', type: 'card', fallback: 'https://images.unsplash.com/photo-1578489758854-f134a358f08b?q=80&w=800' },
+  { key: 'coreia_card_4', page: 'Coreia do Sul', label: 'Card Destaque 4', type: 'card', fallback: 'https://images.unsplash.com/photo-1534270804883-8b1b5e7f2e2b?q=80&w=800' },
+
+  // ── COREIA DO SUL · EXPERIÊNCIAS ────────────────────────
+  { key: 'coreia_experiencias_fallback', page: 'Coreia do Sul (experiências)', label: 'Foto padrão dos cards', type: 'card', fallback: 'https://images.unsplash.com/photo-1543489822-c49534f3271f?w=600' },
+
+  // ── COREIA DO SUL · JORNADAS ────────────────────────────
+  { key: 'coreia_jornadas_fallback', page: 'Coreia do Sul (jornadas)', label: 'Foto padrão dos cards', type: 'card', fallback: 'https://images.unsplash.com/photo-1519817914152-22d216bb9170?w=600' },
+
+  // ── COREIA DO SUL · INTERCÂMBIO ─────────────────────────
+  { key: 'coreia_intercambio_campus_fallback', page: 'Coreia do Sul (intercâmbio)', label: 'Foto padrão dos campi', type: 'card', fallback: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?q=80&w=600' },
+
+  // ── COREIA DO SUL · K-BEAUTY ────────────────────────────
+  { key: 'coreia_kbeauty_fallback', page: 'Coreia do Sul (K-Beauty)', label: 'Foto padrão dos cards', type: 'card', fallback: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?q=80&w=800' },
+
+  // ── EXPERIÊNCIAS · TEXTURA ──────────────────────────────
+  { key: 'experiencias_texture_banner', page: 'Experiências', label: 'Banner de textura', type: 'banner_single', fallback: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=600' },
+
+  // ── FALLBACKS GENÉRICOS (dados do banco sem imagem) ─────
+  // Usados pelas páginas públicas quando `mainImage`/`coverImage`/`avatarUrl`
+  // vêm vazios do Prisma — a página nunca renderiza `<img>` sem src.
+  { key: 'home_experiences_fallback', page: 'Home', label: 'Foto padrão das experiências em destaque', type: 'card', fallback: 'https://images.unsplash.com/photo-1543489822-c49534f3271f?q=80&w=800' },
+  { key: 'home_journey_fallback', page: 'Home', label: 'Foto padrão das jornadas em destaque', type: 'card', fallback: 'https://images.unsplash.com/photo-1538485399081-7191377e8241?q=80&w=800' },
+  { key: 'destinos_card_fallback', page: 'Destinos', label: 'Foto padrão dos cards de destino', type: 'card', fallback: 'https://images.unsplash.com/photo-1538669715515-5e3819766a9e?q=80&w=800' },
+  { key: 'destinos_detail_fallback', page: 'Destinos', label: 'Foto padrão do banner de destino', type: 'banner_single', fallback: 'https://images.unsplash.com/photo-1538669715515-5e3819766a9e?q=80&w=1600' },
+  { key: 'destinos_gallery_fallback', page: 'Destinos', label: 'Foto padrão da galeria do destino', type: 'image', fallback: 'https://images.unsplash.com/photo-1519817914152-22d216bb9170?q=80&w=800' },
+  { key: 'experiencias_card_fallback', page: 'Experiências', label: 'Foto padrão dos cards de experiência', type: 'card', fallback: 'https://images.unsplash.com/photo-1543489822-c49534f3271f?q=80&w=400' },
+  { key: 'journal_cover_fallback', page: 'Journal', label: 'Foto padrão da capa do artigo', type: 'card', fallback: 'https://images.unsplash.com/photo-1540959733332-eab4deceeaf7?q=80&w=800' },
+  { key: 'journal_post_3', page: 'Journal', label: 'Post 3 (fallback)', type: 'card', fallback: 'https://images.unsplash.com/photo-1553621042-f6e147245754?q=80&w=600' },
+  { key: 'journal_post_4', page: 'Journal', label: 'Post 4 (fallback)', type: 'card', fallback: 'https://images.unsplash.com/photo-1522020297063-e5dcf4a54c9c?q=80&w=600' },
+  { key: 'sobre_avatar_fallback', page: 'Sobre', label: 'Foto padrão do depoimento', type: 'image', fallback: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&h=200&fit=crop' },
+  { key: 'sobre_partner_logo_fallback', page: 'Sobre', label: 'Logo padrão de parceiro', type: 'logo', fallback: '/images/logo.png' },
 ];
 
 export function getMediaSlot(key: string): MediaSlot | undefined {

@@ -1,279 +1,433 @@
-'use client';
-
-import React, { useEffect, useState } from 'react';
-import Image from 'next/image';
+import type { Metadata } from 'next';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import { Calendar, CheckCircle2, XCircle, ArrowLeft, Send, PhoneCall } from 'lucide-react';
+import { notFound } from 'next/navigation';
+import { ArrowLeft, CheckCircle2, XCircle } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { db } from '@/lib/db';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { submitLeadAction } from '@/actions/crmActions';
-import { getPackageBySlug } from '@/actions/packageActions';
-import { useLanguage } from '@/contexts/LanguageContext';
+import SmartImage from '@/components/SmartImage';
+import Breadcrumbs from '@/components/seo/Breadcrumbs';
+import JsonLd from '@/components/seo/JsonLd';
+import { prisma } from '@/lib/prisma';
+import { getPublicSiteConfig } from '@/actions/siteConfigActions';
+import { getMediaMap } from '@/lib/cmsData';
+import { getServerI18n } from '@/lib/serverI18n';
+import { parseStringArray } from '@/lib/validate';
+import {
+  CONTACT,
+  DEFAULT_OG_IMAGE,
+  buildMetadata,
+  productJsonLd,
+  touristTripJsonLd,
+  truncateMeta,
+} from '@/lib/seo';
+import PackageRequestForm from './_components/PackageRequestForm';
 
-export default function PacoteDetailPage() {
-  const { slug } = useParams();
-  const { t, locale } = useLanguage();
-  const lp = (path: string) => (locale === 'pt' || path === '/' ? path : `/${locale}${path}`);
-  const [pack, setPack] = useState<any>(null);
-  const [destination, setDestination] = useState<any>(null);
-  
-  // Inquiry Form State
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [formSuccess, setFormSuccess] = useState(false);
-  const [loading, setLoading] = useState(false);
+/* ────────────────────────────────────────────────────────────────────────────
+ * Helpers de dados
+ * ────────────────────────────────────────────────────────────────────────── */
 
-  useEffect(() => {
-    async function loadPackage() {
-      if (!slug) return;
-      try {
-        const res = await getPackageBySlug(slug as string);
-        if (res.success && res.data) {
-          const p = res.data;
-          let gallery: string[] = [];
-          let itinerary: any[] = [];
-          let included: string[] = [];
-          let not_included: string[] = [];
-          try { gallery = JSON.parse(p.gallery || '[]'); } catch {}
-          try { itinerary = JSON.parse(p.itinerary || '[]'); } catch {}
-          try { included = JSON.parse(p.included || '[]'); } catch {}
-          try { not_included = JSON.parse(p.notIncluded || '[]'); } catch {}
+const PACKAGE_SELECT = {
+  id: true,
+  slug: true,
+  title: true,
+  destination: true,
+  price: true,
+  category: true,
+  status: true,
+  description: true,
+  gallery: true,
+  itinerary: true,
+  included: true,
+  notIncluded: true,
+  updatedAt: true,
+} as const;
 
-          setPack({
-            ...p,
-            gallery,
-            itinerary,
-            included,
-            not_included,
-            start_dates: [],
-            duration: '10 Dias'
-          });
-          if (p.destination) {
-            setDestination({ name: p.destination });
-          }
-          return;
-        }
-      } catch (err) {
-        console.error('Error fetching package from DB:', err);
+/**
+ * O roteiro é um JSON de OBJETOS (`{day, title, description}`) ou, em registros
+ * antigos, uma lista de strings. `parseStringArray` só serve para listas de
+ * texto, então o roteiro tem o seu próprio leitor — tolerante aos dois formatos.
+ */
+interface ItineraryDay {
+  day: string;
+  title: string;
+  description: string;
+}
+
+const readJsonArray = (raw: unknown): unknown[] => {
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw !== 'string' || !raw.trim()) return [];
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const parseItinerary = (raw: unknown): ItineraryDay[] =>
+  readJsonArray(raw)
+    .slice(0, 90)
+    .map((entry, index) => {
+      if (entry && typeof entry === 'object') {
+        const record = entry as Record<string, unknown>;
+        const day =
+          record.day === undefined || record.day === null || record.day === ''
+            ? String(index + 1)
+            : String(record.day);
+        return {
+          day,
+          title: String(record.title ?? record.name ?? '').trim(),
+          description: String(record.description ?? record.detail ?? '').trim(),
+        };
       }
+      return { day: String(index + 1), title: String(entry ?? '').trim(), description: '' };
+    })
+    .filter((entry) => entry.title.length > 0);
 
-      // Fallback to local db if not in PostgreSQL
-      const pkgs = db.get('packages') || [];
-      const found = pkgs.find((p: any) => p.slug === slug);
-      setPack(found || null);
+/** `Package.category` → chave canônica do rótulo (fallback: `standard`). */
+const PACKAGE_CATEGORY_KEYS: Record<string, string> = {
+  drip: 'pacotes.detail.category.drip',
+  standard: 'pacotes.detail.category.standard',
+  luxury: 'pacotes.detail.category.luxury',
+  experience: 'pacotes.detail.category.experience',
+};
 
-      if (found) {
-        const dests = db.get('destinations') || [];
-        const d = dests.find((dest: any) => dest.id === found.destination_id);
-        setDestination(d || null);
-      }
-    }
+/** Só dígitos para montar o link `wa.me`. */
+const toWhatsappDigits = (value: string | null | undefined, fallback: string): string =>
+  (value ?? '').replace(/[^\d]/g, '') || fallback;
 
-    loadPackage();
-  }, [slug]);
+/* ────────────────────────────────────────────────────────────────────────────
+ * Rotas estáticas
+ * ────────────────────────────────────────────────────────────────────────── */
 
-  const handleInquirySubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name || !email || !phone) return;
-    setLoading(true);
-    const res = await submitLeadAction({
-      name,
-      phone,
-      email,
-      interest: pack.title,
-      origin: t('Formulário Pacote: ') + pack.title
+export async function generateStaticParams(): Promise<{ slug: string }[]> {
+  try {
+    const packages = await prisma.package.findMany({
+      where: { status: 'active' },
+      orderBy: { id: 'asc' },
+      take: 100,
+      select: { slug: true },
     });
-    setLoading(false);
-    if (res.success) {
-      setFormSuccess(true);
-      setName('');
-      setEmail('');
-      setPhone('');
-      setTimeout(() => setFormSuccess(false), 5000);
-    }
-  };
+    return packages.map((pack) => ({ slug: pack.slug }));
+  } catch {
+    // Sem banco a rota ainda é renderizada sob demanda (sem 500 no build).
+    return [];
+  }
+}
 
-  if (!pack) {
-    return (
-      <div className="flex flex-col min-h-screen bg-background">
-        <Header />
-        <main className="flex-1 flex flex-col items-center justify-center p-12 text-center">
-          <h2 className="font-heading text-3xl font-light text-secondary">{t('Pacote não encontrado')}</h2>
-          <Link href={lp('/pacotes')} className="mt-4 text-primary hover:underline text-xs font-bold uppercase tracking-wider flex items-center gap-1">
-            <ArrowLeft className="h-4 w-4" /> {t('Voltar para Pacotes')}
-          </Link>
-        </main>
-        <Footer />
-      </div>
-    );
+/* ────────────────────────────────────────────────────────────────────────────
+ * SEO
+ * ────────────────────────────────────────────────────────────────────────── */
+
+type PageProps = { params: Promise<{ slug: string }> };
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const { t, locale, fill } = await getServerI18n();
+
+  let pack: { title: string; description: string | null; gallery: string } | null = null;
+  try {
+    pack = await prisma.package.findUnique({
+      where: { slug },
+      select: { title: true, description: true, gallery: true },
+    });
+  } catch {
+    pack = null;
   }
 
+  if (!pack) {
+    return buildMetadata({
+      title: truncateMeta(t('pacotes.pacote-nao-encontrado'), 60),
+      description: t('pacotes.detail.notFoundDescription'),
+      path: `/pacotes/${slug}`,
+      locale,
+      noindex: true,
+    });
+  }
+
+  const gallery = parseStringArray(pack.gallery, 24);
+  return buildMetadata({
+    title: truncateMeta(fill(t('pacotes.detail.seoTitle'), { title: pack.title }), 60),
+    description: truncateMeta(
+      fill(t('pacotes.detail.seoDescriptionTemplate'), { title: pack.title }),
+      160,
+    ),
+    path: `/pacotes/${slug}`,
+    locale,
+    image: gallery[0] ?? DEFAULT_OG_IMAGE,
+    imageAlt: fill(t('pacotes.detail.galleryAlt'), { title: pack.title }),
+  });
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Página
+ * ────────────────────────────────────────────────────────────────────────── */
+
+export default async function PackageDetailPage({ params }: PageProps) {
+  const { slug } = await params;
+  const { t, locale, lp, fill, formatCurrency, formatNumber } = await getServerI18n();
+
+  const [pack, media, siteConfig] = await Promise.all([
+    prisma.package.findUnique({ where: { slug }, select: PACKAGE_SELECT }),
+    getMediaMap().catch(() => ({}) as Record<string, string>),
+    getPublicSiteConfig().catch(() => null),
+  ]);
+
+  if (!pack || pack.status !== 'active') notFound();
+
+  const gallery = parseStringArray(pack.gallery, 24);
+  const itinerary = parseItinerary(pack.itinerary);
+  const included = parseStringArray(pack.included, 40);
+  const notIncluded = parseStringArray(pack.notIncluded, 40);
+
+  const durationDays = itinerary.length;
+  const categoryKey = PACKAGE_CATEGORY_KEYS[pack.category] ?? PACKAGE_CATEGORY_KEYS.standard!;
+  const cover = gallery[0] ?? media.pacotes_jornada_army ?? DEFAULT_OG_IMAGE;
+  const priceLabel = formatCurrency(pack.price, 'BRL', { maximumFractionDigits: 0 });
+
+  const whatsappDigits = toWhatsappDigits(siteConfig?.contact.whatsapp, CONTACT.whatsapp);
+  const whatsappUrl = `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(
+    t('pacotes.detail.whatsappMessagePrefix'),
+  )}${encodeURIComponent(pack.title)}`;
+
+  const productLd = productJsonLd({
+    name: pack.title,
+    description: pack.description ?? pack.title,
+    path: `/pacotes/${pack.slug}`,
+    locale,
+    image: gallery.length ? gallery : cover,
+    price: pack.price,
+    priceCurrency: 'BRL',
+    category: t(categoryKey),
+  });
+
+  const tripLd = touristTripJsonLd({
+    name: pack.title,
+    description: pack.description ?? pack.title,
+    path: `/pacotes/${pack.slug}`,
+    locale,
+    image: gallery.length ? gallery : cover,
+    durationDays: durationDays > 0 ? durationDays : null,
+    price: pack.price,
+    priceCurrency: 'BRL',
+    itinerary: itinerary.slice(0, 20).map((day) => ({
+      name: `${t('pacotes.dia')} ${day.day} — ${day.title}`,
+    })),
+  });
+
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen bg-background text-foreground">
+      <JsonLd id="pacote-product-jsonld" data={productLd} />
+      <JsonLd id="pacote-trip-jsonld" data={tripLd} />
+
       <Header />
 
       <main className="flex-1 w-full py-12 px-4 md:px-8 max-w-7xl mx-auto">
-        <Link href={lp('/pacotes')} className="text-xs uppercase font-bold text-muted-foreground hover:text-primary tracking-wider flex items-center gap-1.5 mb-8">
-          <ArrowLeft className="h-4 w-4" /> {t('Voltar para todos os pacotes')}
+        <Breadcrumbs
+          locale={locale}
+          items={[
+            { name: t('pacotes.list.breadcrumb'), path: '/pacotes' },
+            { name: truncateMeta(pack.title, 60), path: `/pacotes/${pack.slug}` },
+          ]}
+          className="mb-8"
+        />
+
+        <Link
+          href={lp('/pacotes')}
+          className="text-xs uppercase font-bold text-muted-foreground hover:text-primary tracking-wider flex items-center gap-1.5 mb-8 w-fit"
+        >
+          <ArrowLeft aria-hidden className="h-4 w-4" /> {t('pacotes.detail.backToAllPackages')}
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-          {/* Main Content Area */}
+          {/* ── Conteúdo principal ─────────────────────────────────────────── */}
           <div className="lg:col-span-2 flex flex-col gap-8">
             <div>
               <span className="text-xs font-bold uppercase tracking-widest text-primary">
-                {destination ? destination.name : t('Viagem Exclusiva')}
+                {pack.destination ?? t('pacotes.viagem-exclusiva')}
               </span>
-              <h1 className="font-heading text-3xl sm:text-5xl font-light text-secondary mt-2 leading-tight uppercase">
+              <h1 className="font-heading text-3xl sm:text-5xl font-light text-secondary mt-2 leading-tight">
                 {pack.title}
               </h1>
-              <p className="text-sm text-muted-foreground font-light mt-4 leading-relaxed">
-                {pack.description}
-              </p>
+              {pack.description ? (
+                <p className="text-sm text-muted-foreground font-light mt-4 leading-relaxed">
+                  {pack.description}
+                </p>
+              ) : null}
             </div>
 
-            {/* Gallery Images */}
-            {pack.gallery && pack.gallery.length > 0 && (
-              <div className="relative aspect-[16/9] w-full rounded-3xl overflow-hidden border border-border">
-                <Image src={pack.gallery[0]} alt={pack.title} fill unoptimized className="object-cover" />
-              </div>
-            )}
-
-            {/* Itinerary */}
-            {pack.itinerary && pack.itinerary.length > 0 && (
-              <div className="mt-4">
-                <h3 className="font-heading text-2xl font-light text-secondary uppercase tracking-wider border-b border-border pb-4 mb-6">
-                  {t('Roteiro Dia a Dia')}
-                </h3>
-                <div className="flex flex-col gap-6 pl-4 border-l border-primary/20 relative">
-                  {pack.itinerary.map((day: any) => (
-                    <div key={day.day} className="relative flex flex-col gap-1 pb-4">
-                      {/* Node point */}
-                      <span className="absolute -left-[21px] top-0 h-2.5 w-2.5 rounded-full bg-primary ring-4 ring-background" />
-                      <span className="text-[10px] font-bold text-primary uppercase tracking-wider">{t('Dia')} {day.day}</span>
-                      <h4 className="font-heading text-lg font-bold text-secondary leading-tight mt-0.5">{day.title}</h4>
-                      <p className="text-xs text-muted-foreground font-light leading-relaxed mt-1">{day.description}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Included & Not Included Lists */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-border pt-8 mt-4">
-              <div className="flex flex-col gap-3">
-                <h4 className="text-xs font-bold text-secondary uppercase tracking-widest flex items-center gap-1.5">
-                  <CheckCircle2 className="h-4.5 w-4.5 text-green-600" /> {t('O que está incluso')}
-                </h4>
-                <ul className="flex flex-col gap-2 text-xs text-muted-foreground">
-                  {pack.included && pack.included.map((item: string, idx: number) => (
-                    <li key={idx} className="flex items-start gap-1.5 font-light">
-                      <span className="text-green-500 font-bold mr-1">✓</span> {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="flex flex-col gap-3">
-                <h4 className="text-xs font-bold text-secondary uppercase tracking-widest flex items-center gap-1.5">
-                  <XCircle className="h-4.5 w-4.5 text-red-500" /> {t('O que não está incluso')}
-                </h4>
-                <ul className="flex flex-col gap-2 text-xs text-muted-foreground">
-                  {pack.not_included && pack.not_included.map((item: string, idx: number) => (
-                    <li key={idx} className="flex items-start gap-1.5 font-light">
-                      <span className="text-red-500 font-bold mr-1">✗</span> {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+            <div className="relative aspect-[16/9] w-full rounded-3xl overflow-hidden border border-border">
+              <SmartImage
+                src={cover}
+                alt={fill(t('pacotes.detail.galleryAlt'), { title: pack.title })}
+                fill
+                priority
+                quality={90}
+                sizes="(min-width: 1024px) 66vw, 100vw"
+                className="object-cover"
+                placeholderLabel={pack.title}
+              />
             </div>
+
+            {gallery.length > 1 ? (
+              <ul className="grid grid-cols-3 gap-3">
+                {gallery.slice(1, 7).map((src) => (
+                  <li key={src} className="relative aspect-[4/3] rounded-2xl overflow-hidden border border-border">
+                    <SmartImage
+                      src={src}
+                      alt={fill(t('pacotes.detail.galleryAlt'), { title: pack.title })}
+                      fill
+                      sizes="(min-width: 1024px) 21vw, 33vw"
+                      quality={75}
+                      className="object-cover"
+                      placeholderLabel={pack.title}
+                    />
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+
+            {/* Roteiro */}
+            {itinerary.length > 0 ? (
+              <section aria-labelledby="pacote-itinerary-title" className="mt-4">
+                <h2
+                  id="pacote-itinerary-title"
+                  className="font-heading text-2xl font-light text-secondary uppercase tracking-wider border-b border-border pb-4 mb-6"
+                >
+                  {t('pacotes.roteiro-dia-a-dia')}
+                </h2>
+                <ol className="flex flex-col gap-6 pl-4 border-l border-primary/20 relative">
+                  {itinerary.map((day) => (
+                    <li key={`${day.day}-${day.title}`} className="relative flex flex-col gap-1 pb-4">
+                      <span
+                        aria-hidden
+                        className="absolute -left-[21px] top-0 h-2.5 w-2.5 rounded-full bg-primary ring-4 ring-background"
+                      />
+                      <span className="text-[10px] font-bold text-primary uppercase tracking-wider">
+                        {fill(t('pacotes.detail.itineraryDayLabel'), { n: day.day })}
+                      </span>
+                      <h3 className="font-heading text-lg font-bold text-secondary leading-tight mt-0.5">
+                        {day.title}
+                      </h3>
+                      {day.description ? (
+                        <p className="text-xs text-muted-foreground font-light leading-relaxed mt-1">
+                          {day.description}
+                        </p>
+                      ) : null}
+                    </li>
+                  ))}
+                </ol>
+              </section>
+            ) : null}
+
+            {/*Incluso / não incluso */}
+            {included.length > 0 || notIncluded.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-border pt-8 mt-4">
+                {included.length > 0 ? (
+                  <section aria-labelledby="pacote-included-title">
+                    <h2
+                      id="pacote-included-title"
+                      className="text-xs font-bold text-secondary uppercase tracking-widest flex items-center gap-1.5"
+                    >
+                      <CheckCircle2 aria-hidden className="h-4.5 w-4.5 text-green-600" />
+                      {t('pacotes.detail.alt-x')}
+                    </h2>
+                    <ul className="flex flex-col gap-2 text-xs text-muted-foreground mt-3">
+                      {included.map((item) => (
+                        <li key={item} className="flex items-start gap-1.5 font-light">
+                          <span aria-hidden className="text-green-500 font-bold mr-1">
+                            ✓
+                          </span>
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                ) : null}
+
+                {notIncluded.length > 0 ? (
+                  <section aria-labelledby="pacote-notincluded-title">
+                    <h2
+                      id="pacote-notincluded-title"
+                      className="text-xs font-bold text-secondary uppercase tracking-widest flex items-center gap-1.5"
+                    >
+                      <XCircle aria-hidden className="h-4.5 w-4.5 text-red-500" />
+                      {t('pacotes.o-que-nao-esta-incluso')}
+                    </h2>
+                    <ul className="flex flex-col gap-2 text-xs text-muted-foreground mt-3">
+                      {notIncluded.map((item) => (
+                        <li key={item} className="flex items-start gap-1.5 font-light">
+                          <span aria-hidden className="text-red-500 font-bold mr-1">
+                            ✗
+                          </span>
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                ) : null}
+              </div>
+            ) : null}
           </div>
 
-          {/* Booking Inquiry Sidebar */}
-          <div className="flex flex-col gap-6">
-            <div className="border border-border rounded-3xl p-8 bg-card shadow-sm flex flex-col gap-6 h-fit">
+          {/* ── Sidebar de investimento + formulário ──────────────────────── */}
+          <aside className="flex flex-col gap-6">
+            <div className="border border-border rounded-3xl p-8 bg-card shadow-sm flex flex-col gap-6 h-fit lg:sticky lg:top-28">
               <div>
-                <span className="text-[10px] uppercase font-bold text-primary tracking-widest">{t('Investimento do Viajante')}</span>
+                <span className="text-[10px] uppercase font-bold text-primary tracking-widest">
+                  {t('pacotes.detail.investment')}
+                </span>
                 <div className="flex items-baseline gap-1 mt-1">
-                  <span className="font-heading text-3xl font-bold text-primary">US$ {pack.price.toLocaleString()}</span>
-                  <span className="text-xs text-muted-foreground">{t('/ por pessoa')}</span>
+                  <span className="font-heading text-3xl font-bold text-primary">{priceLabel}</span>
+                  <span className="text-xs text-muted-foreground">{t('pacotes.por-pessoa')}</span>
                 </div>
               </div>
 
-              <div className="h-px bg-border" />
+              <div className="h-px bg-border" aria-hidden />
 
-              <div className="flex flex-col gap-2.5 text-xs text-muted-foreground">
-                <div className="flex justify-between">
-                  <span>{t('Duração:')}</span>
-                  <span className="font-bold text-secondary">{pack.duration || t('10 Dias')}</span>
+              <dl className="flex flex-col gap-2.5 text-xs text-muted-foreground">
+                <div className="flex justify-between gap-3">
+                  <dt>{t('pacotes.duracao')}</dt>
+                  <dd className="font-bold text-secondary text-right">
+                    {durationDays > 0
+                      ? fill(t('pacotes.detail.daysTemplate'), { n: formatNumber(durationDays) })
+                      : t('pacotes.detail.daysUnknown')}
+                  </dd>
                 </div>
-                <div className="flex justify-between">
-                  <span>{t('Próximas saídas:')}</span>
-                  <span className="font-bold text-secondary">
-                    {pack.start_dates?.map((d: string) => new Date(d).toLocaleDateString('pt-BR')).join(' / ') || t('A definir')}
-                  </span>
+                <div className="flex justify-between gap-3">
+                  <dt>{t('pacotes.detail.categoryLabel')}</dt>
+                  <dd className="font-bold text-secondary text-right">{t(categoryKey)}</dd>
                 </div>
-              </div>
+              </dl>
 
-              {/* Inquiry form */}
               <div className="mt-2">
-                <h4 className="text-[10px] uppercase font-bold text-secondary tracking-widest mb-3">{t('Solicitar Orçamento')}</h4>
-                
-                {formSuccess ? (
-                  <div className="bg-green-50 border border-green-200 text-green-800 text-xs rounded-xl p-3.5 text-center font-bold">
-                    {t('✓ Solicitação recebida! Entraremos em contato em breve.')}
-                  </div>
-                ) : (
-                  <form onSubmit={handleInquirySubmit} className="flex flex-col gap-3 text-xs">
-                    <Input
-                      required
-                      placeholder={t('Nome Completo')}
-                      value={name}
-                      onChange={e => setName(e.target.value)}
-                      className="rounded-xl h-10 border-border"
-                    />
-                    <Input
-                      required
-                      type="email"
-                      placeholder={t('E-mail de contato')}
-                      value={email}
-                      onChange={e => setEmail(e.target.value)}
-                      className="rounded-xl h-10 border-border"
-                    />
-                    <Input
-                      required
-                      placeholder={t('Telefone (WhatsApp)')}
-                      value={phone}
-                      onChange={e => setPhone(e.target.value)}
-                      className="rounded-xl h-10 border-border"
-                    />
-                    <Button type="submit" disabled={loading} className="w-full bg-primary hover:bg-accent-hover text-white rounded-xl py-3 font-bold uppercase tracking-wider text-[10px]">
-                      {loading ? t('Enviando...') : t('Enviar Solicitação')}
-                    </Button>
-                  </form>
-                )}
+                <h2 className="text-[10px] uppercase font-bold text-secondary tracking-widest mb-3">
+                  {t('pacotes.detail.requestQuote')}
+                </h2>
+                <PackageRequestForm
+                  packTitle={pack.title}
+                  packSlug={pack.slug}
+                  price={pack.price}
+                  currency="BRL"
+                  priceLabel={priceLabel}
+                  whatsappUrl={whatsappUrl}
+                />
               </div>
 
               <div className="flex items-center justify-center gap-1.5 text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-2 border-t border-border pt-4">
-                {t('Ou converse agora pelo')}
+                {t('pacotes.detail.orChatNowVia')}
               </div>
 
               <a
-                href={`https://wa.me/5541987094799?text=${encodeURIComponent(t('Olá, gostaria de saber mais sobre o pacote '))}${encodeURIComponent(pack.title)}`}
+                href={whatsappUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="w-full flex items-center justify-center gap-2 bg-[#25d366] hover:bg-[#20ba5a] text-white text-xs font-bold py-3.5 rounded-xl uppercase tracking-wider shadow-sm"
               >
-                <PhoneCall className="h-4 w-4" />
-                {t('WhatsApp Directo')}
+                {t('pacotes.detail.directWhatsApp')}
               </a>
             </div>
-          </div>
+          </aside>
         </div>
       </main>
 

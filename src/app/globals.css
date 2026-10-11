@@ -47,7 +47,13 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  /* Tokens de marca usados por manifest.ts / viewport themeColor.
+     Mantêm CSS, manifest e metadata em uma fonte única. */
+  --color-brand-background: var(--background-color);
+  --color-brand-accent: var(--accent-color);
+  --color-brand-primary: var(--primary-color);
 }
+
 
 :root {
   /* Dynamic Design Tokens from CMS */
@@ -131,7 +137,14 @@
   html {
     @apply font-sans;
   }
+  /* Foco visível para navegação por teclado (botões/links de SEO inclusos).
+     Só aparece via :focus-visible, então não muda o visual do mouse. */
+  :focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+  }
 }
+
 /* Admin Dashboard Specific Theme */
 .admin-dashboard {
   --admin-bg: #110508;
@@ -161,3 +174,12 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Placeholder neutro do <SmartImage /> quando não há src nem fallbackSrc.
+   Herda o border-radius do pai para não "vazar" o retângulo. */
+[data-smart-image-placeholder] {
+  background-color: var(--card-color);
+  background-repeat: no-repeat;
+  min-height: 120px;
+}
+

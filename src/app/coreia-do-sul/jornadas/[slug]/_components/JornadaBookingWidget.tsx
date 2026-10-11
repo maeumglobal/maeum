@@ -1,159 +1,295 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Calendar, Users, X, Loader2, CheckCircle2 } from 'lucide-react';
+import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { Calendar, CheckCircle2, Loader2, Users, X } from 'lucide-react';
 import { submitBookingInquiryAction } from '@/actions/tripPlanActions';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Departure {
   id: string;
-  start_date: string;
-  end_date: string;
-  total_spots: number;
-  available_spots: number;
+  startDate: string;
+  endDate: string;
+  totalSpots: number;
+  availableSpots: number;
   status: string;
   notes: string | null;
-}
-
-interface JourneyCategory {
-  name: string;
-  price: number;
-  description: string;
-  included: string[];
 }
 
 interface Props {
   journeyTitle: string;
   journeySlug: string;
   pricePerPerson: number;
-  categories: JourneyCategory[];
+  /** Moeda do catálogo (`Journey.priceCurrency`); default BRL. */
+  priceCurrency?: string | null;
   nextAvailableDeparture: Departure | null;
 }
+
+/** Máscara de telefone brasileiro: é um formato, não copy traduzível. */
+const PHONE_PLACEHOLDER = '+55 (11) 9 0000-0000';
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i;
+const MIN_PARTICIPANTS = 1;
+const MAX_PARTICIPANTS = 20;
+
+/** Substitui `{chave}` em um template do dicionário por valores reais. */
+const fill = (template: string, vars: Record<string, string>): string =>
+  template.replace(/\{(\w+)\}/g, (whole, key: string) => vars[key] ?? whole);
 
 export default function JornadaBookingWidget({
   journeyTitle,
   journeySlug,
   pricePerPerson,
-  categories,
+  priceCurrency,
   nextAvailableDeparture,
 }: Props) {
-  const hasCategories = categories.length > 0;
-  const [selectedCategory, setSelectedCategory] = useState(categories[0]?.name ?? '');
+  const { t, formatDate, formatNumber, formatCurrency } = useLanguage();
+
   const [showModal, setShowModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
+  const [participants, setParticipants] = useState(MIN_PARTICIPANTS);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [notes, setNotes] = useState('');
 
-  const displayPrice = () => {
-    if (hasCategories) {
-      const cat = categories.find((c) => c.name === selectedCategory);
-      return cat?.price ?? pricePerPerson;
-    }
-    return pricePerPerson;
-  };
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const firstFieldRef = useRef<HTMLInputElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const openButtonRef = useRef<HTMLButtonElement>(null);
 
-  const formatCurrency = (value: number) => value.toLocaleString('pt-BR');
+  const basePriceId = useId();
+  const nameId = useId();
+  const emailId = useId();
+  const phoneId = useId();
+  const notesId = useId();
+  const participantsId = useId();
 
-  const formatDate = (dateStr: string) =>
-    new Date(dateStr).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
+  const currency = priceCurrency || 'BRL';
+  const unitPrice = formatCurrency(pricePerPerson, currency);
+  const totalPrice = pricePerPerson * participants;
+  const totalFormatted = formatCurrency(totalPrice, currency);
+  const departureDate = nextAvailableDeparture
+    ? formatDate(nextAvailableDeparture.startDate, { day: 'numeric', month: 'long', year: 'numeric' })
+    : null;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
+  const closeModal = useCallback(() => {
+    setShowModal(false);
+    // Devolve o foco ao gatilho que abriu o diálogo.
+    window.requestAnimationFrame(() => openButtonRef.current?.focus());
+  }, []);
+
+  const openModal = useCallback(() => {
     setError('');
+    setShowModal(true);
+  }, []);
 
-    const result = await submitBookingInquiryAction({
-      name,
-      email,
-      phone,
-      type: 'jornada',
-      itemTitle: journeyTitle,
-      itemSlug: journeySlug,
-      date: nextAvailableDeparture?.start_date?.slice(0, 10) ?? undefined,
-      participants: 1,
-      totalPrice: displayPrice(),
-      categoryName: selectedCategory || undefined,
-      notes: notes || undefined,
-    });
+  /* Foco no primeiro campo + `Esc` fecha + trava o scroll do body. */
+  useEffect(() => {
+    if (!showModal) return;
 
-    setSubmitting(false);
-    if (result.success) {
-      setSuccess(true);
-    } else {
-      setError(result.error ?? 'Erro ao enviar. Tente novamente.');
+    firstFieldRef.current?.focus();
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setShowModal(false);
+        window.requestAnimationFrame(() => openButtonRef.current?.focus());
+        return;
+      }
+      if (event.key !== 'Tab') return;
+
+      /* Focus trap: mantém o Tab dentro do diálogo. */
+      const focusables = dialogRef.current?.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      if (!focusables || focusables.length === 0) return;
+      const first = focusables[0]!;
+      const last = focusables[focusables.length - 1]!;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [showModal]);
+
+  const validate = (): boolean => {
+    if (name.trim().length < 2) {
+      setError(t('detalhe.booking.invalidName'));
+      return false;
+    }
+    if (!EMAIL_PATTERN.test(email.trim())) {
+      setError(t('detalhe.booking.invalidEmail'));
+      return false;
+    }
+    if (phone.replace(/\D/g, '').length < 8) {
+      setError(t('detalhe.booking.invalidPhone'));
+      return false;
+    }
+    if (participants < MIN_PARTICIPANTS || participants > MAX_PARTICIPANTS) {
+      setError(t('detalhe.booking.invalidParticipants'));
+      return false;
+    }
+    return true;
+  };
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setError('');
+    if (!validate()) return;
+
+    setSubmitting(true);
+    try {
+      const result = await submitBookingInquiryAction({
+        name: name.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        type: 'jornada',
+        itemTitle: journeyTitle,
+        itemSlug: journeySlug,
+        date: nextAvailableDeparture?.startDate?.slice(0, 10) || undefined,
+        participants,
+        totalPrice,
+        notes: notes.trim() || undefined,
+      });
+
+      if (result.success) {
+        setSuccess(true);
+        setName('');
+        setEmail('');
+        setPhone('');
+        setNotes('');
+        setParticipants(MIN_PARTICIPANTS);
+      } else {
+        setError(result.error || t('detalhe.booking.genericError'));
+      }
+    } catch {
+      setError(t('detalhe.booking.genericError'));
+    } finally {
+      setSubmitting(false);
     }
   };
+
+  const requestLabel = t('detalhe.booking.requestBooking');
 
   return (
     <>
       {/* Sidebar card */}
       <div className="lg:sticky lg:top-28 border border-border rounded-3xl p-6 md:p-8 bg-card shadow-sm">
         <div className="flex items-baseline gap-1.5 mb-2">
-          <span className="font-heading text-3xl font-bold text-secondary">
-            R$ {formatCurrency(displayPrice())}
-          </span>
-          <span className="text-sm text-muted-foreground">/ pessoa</span>
+          <span className="font-heading text-3xl font-bold text-secondary">{unitPrice}</span>
+          <span className="text-sm text-muted-foreground">{t('detalhe.pessoa-x')}</span>
         </div>
 
-        {/* Category selector */}
-        {hasCategories && (
-          <div className="mb-6 mt-4">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2 block">
-              Categoria
-            </label>
-            <div className="flex gap-2">
-              {categories.map((cat) => (
-                <button
-                  key={cat.name}
-                  onClick={() => setSelectedCategory(cat.name)}
-                  className={`flex-1 text-xs font-bold py-2.5 px-3 rounded-xl border transition-all ${
-                    selectedCategory === cat.name
-                      ? 'bg-primary text-white border-primary'
-                      : 'bg-transparent text-secondary border-border hover:border-primary/50'
-                  }`}
-                >
-                  {cat.name}
-                </button>
-              ))}
+        <div className="space-y-5 mt-6">
+          {/* Quantidade de participantes */}
+          <div>
+            <span
+              id={participantsId}
+              className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2 block"
+            >
+              <span className="flex items-center gap-1.5">
+                <Users aria-hidden className="h-3.5 w-3.5" />
+                <span>{t('detalhe.participantes')}</span>
+              </span>
+            </span>
+            <div
+              role="group"
+              aria-labelledby={participantsId}
+              className="flex items-center justify-between border border-border rounded-xl px-4 h-10"
+            >
+              <button
+                type="button"
+                onClick={() =>
+                  setParticipants((value) => Math.max(MIN_PARTICIPANTS, value - 1))
+                }
+                disabled={participants <= MIN_PARTICIPANTS}
+                aria-label={t('detalhe.booking.decrease')}
+                className="text-secondary hover:text-primary transition-colors text-lg font-medium leading-none disabled:opacity-30"
+              >
+                &minus;
+              </button>
+              <span aria-live="polite" className="text-sm font-semibold text-secondary">
+                {formatNumber(participants)}
+              </span>
+              <button
+                type="button"
+                onClick={() =>
+                  setParticipants((value) => Math.min(MAX_PARTICIPANTS, value + 1))
+                }
+                disabled={participants >= MAX_PARTICIPANTS}
+                aria-label={t('detalhe.booking.increase')}
+                className="text-secondary hover:text-primary transition-colors text-lg font-medium leading-none disabled:opacity-30"
+              >
+                +
+              </button>
             </div>
           </div>
-        )}
 
-        <div className="space-y-5 mt-6">
-          {/* Next departure */}
-          {nextAvailableDeparture && (
-            <div className="bg-muted/50 rounded-xl p-4">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
-                Próxima saída disponível
-              </div>
-              <div className="flex items-center gap-2 text-sm text-secondary font-medium">
-                <Calendar className="h-4 w-4 text-accent" />
-                <span>{formatDate(nextAvailableDeparture.start_date)}</span>
-              </div>
-              <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                <Users className="h-3.5 w-3.5 text-accent" />
-                <span>{nextAvailableDeparture.available_spots} vagas restantes</span>
-              </div>
+          {/* Próxima saída */}
+          <div className="bg-muted/50 rounded-xl p-4">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
+              {nextAvailableDeparture
+                ? t('detalhe.proxima-saida-disponivel')
+                : t('coreia.jornadas.departuresEmptyTitle')}
             </div>
-          )}
+            {nextAvailableDeparture ? (
+              <>
+                <div className="flex items-center gap-2 text-sm text-secondary font-medium">
+                  <Calendar aria-hidden className="h-4 w-4 shrink-0 text-accent" />
+                  <span>{departureDate}</span>
+                </div>
+                <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                  <Users aria-hidden className="h-3.5 w-3.5 shrink-0 text-accent" />
+                  <span>
+                    {formatNumber(nextAvailableDeparture.availableSpots)}{' '}
+                    {t('detalhe.vagas-restantes')}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                {t('coreia.jornadas.departuresEmptyDescription')}
+              </p>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between text-sm border-t border-border pt-4">
+            <label htmlFor={basePriceId} className="text-muted-foreground">
+              {t('detalhe.booking.total')}
+            </label>
+            <span id={basePriceId} className="font-heading font-bold text-lg text-secondary">
+              {totalFormatted}
+            </span>
+          </div>
 
           <button
-            onClick={() => setShowModal(true)}
+            ref={openButtonRef}
+            type="button"
+            onClick={openModal}
             className="w-full bg-primary hover:bg-accent-hover text-white text-sm font-bold py-3.5 rounded-xl transition-all shadow-sm hover:shadow-md active:scale-[0.98]"
           >
-            SOLICITAR RESERVA
+            {t('detalhe.solicitar-reserva')}
           </button>
 
           <div className="text-center space-y-1.5">
             <p className="text-[10px] text-muted-foreground leading-relaxed">
-              Aceitamos Pix, boleto em até 48x e cartão em até 24x sem juros
+              {t('detalhe.package.paymentTerms')}
             </p>
             <p className="text-[10px] text-muted-foreground leading-relaxed">
-              Entre 25 e 48 vezes possuem acréscimo simples de 5%
+              {t('detalhe.package.installmentSurcharge')}
             </p>
           </div>
         </div>
@@ -163,102 +299,220 @@ export default function JornadaBookingWidget({
       <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-border px-4 py-3 md:hidden shadow-lg">
         <div className="flex items-center justify-between max-w-lg mx-auto">
           <div>
-            <span className="font-heading text-xl font-bold text-secondary">
-              R$ {formatCurrency(displayPrice())}
-            </span>
-            <span className="text-xs text-muted-foreground ml-1">/ pessoa</span>
+            <span className="font-heading text-xl font-bold text-secondary">{unitPrice}</span>
+            <span className="text-xs text-muted-foreground ml-1">{t('detalhe.pessoa-x')}</span>
           </div>
           <button
-            onClick={() => setShowModal(true)}
+            type="button"
+            onClick={openModal}
             className="bg-primary hover:bg-accent-hover text-white text-sm font-bold px-6 py-3 rounded-xl transition-all shadow-sm active:scale-[0.98]"
           >
-            SOLICITAR RESERVA
+            {t('detalhe.solicitar-reserva')}
           </button>
         </div>
       </div>
 
       {/* MODAL */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-white rounded-3xl p-6 md:p-8 shadow-2xl">
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setShowModal(false);
+          }}
+        >
+          <div
+            ref={dialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={`${basePriceId}-title`}
+            className="w-full max-w-md bg-white rounded-3xl p-6 md:p-8 shadow-2xl max-h-[90dvh] overflow-y-auto"
+          >
             {success ? (
-              <div className="flex flex-col items-center text-center py-6">
-                <CheckCircle2 className="h-14 w-14 text-green-500 mb-4" />
-                <h3 className="font-heading text-2xl font-light text-secondary mb-2">Solicitação Enviada!</h3>
+              <div className="flex flex-col items-center text-center py-6" aria-live="polite">
+                <CheckCircle2 aria-hidden className="h-14 w-14 text-green-500 mb-4" />
+                <h3
+                  id={`${basePriceId}-title`}
+                  className="font-heading text-2xl font-light text-secondary mb-2"
+                >
+                  {t('detalhe.booking.successTitle')}
+                </h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Recebemos sua solicitação para <strong>{journeyTitle}</strong>. Nossa equipe entrará em contato em até 24h. 🌸
+                  {fill(t('detalhe.booking.successBody'), { item: journeyTitle })}
                 </p>
                 <button
-                  onClick={() => { setShowModal(false); setSuccess(false); }}
+                  ref={closeButtonRef}
+                  type="button"
+                  onClick={() => {
+                    setSuccess(false);
+                    closeModal();
+                  }}
                   className="mt-6 px-8 py-3 bg-primary text-white text-sm font-bold rounded-xl hover:bg-accent-hover transition-all"
                 >
-                  Fechar
+                  {t('detalhe.booking.close')}
                 </button>
               </div>
             ) : (
               <>
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex items-start justify-between gap-4 mb-6">
                   <div>
-                    <h3 className="font-heading text-xl font-light text-secondary">Solicitar Reserva</h3>
-                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{journeyTitle}</p>
+                    <h3
+                      id={`${basePriceId}-title`}
+                      className="font-heading text-xl font-light text-secondary"
+                    >
+                      {requestLabel}
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                      {journeyTitle}
+                    </p>
                   </div>
                   <button
-                    onClick={() => setShowModal(false)}
+                    type="button"
+                    onClick={closeModal}
+                    aria-label={t('detalhe.booking.close')}
                     className="p-2 rounded-full hover:bg-muted transition-colors text-muted-foreground hover:text-secondary"
                   >
-                    <X className="h-5 w-5" />
+                    <X aria-hidden className="h-5 w-5" />
                   </button>
                 </div>
 
-                {/* Summary */}
-                <div className="bg-muted/40 rounded-2xl p-4 mb-5 text-sm flex items-center justify-between">
+                {/* Resumo */}
+                <div className="bg-muted/40 rounded-2xl p-4 mb-5 text-sm flex items-center justify-between gap-3">
                   <span className="text-muted-foreground">
-                    {selectedCategory || 'Jornada'} · {nextAvailableDeparture ? formatDate(nextAvailableDeparture.start_date) : 'Data a combinar'}
+                    {t('detalhe.booking.journeyLabel')} ·{' '}
+                    {departureDate ?? t('detalhe.booking.dateTbd')}
                   </span>
-                  <span className="font-heading font-bold text-secondary">R$ {formatCurrency(displayPrice())}</span>
+                  <span className="font-heading font-bold text-secondary shrink-0">
+                    {totalFormatted}
+                  </span>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Resultado do envio, anunciado para leitores de tela */}
+                <p aria-live="assertive" role="status" className="sr-only">
+                  {error}
+                </p>
+
+                <form onSubmit={handleSubmit} noValidate className="space-y-4">
                   <div>
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5 block">Nome completo *</label>
+                    <span
+                      id={`${participantsId}-modal-label`}
+                      className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5 block"
+                    >
+                      {t('detalhe.participantes')}
+                    </span>
+                    <div
+                      role="group"
+                      aria-labelledby={`${participantsId}-modal-label`}
+                      className="flex items-center justify-between border border-border rounded-xl px-4 h-10"
+                    >
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setParticipants((value) => Math.max(MIN_PARTICIPANTS, value - 1))
+                        }
+                        disabled={participants <= MIN_PARTICIPANTS || submitting}
+                        aria-label={t('detalhe.booking.decrease')}
+                        className="text-secondary hover:text-primary transition-colors text-lg font-medium leading-none disabled:opacity-30"
+                      >
+                        &minus;
+                      </button>
+                      <span className="text-sm font-semibold text-secondary">
+                        {formatNumber(participants)}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setParticipants((value) => Math.min(MAX_PARTICIPANTS, value + 1))
+                        }
+                        disabled={participants >= MAX_PARTICIPANTS || submitting}
+                        aria-label={t('detalhe.booking.increase')}
+                        className="text-secondary hover:text-primary transition-colors text-lg font-medium leading-none disabled:opacity-30"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor={nameId}
+                      className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5 block"
+                    >
+                      {t('detalhe.booking.fullName')}
+                    </label>
                     <input
+                      ref={firstFieldRef}
+                      id={nameId}
+                      name="name"
                       type="text"
+                      autoComplete="name"
                       required
+                      maxLength={120}
                       value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="Seu nome"
+                      onChange={(event) => setName(event.target.value)}
+                      placeholder={t('detalhe.booking.namePlaceholder')}
                       className="w-full h-10 px-3 rounded-xl border border-border bg-transparent text-sm text-secondary placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary transition-colors"
                     />
                   </div>
+
                   <div>
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5 block">E-mail *</label>
+                    <label
+                      htmlFor={emailId}
+                      className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5 block"
+                    >
+                      {t('detalhe.booking.email')}
+                    </label>
                     <input
+                      id={emailId}
+                      name="email"
                       type="email"
+                      autoComplete="email"
+                      inputMode="email"
                       required
+                      maxLength={180}
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(event) => setEmail(event.target.value)}
                       placeholder="seu@email.com"
                       className="w-full h-10 px-3 rounded-xl border border-border bg-transparent text-sm text-secondary placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary transition-colors"
                     />
                   </div>
+
                   <div>
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5 block">WhatsApp *</label>
+                    <label
+                      htmlFor={phoneId}
+                      className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5 block"
+                    >
+                      {t('detalhe.booking.whatsapp')}
+                    </label>
                     <input
+                      id={phoneId}
+                      name="phone"
                       type="tel"
+                      autoComplete="tel"
+                      inputMode="tel"
                       required
+                      maxLength={40}
                       value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="+55 (11) 9 0000-0000"
+                      onChange={(event) => setPhone(event.target.value)}
+                      placeholder={PHONE_PLACEHOLDER}
                       className="w-full h-10 px-3 rounded-xl border border-border bg-transparent text-sm text-secondary placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary transition-colors"
                     />
                   </div>
+
                   <div>
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5 block">Observações</label>
+                    <label
+                      htmlFor={notesId}
+                      className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5 block"
+                    >
+                      {t('detalhe.observacoes')}
+                    </label>
                     <textarea
+                      id={notesId}
+                      name="notes"
                       value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
+                      onChange={(event) => setNotes(event.target.value)}
                       rows={2}
-                      placeholder="Alguma dúvida ou pedido especial?"
+                      maxLength={2000}
+                      placeholder={t('detalhe.booking.notesPlaceholder')}
                       className="w-full px-3 py-2.5 rounded-xl border border-border bg-transparent text-sm text-secondary placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary transition-colors resize-none"
                     />
                   </div>
@@ -272,7 +526,14 @@ export default function JornadaBookingWidget({
                     disabled={submitting}
                     className="w-full bg-primary hover:bg-accent-hover disabled:opacity-60 text-white text-sm font-bold py-3.5 rounded-xl transition-all shadow-sm hover:shadow-md active:scale-[0.98] flex items-center justify-center gap-2"
                   >
-                    {submitting ? <><Loader2 className="h-4 w-4 animate-spin" /> Enviando...</> : 'Confirmar Solicitação'}
+                    {submitting ? (
+                      <>
+                        <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
+                        {t('detalhe.enviando')}
+                      </>
+                    ) : (
+                      t('detalhe.booking.confirm')
+                    )}
                   </button>
                 </form>
               </>

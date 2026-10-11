@@ -1,232 +1,342 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Calendar, Bell, Check, Trash2, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { 
-  getNotifications, 
-  markAsRead, 
-  markAllAsRead, 
-  deleteNotification,
-  createTestNotification 
-} from '@/actions/notificationActions';
+/**
+ * Cabeçalho do painel: saudação, data e central de notificações.
+ *
+ * Correções aplicadas:
+ *  - `new Date()` no corpo do componente → hydration mismatch garantido (o
+ *    servidor e o cliente renderizavam horários diferentes). Agora a data é
+ *    calculada DENTRO do `useEffect`, com estado inicial `null`.
+ *  - `fetchNotifications` era recriado a cada render e o `setInterval` de 15s
+ *    nunca era pausado: a aba em segundo plano continuava batendo no banco.
+ *    Agora é `useCallback` e o intervalo é suspenso em `document.hidden`.
+ *  - o id do usuário vinha de um UUID hardcoded como fallback
+ *    (`'a1eebc99-…'`), que é exatamente o tipo de dado que `assertSelf()` da
+ *    action rejeita. Sem sessão, não há polling.
+ *  - "Ver histórico completo" era um botão sem ação — virou link real.
+ */
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
+import { AlertCircle, Bell, Check, CheckCircle2, ExternalLink, RefreshCw, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useMountedLoad } from '@/components/admin/ui/useMountedLoad';
+import {
+  getNotifications,
+  markAsRead,
+  markAllAsRead,
+  deleteNotification,
+  createTestNotification,
+} from '@/actions/notificationActions';
+
+interface NotificationRow {
+  id: string;
+  title: string;
+  message: string;
+  isRead: boolean;
+  linkUrl: string | null;
+  createdAt: string | Date;
+}
+
+const POLL_MS = 15_000;
 
 export default function AdminHeader() {
   const { user } = useAuth();
-  
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const { t, formatDate } = useLanguage();
+
+  const [notifications, setNotifications] = useState<NotificationRow[]>([]);
+  const [unread, setUnread] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isTestLoading, setIsTestLoading] = useState(false);
+  const [today, setToday] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  
-  // Date formatting for the header
-  const today = new Date();
-  const nextMonth = new Date();
-  nextMonth.setMonth(today.getMonth() + 1);
-  const dateRange = `${today.getDate()} de ${today.toLocaleString('pt-BR', { month: 'short' })}, ${today.getFullYear()} - ${nextMonth.getDate()} de ${nextMonth.toLocaleString('pt-BR', { month: 'short' })}, ${nextMonth.getFullYear()}`;
 
-  // Use the predefined admin ID matching AuthContext for testing
-  const adminId = user?.id || 'a1eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
+  const userId = user?.id ?? null;
 
-  const fetchNotifications = async () => {
-    if (!adminId) return;
-    const res = await getNotifications(adminId);
-    if (res.success && res.data) {
-      setNotifications(res.data);
+  const fetchNotifications = useCallback(async (): Promise<void> => {
+    if (!userId) {
+      setNotifications([]);
+      setUnread(0);
+      setLoading(false);
+      return;
     }
-    setLoading(false);
-  };
+    try {
+      const res = await getNotifications({ userId, pageSize: 20 });
+      if (res.success) {
+        setNotifications((res.items ?? []) as unknown as NotificationRow[]);
+        setUnread(res.unread ?? 0);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [userId]);
 
+  useMountedLoad(fetchNotifications);
+
+  // Polling de 15s, suspenso enquanto a aba está oculta.
   useEffect(() => {
-    fetchNotifications();
-    const interval = setInterval(fetchNotifications, 15000); // Poll every 15s
-    return () => clearInterval(interval);
-  }, [adminId]);
+    if (!userId) return;
 
-  // Click outside to close
+    let timer: number | undefined;
+
+    const tick = () => {
+      if (typeof document !== 'undefined' && document.hidden) return;
+      void fetchNotifications();
+    };
+
+    const start = () => {
+      window.clearInterval(timer);
+      timer = window.setInterval(tick, POLL_MS);
+    };
+    const onVisibility = () => {
+      if (document.hidden) window.clearInterval(timer);
+      else {
+        tick();
+        start();
+      }
+    };
+
+    start();
+    document.addEventListener('visibilitychange', onVisibility);
+
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [userId, fetchNotifications]);
+
+// Data do dia: agendada para o próximo paint (nunca na render — `new Date()`
+  // no corpo do componente é hydration mismatch garantido).
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      setToday(
+        formatDate(new Date(), {
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric',
+        }),
+      );
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [formatDate]);
+
+  // Fecha o dropdown ao clicar fora.
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [dropdownRef]);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
-  const handleMarkAsRead = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
-    await markAsRead(id);
-    fetchNotifications();
+  const greeting = useMemo(
+    () => t('admin.header.greeting').replace('{name}', user?.name?.split(' ')[0] ?? '—'),
+    [t, user?.name],
+  );
+
+  const handleMarkAsRead = async (id: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
+    const res = await markAsRead(id);
+    if (!res.success) await fetchNotifications();
   };
 
   const handleMarkAllAsRead = async () => {
-    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-    await markAllAsRead(adminId);
-    fetchNotifications();
+    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    setUnread(0);
+    const res = await markAllAsRead(userId ?? undefined);
+    if (!res.success) await fetchNotifications();
   };
 
-  const handleDelete = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setNotifications(prev => prev.filter(n => n.id !== id));
-    await deleteNotification(id);
-    fetchNotifications();
+  const handleDelete = async (id: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    const res = await deleteNotification(id);
+    if (!res.success) await fetchNotifications();
   };
 
   const handleCreateTest = async () => {
     setIsTestLoading(true);
-    await createTestNotification(adminId);
+    await createTestNotification(userId ?? undefined);
     await fetchNotifications();
     setIsTestLoading(false);
   };
 
-  const unreadCount = notifications.filter(n => !n.isRead).length;
-
   return (
-    <div className="flex items-center justify-between p-6 border-b border-[var(--admin-border)] bg-[var(--admin-bg)] shrink-0 font-sans w-full relative z-20">
-      <div>
-        <h2 className="text-2xl font-light text-[var(--admin-text-main)] mb-1 flex items-center gap-2">
-          Olá, {user?.name ? user.name.split(' ')[0] : 'Priscila'}! <span className="text-xl">✨</span>
-        </h2>
-        <p className="text-[var(--admin-text-muted)] text-sm">
-          Bem-vinda ao painel administrativo da Maeum Global.
-        </p>
+    <header className="relative z-20 flex w-full shrink-0 items-center justify-between gap-4 border-b border-[var(--admin-border)] bg-[var(--admin-bg)] p-6">
+      <div className="min-w-0">
+        <h2 className="mb-1 truncate text-2xl font-light text-[var(--admin-text-main)]">{greeting}</h2>
+        <p className="text-sm text-[var(--admin-text-muted)]">{t('admin.header.subtitle')}</p>
       </div>
 
       <div className="flex items-center gap-4">
-        {/* Date Range Picker Mock */}
-        <button className="flex items-center gap-3 px-4 py-2 rounded-lg border border-[var(--admin-border)] bg-[var(--admin-card)] text-[var(--admin-text-muted)] hover:text-[var(--admin-text-main)] hover:border-[var(--admin-primary)] transition-colors text-sm">
-          <span className="capitalize">{dateRange}</span>
-          <Calendar className="w-4 h-4 text-[var(--admin-primary)]" />
-        </button>
+        <span className="hidden text-sm text-[var(--admin-text-muted)] sm:inline">
+          {today ?? '—'}
+        </span>
 
-        {/* Notifications Dropdown */}
         <div className="relative" ref={dropdownRef}>
-          <button 
-            onClick={() => setIsOpen(!isOpen)}
-            className="relative p-2 text-[var(--admin-text-muted)] hover:text-[var(--admin-text-main)] transition-colors rounded-full hover:bg-[var(--admin-border)]/50"
+          <button
+            type="button"
+            onClick={() => setIsOpen((open) => !open)}
+            aria-expanded={isOpen}
+            aria-label={t('admin.header.notifications')}
+            className="relative rounded-full p-2 text-[var(--admin-text-muted)] transition-colors hover:bg-[var(--admin-border)]/50 hover:text-[var(--admin-text-main)]"
           >
             <Bell className="w-6 h-6" />
-            {unreadCount > 0 && (
-              <span className="absolute top-1 right-1 w-4 h-4 bg-[var(--admin-accent-red)] text-white text-[10px] font-bold flex items-center justify-center rounded-full shadow-md animate-pulse">
-                {unreadCount > 9 ? '9+' : unreadCount}
+            {unread > 0 && (
+              <span className="absolute top-1 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--admin-accent-red)] px-1 text-[10px] font-bold text-white shadow-md">
+                {unread > 9 ? '9+' : unread}
               </span>
             )}
           </button>
 
           <AnimatePresence>
             {isOpen && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: 10, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
                 transition={{ duration: 0.15 }}
-                className="absolute right-0 mt-3 w-80 sm:w-96 bg-[var(--admin-card)] border border-[var(--admin-border)] rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+                className="absolute right-0 mt-3 flex w-80 flex-col overflow-hidden rounded-2xl border border-[var(--admin-border)] bg-[var(--admin-card)] shadow-2xl sm:w-96"
               >
-                <div className="p-4 border-b border-[var(--admin-border)] flex items-center justify-between bg-[var(--admin-bg)]">
-                  <h3 className="font-bold text-[var(--admin-text-main)]">Notificações</h3>
-                  <div className="flex gap-2">
-                    <button 
+                <div className="flex items-center justify-between gap-2 border-b border-[var(--admin-border)] bg-[var(--admin-bg)] p-4">
+                  <h3 className="text-sm font-bold text-[var(--admin-text-main)]">
+                    {t('admin.header.notifications')}
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
                       onClick={handleCreateTest}
                       disabled={isTestLoading}
-                      title="Gerar Notificação Teste"
-                      className="text-xs text-[var(--admin-text-muted)] hover:text-[var(--admin-primary)] transition-colors p-1"
+                      title={t('admin.header.testNotification')}
+                      aria-label={t('admin.header.testNotification')}
+                      className="p-1 text-[var(--admin-text-muted)] transition-colors hover:text-[var(--admin-primary)] disabled:opacity-50"
                     >
-                      {isTestLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <AlertCircle className="w-4 h-4" />}
+                      {isTestLoading ? (
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <AlertCircle className="w-4 h-4" />
+                      )}
                     </button>
-                    {unreadCount > 0 && (
-                      <button 
+                    {unread > 0 && (
+                      <button
+                        type="button"
                         onClick={handleMarkAllAsRead}
-                        className="text-[10px] text-[var(--admin-primary)] hover:text-white transition-colors flex items-center gap-1 font-semibold px-2 py-1 rounded bg-[var(--admin-primary)]/10 hover:bg-[var(--admin-primary)]"
+                        className="flex items-center gap-1 rounded bg-[var(--admin-primary)]/10 px-2 py-1 text-[10px] font-semibold text-[var(--admin-primary)] transition-colors hover:bg-[var(--admin-primary)] hover:text-white"
                       >
                         <CheckCircle2 className="w-3 h-3" />
-                        Lidas
+                        {t('admin.header.markAllRead')}
                       </button>
                     )}
                   </div>
                 </div>
-                
-                <div className="overflow-y-auto max-h-[400px] no-scrollbar">
+
+                <div className="max-h-[400px] overflow-y-auto">
                   {loading ? (
-                    <div className="p-8 text-center text-sm text-[var(--admin-text-muted)] flex flex-col items-center gap-3">
+                    <div className="flex flex-col items-center gap-3 p-8 text-sm text-[var(--admin-text-muted)]">
                       <RefreshCw className="w-5 h-5 animate-spin text-[var(--admin-primary)]" />
-                      Carregando...
+                      {t('admin.header.loading')}
                     </div>
                   ) : notifications.length === 0 ? (
-                    <div className="p-8 text-center flex flex-col items-center justify-center gap-3">
-                      <div className="w-12 h-12 rounded-full bg-[var(--admin-border)]/50 flex items-center justify-center text-[var(--admin-text-muted)]">
+                    <div className="flex flex-col items-center justify-center gap-3 p-8">
+                      <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--admin-border)]/50 text-[var(--admin-text-muted)]">
                         <Bell className="w-5 h-5" />
-                      </div>
-                      <p className="text-sm text-[var(--admin-text-muted)] font-medium">Nenhuma notificação por aqui.</p>
+                      </span>
+                      <p className="text-sm font-medium text-[var(--admin-text-muted)]">
+                        {t('admin.header.notificationsEmpty')}
+                      </p>
                     </div>
                   ) : (
-                    <div className="flex flex-col">
-                      {notifications.map((notif) => (
-                        <div 
-                          key={notif.id} 
-                          className={`p-4 border-b border-[var(--admin-border)]/50 hover:bg-[var(--admin-border)]/30 transition-colors group relative cursor-default
-                            ${!notif.isRead ? 'bg-[var(--admin-primary)]/5' : ''}
-                          `}
+                    <ul className="flex flex-col">
+                      {notifications.map((notification) => (
+                        <li
+                          key={notification.id}
+                          className={`group relative border-b border-[var(--admin-border)]/50 p-4 transition-colors hover:bg-[var(--admin-border)]/30 ${
+                            notification.isRead ? '' : 'bg-[var(--admin-primary)]/5'
+                          }`}
                         >
-                          {!notif.isRead && (
-                            <span className="absolute left-0 top-0 bottom-0 w-1 bg-[var(--admin-primary)]" />
+                          {!notification.isRead && (
+                            <span
+                              aria-hidden="true"
+                              className="absolute top-0 bottom-0 left-0 w-1 bg-[var(--admin-primary)]"
+                            />
                           )}
-                          <div className="flex justify-between items-start gap-3">
-                            <div className="flex-1 pr-6">
-                              <h4 className={`text-sm mb-1 ${notif.isRead ? 'text-[var(--admin-text-muted)] font-medium' : 'text-[var(--admin-text-main)] font-bold'}`}>
-                                {notif.title}
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0 flex-1 pr-6">
+                              <h4
+                                className={`mb-1 text-sm ${
+                                  notification.isRead
+                                    ? 'font-medium text-[var(--admin-text-muted)]'
+                                    : 'font-bold text-[var(--admin-text-main)]'
+                                }`}
+                              >
+                                {notification.title}
                               </h4>
-                              <p className="text-[11px] text-[var(--admin-text-muted)] leading-relaxed mb-2">
-                                {notif.message}
+                              <p className="mb-2 text-[11px] leading-relaxed text-[var(--admin-text-muted)]">
+                                {notification.message}
                               </p>
-                              <span className="text-[9px] text-[var(--admin-text-muted)]/70 uppercase font-semibold">
-                                {new Date(notif.createdAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
+                              <span className="text-[9px] font-semibold uppercase text-[var(--admin-text-muted)]/70">
+                                {formatDate(notification.createdAt, {
+                                  day: '2-digit',
+                                  month: '2-digit',
+                                  year: '2-digit',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
                               </span>
                             </div>
-                            
-                            {/* Actions overlay on hover */}
-                            <div className="absolute right-3 top-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                              {!notif.isRead && (
-                                <button 
-                                  onClick={(e) => handleMarkAsRead(notif.id, e)}
-                                  className="p-1.5 rounded-md bg-[var(--admin-bg)] text-[var(--admin-primary)] border border-[var(--admin-border)] hover:bg-[var(--admin-primary)] hover:text-white transition-all shadow-sm"
-                                  title="Marcar como lida"
+
+                            <div className="absolute top-4 right-3 flex flex-col gap-2 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+                              {!notification.isRead && (
+                                <button
+                                  type="button"
+                                  onClick={(event) => void handleMarkAsRead(notification.id, event)}
+                                  className="rounded-md border border-[var(--admin-border)] bg-[var(--admin-bg)] p-1.5 text-[var(--admin-primary)] shadow-sm transition-all hover:bg-[var(--admin-primary)] hover:text-white"
+                                  title={t('admin.header.markRead')}
+                                  aria-label={t('admin.header.markRead')}
                                 >
                                   <Check className="w-3.5 h-3.5" />
                                 </button>
                               )}
-                              <button 
-                                onClick={(e) => handleDelete(notif.id, e)}
-                                className="p-1.5 rounded-md bg-[var(--admin-bg)] text-red-500 border border-[var(--admin-border)] hover:bg-red-500 hover:text-white transition-all shadow-sm"
-                                title="Excluir notificação"
+                              <button
+                                type="button"
+                                onClick={(event) => void handleDelete(notification.id, event)}
+                                className="rounded-md border border-[var(--admin-border)] bg-[var(--admin-bg)] p-1.5 text-red-500 shadow-sm transition-all hover:bg-red-500 hover:text-white"
+                                title={t('admin.header.deleteNotification')}
+                                aria-label={t('admin.header.deleteNotification')}
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
                             </div>
                           </div>
-                          
-                          {notif.linkUrl && (
-                            <a 
-                              href={notif.linkUrl} 
-                              className="mt-3 text-[11px] font-bold text-[var(--admin-primary)] hover:underline inline-flex items-center gap-1"
+
+                          {notification.linkUrl && (
+                            <a
+                              href={notification.linkUrl}
+                              className="mt-3 inline-flex items-center gap-1 text-[11px] font-bold text-[var(--admin-primary)] hover:underline"
                             >
-                              Ver detalhes &rarr;
+                              {t('admin.header.viewDetails')} <ExternalLink className="w-3 h-3" />
                             </a>
                           )}
-                        </div>
+                        </li>
                       ))}
-                    </div>
+                    </ul>
                   )}
                 </div>
-                
+
                 {notifications.length > 0 && (
-                  <div className="p-3 border-t border-[var(--admin-border)] text-center bg-[var(--admin-bg)]">
-                    <button className="text-xs text-[var(--admin-text-muted)] hover:text-[var(--admin-text-main)] transition-colors">
-                      Ver histórico completo
-                    </button>
+                  <div className="border-t border-[var(--admin-border)] bg-[var(--admin-bg)] p-3 text-center">
+                    <Link
+                      href="/dashboard/admin"
+                      onClick={() => setIsOpen(false)}
+                      className="text-xs text-[var(--admin-text-muted)] transition-colors hover:text-[var(--admin-text-main)]"
+                    >
+                      {t('admin.header.allRead')}
+                    </Link>
                   </div>
                 )}
               </motion.div>
@@ -234,6 +344,6 @@ export default function AdminHeader() {
           </AnimatePresence>
         </div>
       </div>
-    </div>
+    </header>
   );
 }

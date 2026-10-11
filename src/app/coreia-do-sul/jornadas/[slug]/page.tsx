@@ -1,90 +1,331 @@
-import React from 'react';
-import Image from 'next/image';
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Calendar, MapPin, Clock, Users, Check, X, ChevronLeft } from 'lucide-react';
+import { Calendar, Check, ChevronLeft, Clock, MapPin, X } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import SmartImage from '@/components/SmartImage';
+import JsonLd from '@/components/seo/JsonLd';
+import Breadcrumbs from '@/components/seo/Breadcrumbs';
 import { prisma } from '@/lib/prisma';
+import { getMediaMap } from '@/lib/cmsData';
+import { getServerI18n } from '@/lib/serverI18n';
+import { buildMetadata, touristTripJsonLd, truncateMeta } from '@/lib/seo';
 import JornadaBookingWidget from './_components/JornadaBookingWidget';
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  const journey = await prisma.journey.findUnique({ where: { slug } });
-  if (!journey) return { title: 'Jornada não encontrada' };
-  return {
-    title: `${journey.title} | Maeum Global`,
-    description: journey.subtitle?.slice(0, 160),
-  };
+/* ────────────────────────────────────────────────────────────────────────────
+ * Conteúdo JSON serializado em colunas `String` do Prisma.
+ * ────────────────────────────────────────────────────────────────────────── */
+
+const parseStringList = (value: string): string[] => {
+  try {
+    const parsed: unknown = JSON.parse(value || '[]');
+    return Array.isArray(parsed)
+      ? parsed.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+      : [];
+  } catch {
+    return [];
+  }
+};
+
+interface ItineraryDay {
+  day: number;
+  title: string;
+  description: string;
 }
+
+const parseItinerary = (value: string): ItineraryDay[] => {
+  try {
+    const parsed: unknown = JSON.parse(value || '[]');
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .map((item): ItineraryDay | null => {
+        if (!item || typeof item !== 'object') return null;
+        const row = item as Record<string, unknown>;
+        const day = Number(row.day);
+        if (!Number.isFinite(day)) return null;
+        return {
+          day,
+          title: typeof row.title === 'string' ? row.title : '',
+          description: typeof row.description === 'string' ? row.description : '',
+        };
+      })
+      .filter((item): item is ItineraryDay => item !== null && item.title.length > 0);
+  } catch {
+    return [];
+  }
+};
+
+interface Highlight {
+  title: string;
+  description: string;
+  image: string;
+}
+
+const parseHighlights = (value: string): Highlight[] => {
+  try {
+    const parsed: unknown = JSON.parse(value || '[]');
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .map((item): Highlight | null => {
+        if (!item || typeof item !== 'object') return null;
+        const row = item as Record<string, unknown>;
+        const title = typeof row.title === 'string' ? row.title : '';
+        if (!title) return null;
+        return {
+          title,
+          description: typeof row.description === 'string' ? row.description : '',
+          image: typeof row.image === 'string' ? row.image : '',
+        };
+      })
+      .filter((item): item is Highlight => item !== null);
+  } catch {
+    return [];
+  }
+};
+
+const uniqueStrings = (values: readonly string[]): string[] => [...new Set(values)];
+
+/**
+ * Listas JSON (`included`, `notIncluded`) existem em pt/en/es. Um `'[]'` numa
+ * variante significa "não traduzido ainda", não "lista vazia": por isso
+ * escolhemos a primeira variante que efetivamente tem itens.
+ */
+const localizedStringList = (
+  variants: { pt: string | null; en: string | null; es: string | null },
+  order: readonly ('pt' | 'en' | 'es')[],
+): string[] => {
+  for (const locale of order) {
+    const list = parseStringList(variants[locale] ?? '');
+    if (list.length > 0) return uniqueStrings(list);
+  }
+  return [];
+};
+
+/** Converte a URL do YouTube (formato `watch?v=`) num embed permitido pelo CSP. */
+const toEmbedUrl = (url: string): string | null => {
+  try {
+    const parsed = new URL(url);
+    const id = parsed.searchParams.get('v') ?? parsed.pathname.split('/').pop();
+    if (!id) return null;
+    if (parsed.hostname.includes('youtu.be')) return `https://www.youtube.com/embed/${id}`;
+    if (parsed.hostname.includes('youtube.com')) return `https://www.youtube.com/embed/${id}`;
+    if (parsed.hostname.includes('vimeo.com')) return `https://player.vimeo.com/video/${id}`;
+    return null;
+  } catch {
+    return null;
+  }
+};
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Dados
+ * ────────────────────────────────────────────────────────────────────────── */
+
+type JourneyDetail = Awaited<
+  ReturnType<typeof loadJourney>
+>;
+
+async function loadJourney(slug: string) {
+  return prisma.journey.findUnique({
+    where: { slug },
+    include: {
+      departures: { orderBy: { startDate: 'asc' } },
+    },
+  });
+}
+
+export async function generateStaticParams(): Promise<{ slug: string }[]> {
+  try {
+    const journeys = await prisma.journey.findMany({
+      where: { status: { in: ['active', 'soldout'] } },
+      select: { slug: true },
+      orderBy: { sortOrder: 'asc' },
+    });
+    return journeys.map((journey) => ({ slug: journey.slug }));
+  } catch (error) {
+    console.error('[jornadas/[slug]] generateStaticParams:', error);
+    return [];
+  }
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * SEO
+ * ────────────────────────────────────────────────────────────────────────── */
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const { locale, t, localizedField } = await getServerI18n();
+
+  let journey: JourneyDetail = null;
+  try {
+    journey = await loadJourney(slug);
+  } catch (error) {
+    console.error('[jornadas/[slug]] generateMetadata:', error);
+  }
+
+  if (!journey) {
+    return buildMetadata({
+      title: truncateMeta(t('jornadas.jornada-nao-encontrada'), 60),
+      description: t('coreia.jornadas.notFoundDescription'),
+      path: `/coreia-do-sul/jornadas/${slug}`,
+      locale,
+      noindex: true,
+    });
+  }
+
+  const title = localizedField({ pt: journey.title, en: journey.titleEn, es: journey.titleEs }) ?? journey.title;
+  const description = localizedField({
+    pt: journey.subtitle ?? journey.concept,
+    en: journey.subtitleEn ?? journey.conceptEn,
+    es: journey.subtitleEs ?? journey.conceptEs,
+  });
+
+  return buildMetadata({
+    title: truncateMeta(`${title} | Maeum Global`, 60),
+    description: truncateMeta(description ?? t('coreia.jornadas.seoDescription'), 160),
+    path: `/coreia-do-sul/jornadas/${journey.slug}`,
+    locale,
+    image: journey.mainImage ?? undefined,
+    imageAlt: title,
+  });
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Página
+ * ────────────────────────────────────────────────────────────────────────── */
 
 export default async function JornadaDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
+  const { t, locale, lp, fill, formatNumber, formatCurrency, formatDate, localizedField } =
+    await getServerI18n();
 
-  const journey = await prisma.journey.findUnique({
-    where: { slug },
-    include: { departures: { orderBy: { startDate: 'asc' } } },
-  });
+  let journey: JourneyDetail = null;
+  let media: Record<string, string> = {};
+  try {
+    [journey, media] = await Promise.all([
+      loadJourney(slug),
+      getMediaMap().catch(() => ({}) as Record<string, string>),
+    ]);
+  } catch (error) {
+    console.error('[jornadas/[slug]] falha ao carregar a jornada:', error);
+  }
 
   if (!journey) notFound();
 
-  // Parse JSON fields
-  const parseJson = (val: unknown, fallback: unknown[] = []) => {
-    try { return JSON.parse(val as string) ?? fallback; } catch { return fallback; }
-  };
+  const title = localizedField({ pt: journey.title, en: journey.titleEn, es: journey.titleEs }) ?? journey.title;
+  const subtitle = localizedField({
+    pt: journey.subtitle,
+    en: journey.subtitleEn,
+    es: journey.subtitleEs,
+  });
+  const concept = localizedField({
+    pt: journey.concept,
+    en: journey.conceptEn,
+    es: journey.conceptEs,
+  });
 
-  const destinations: string[] = parseJson(journey.destinations);
-  const included: string[] = parseJson(journey.included);
-  const notIncluded: string[] = parseJson(journey.notIncluded);
-  const itinerary: { day: number; title: string; description: string }[] = parseJson(journey.itinerary);
-  const highlights: { title: string; description: string; image: string }[] = parseJson(journey.highlights);
-  const categories: { name: string; price: number; description: string; included: string[] }[] = parseJson((journey as any).categories ?? '[]');
-  const gallery: string[] = parseJson(journey.gallery);
-  const allImages = [journey.mainImage, ...gallery].filter(Boolean) as string[];
+  const destinations = parseStringList(journey.destinations);
+  const localeOrder = [locale, 'pt', 'en', 'es'].filter(
+    (value, index, all): value is 'pt' | 'en' | 'es' =>
+      all.indexOf(value) === index && (value === 'pt' || value === 'en' || value === 'es'),
+  );
+  const included = localizedStringList(
+    { pt: journey.included, en: journey.includedEn, es: journey.includedEs },
+    localeOrder,
+  );
+  const notIncluded = localizedStringList(
+    { pt: journey.notIncluded, en: journey.notIncludedEn, es: journey.notIncludedEs },
+    localeOrder,
+  );
+  const itinerary = parseItinerary(journey.itinerary);
+  const highlights = parseHighlights(journey.highlights);
 
-  const departures = journey.departures.map((d) => ({
-    id: d.id,
-    start_date: d.startDate.toISOString(),
-    end_date: d.endDate.toISOString(),
-    total_spots: d.totalSpots,
-    available_spots: d.availableSpots,
-    status: d.status,
-    notes: d.notes,
+  const heroFallback = media.coreia_jornadas_fallback ?? '';
+  const allImages = uniqueStrings([journey.mainImage ?? '', ...parseStringList(journey.gallery)]).filter(
+    (image) => image.length > 0,
+  );
+  const heroImage = allImages[0] ?? heroFallback;
+
+  const departures = journey.departures.map((departure) => ({
+    id: departure.id,
+    startDate: departure.startDate.toISOString(),
+    endDate: departure.endDate.toISOString(),
+    totalSpots: departure.totalSpots,
+    availableSpots: departure.availableSpots,
+    status: departure.status,
+    notes: departure.notes,
   }));
+  const nextAvailableDeparture =
+    departures.find((departure) => departure.status !== 'cancelled' && departure.availableSpots > 0) ??
+    null;
 
-  const nextAvailableDeparture = departures.find((d) => d.status === 'available') ?? null;
+  const videoEmbed = journey.videoUrl ? toEmbedUrl(journey.videoUrl) : null;
+  const premiumLabel = t('jornadas.badge.premium');
+  const categoryBadge =
+    journey.category === 'premium' ? premiumLabel : journey.category.toUpperCase();
 
-  const formatDate = (dateStr: string) =>
-    new Date(dateStr).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
+  const tripJsonLd = touristTripJsonLd({
+    name: title,
+    description: concept ?? subtitle ?? t('coreia.jornadas.seoDescription'),
+    path: `/coreia-do-sul/jornadas/${journey.slug}`,
+    locale,
+    image: allImages.length ? allImages : undefined,
+    durationDays: journey.durationDays,
+    price: journey.pricePerPerson,
+    priceCurrency: journey.priceCurrency,
+    touristType: 'Leisure travelers',
+    ...(nextAvailableDeparture ? { departureDate: nextAvailableDeparture.startDate } : {}),
+    ...(destinations.length
+      ? { itinerary: destinations.map((name) => ({ name, path: '/destinos' })) }
+      : {}),
+  });
 
-  const formatDateShort = (dateStr: string) =>
-    new Date(dateStr).toLocaleDateString('pt-BR');
+  const dateFormat: Intl.DateTimeFormatOptions = { day: '2-digit', month: '2-digit', year: 'numeric' };
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
+      <JsonLd id="jornada-trip-jsonld" data={tripJsonLd} />
+
       <Header />
 
       <main className="flex-1 w-full pb-32 md:pb-16">
         <div className="max-w-7xl mx-auto px-4 md:px-8 pt-6 pb-2">
+          <Breadcrumbs
+            locale={locale}
+            items={[
+              { name: t('coreia.coreia-do-sul'), path: '/coreia-do-sul' },
+              { name: t('jornadas.groups.subtitle'), path: '/coreia-do-sul/jornadas' },
+              { name: title, path: `/coreia-do-sul/jornadas/${journey.slug}` },
+            ]}
+          />
           <Link
-            href="/coreia-do-sul/jornadas"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-primary transition-colors"
+            href={lp('/coreia-do-sul/jornadas')}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-primary transition-colors mt-4"
           >
-            <ChevronLeft className="h-4 w-4" />
-            <span>Voltar para Jornadas</span>
+            <ChevronLeft aria-hidden className="h-4 w-4" />
+            <span>{t('jornadas.voltar-para-jornadas')}</span>
           </Link>
         </div>
 
-        {/* HERO IMAGE */}
-        <section className="relative h-[60vh] min-h-[420px] w-full overflow-hidden mt-4 mx-auto max-w-7xl px-4 md:px-8">
+        {/* HERO IMAGE (LCP) */}
+        <section
+          aria-labelledby="jornada-hero-title"
+          className="relative h-[60vh] min-h-[420px] w-full overflow-hidden mt-4 mx-auto max-w-7xl px-4 md:px-8"
+        >
           <div className="relative w-full h-full rounded-3xl overflow-hidden">
-            <Image
-              src={journey.mainImage ?? 'https://images.unsplash.com/photo-1519817914152-22d216bb9170?w=1200'}
-              alt={journey.title}
+            <SmartImage
+              src={heroImage}
+              alt={title}
               fill
               className="object-cover"
+              sizes="(min-width: 1280px) 1216px, 100vw"
               priority
-              unoptimized
+              quality={75}
+              placeholderLabel={title}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
             <div className="absolute inset-0 flex flex-col justify-end p-8 md:p-12">
@@ -97,25 +338,30 @@ export default async function JornadaDetailPage({ params }: { params: Promise<{ 
                         : 'bg-primary/90 text-white border-primary/30'
                     }`}
                   >
-                    {journey.category === 'army' ? 'ARMY' : 'Premium'}
+                    {categoryBadge}
                   </span>
                 )}
-                <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl font-light tracking-wide leading-tight">
-                  {journey.title}
+                <h1
+                  id="jornada-hero-title"
+                  className="font-heading text-4xl sm:text-5xl lg:text-6xl font-light tracking-wide leading-tight"
+                >
+                  {title}
                 </h1>
-                {journey.subtitle && (
+                {subtitle && (
                   <p className="text-sm sm:text-base text-white/80 mt-3 max-w-2xl font-light leading-relaxed">
-                    {journey.subtitle}
+                    {subtitle}
                   </p>
                 )}
                 <div className="flex flex-wrap items-center gap-4 mt-5 text-xs text-white/70">
+                  {destinations.length > 0 && (
+                    <span className="flex items-center gap-1.5">
+                      <MapPin aria-hidden className="h-4 w-4 shrink-0 text-accent" />
+                      {destinations.join(', ')}
+                    </span>
+                  )}
                   <span className="flex items-center gap-1.5">
-                    <MapPin className="h-4 w-4 text-accent" />
-                    {destinations.join(', ')}
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <Clock className="h-4 w-4 text-accent" />
-                    {journey.durationDays} Dias
+                    <Clock aria-hidden className="h-4 w-4 shrink-0 text-accent" />
+                    {formatNumber(journey.durationDays)} {t('jornadas.detail.days-x')}
                   </span>
                 </div>
               </div>
@@ -127,202 +373,273 @@ export default async function JornadaDetailPage({ params }: { params: Promise<{ 
         <section className="max-w-7xl mx-auto px-4 md:px-8 mt-10 grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-16">
           {/* LEFT CONTENT */}
           <div className="lg:col-span-2 space-y-12">
-            {journey.concept && (
-              <div>
-                <h2 className="font-heading text-2xl font-light text-secondary mb-4">Conceito da Viagem</h2>
-                <p className="text-sm text-muted-foreground leading-relaxed">{journey.concept}</p>
-              </div>
+            {concept && (
+              <section aria-labelledby="jornada-concept-title">
+                <h2
+                  id="jornada-concept-title"
+                  className="font-heading text-2xl font-light text-secondary mb-4"
+                >
+                  {t('jornadas.detail.concept')}
+                </h2>
+                <p className="text-sm text-muted-foreground leading-relaxed">{concept}</p>
+              </section>
             )}
 
-            {/* Departures */}
-            {departures.length > 0 && (
-              <div>
-                <h2 className="font-heading text-2xl font-light text-secondary mb-4">Datas e Saídas</h2>
+            {/* Datas e saídas — degrada com elegância quando `JourneyDeparture` está vazio */}
+            <section aria-labelledby="jornada-departures-title">
+              <h2
+                id="jornada-departures-title"
+                className="font-heading text-2xl font-light text-secondary mb-4"
+              >
+                {t('jornadas.detail.datesAndDepartures')}
+              </h2>
+              {departures.length === 0 ? (
+                <div className="bg-muted/40 border border-dashed border-border rounded-2xl px-5 py-8 text-center">
+                  <Calendar aria-hidden className="h-6 w-6 text-muted-foreground mx-auto mb-3" />
+                  <h3 className="font-heading text-lg font-light text-secondary">
+                    {t('coreia.jornadas.departuresEmptyTitle')}
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-2 max-w-lg mx-auto leading-relaxed">
+                    {t('coreia.jornadas.departuresEmptyDescription')}
+                  </p>
+                </div>
+              ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs border-collapse">
+                    <caption className="sr-only">
+                      {t('jornadas.detail.datesAndDepartures')} — {title}
+                    </caption>
                     <thead>
                       <tr className="border-b border-border">
-                        <th className="text-left font-bold text-secondary py-3 pr-4 uppercase tracking-wider">Data Inicial</th>
-                        <th className="text-left font-bold text-secondary py-3 pr-4 uppercase tracking-wider">Data Final</th>
-                        <th className="text-left font-bold text-secondary py-3 pr-4 uppercase tracking-wider">Vagas Totais</th>
-                        <th className="text-left font-bold text-secondary py-3 pr-4 uppercase tracking-wider">Disponíveis</th>
-                        <th className="text-left font-bold text-secondary py-3 pr-4 uppercase tracking-wider">Status</th>
-                        <th className="text-left font-bold text-secondary py-3 uppercase tracking-wider">Obs.</th>
+                        <th scope="col" className="text-left font-bold text-secondary py-3 pr-4 uppercase tracking-wider">
+                          {t('jornadas.data-inicial')}
+                        </th>
+                        <th scope="col" className="text-left font-bold text-secondary py-3 pr-4 uppercase tracking-wider">
+                          {t('jornadas.data-final')}
+                        </th>
+                        <th scope="col" className="text-left font-bold text-secondary py-3 pr-4 uppercase tracking-wider">
+                          {t('jornadas.detail.totalSpots')}
+                        </th>
+                        <th scope="col" className="text-left font-bold text-secondary py-3 pr-4 uppercase tracking-wider">
+                          {t('coreia.jornadas.availableSpotsShort')}
+                        </th>
+                        <th scope="col" className="text-left font-bold text-secondary py-3 pr-4 uppercase tracking-wider">
+                          {t('jornadas.status')}
+                        </th>
+                        <th scope="col" className="text-left font-bold text-secondary py-3 uppercase tracking-wider">
+                          {t('coreia.jornadas.notesShort')}
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
-                      {departures.map((dep) => (
-                        <tr key={dep.id} className="border-b border-border/50">
-                          <td className="py-3 pr-4 text-muted-foreground">{formatDateShort(dep.start_date)}</td>
-                          <td className="py-3 pr-4 text-muted-foreground">{formatDateShort(dep.end_date)}</td>
-                          <td className="py-3 pr-4 text-muted-foreground">{dep.total_spots}</td>
-                          <td className="py-3 pr-4 text-muted-foreground">{dep.available_spots}</td>
+                      {departures.map((departure) => (
+                        <tr key={departure.id} className="border-b border-border/50">
+                          <td className="py-3 pr-4 text-muted-foreground">
+                            {formatDate(departure.startDate, dateFormat)}
+                          </td>
+                          <td className="py-3 pr-4 text-muted-foreground">
+                            {formatDate(departure.endDate, dateFormat)}
+                          </td>
+                          <td className="py-3 pr-4 text-muted-foreground">
+                            {formatNumber(departure.totalSpots)}
+                          </td>
+                          <td className="py-3 pr-4 text-muted-foreground">
+                            {formatNumber(departure.availableSpots)}
+                          </td>
                           <td className="py-3 pr-4">
                             <span
                               className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${
-                                dep.status === 'available' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+                                departure.status === 'sold_out'
+                                  ? 'bg-red-50 text-red-700'
+                                  : departure.status === 'cancelled'
+                                    ? 'bg-muted text-muted-foreground'
+                                    : 'bg-green-50 text-green-700'
                               }`}
                             >
-                              {dep.status === 'available' ? 'Disponível' : 'Esgotada'}
+                              {departure.status === 'sold_out'
+                                ? t('jornadas.esgotada')
+                                : departure.status === 'cancelled'
+                                  ? t('jornadas.status')
+                                  : t('jornadas.disponivel')}
                             </span>
                           </td>
-                          <td className="py-3 text-muted-foreground">{dep.notes ?? '-'}</td>
+                          <td className="py-3 text-muted-foreground">{departure.notes ?? '-'}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-              </div>
-            )}
+              )}
+            </section>
 
-            {/* Highlights */}
+            {/* Destaques */}
             {highlights.length > 0 && (
-              <div>
-                <h2 className="font-heading text-2xl font-light text-secondary mb-6">Destaques da Jornada</h2>
+              <section aria-labelledby="jornada-highlights-title">
+                <h2
+                  id="jornada-highlights-title"
+                  className="font-heading text-2xl font-light text-secondary mb-6"
+                >
+                  {t('jornadas.detail.highlights')}
+                </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {highlights.map((h, idx) => (
-                    <div key={idx} className="bg-card border border-border rounded-2xl overflow-hidden group">
-                      {h.image && (
+                  {highlights.map((highlight) => (
+                    <article
+                      key={highlight.title}
+                      className="bg-card border border-border rounded-2xl overflow-hidden group"
+                    >
+                      {highlight.image && (
                         <div className="relative aspect-video w-full overflow-hidden">
-                          <Image
-                            src={h.image}
-                            alt={h.title}
+                          <SmartImage
+                            src={highlight.image}
+                            alt={highlight.title}
                             fill
-                            unoptimized
                             className="object-cover group-hover:scale-105 transition-transform duration-500"
+                            sizes="(min-width: 640px) 40vw, 100vw"
+                            quality={75}
+                            placeholderLabel={highlight.title}
                           />
                         </div>
                       )}
                       <div className="p-5">
-                        <h4 className="font-heading text-base font-bold text-secondary">{h.title}</h4>
-                        <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{h.description}</p>
+                        <h3 className="font-heading text-base font-bold text-secondary">
+                          {highlight.title}
+                        </h3>
+                        <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+                          {highlight.description}
+                        </p>
                       </div>
-                    </div>
+                    </article>
                   ))}
                 </div>
-              </div>
+              </section>
             )}
 
-            {/* Itinerary */}
+            {/* Roteiro */}
             {itinerary.length > 0 && (
-              <div>
-                <h2 className="font-heading text-2xl font-light text-secondary mb-6">Roteiro</h2>
+              <section aria-labelledby="jornada-itinerary-title">
+                <h2
+                  id="jornada-itinerary-title"
+                  className="font-heading text-2xl font-light text-secondary mb-6"
+                >
+                  {t('jornadas.roteiro')}
+                </h2>
                 <div className="space-y-0">
-                  {itinerary.map((day, idx) => (
-                    <div key={idx} className="flex gap-5 pb-8 relative">
+                  {itinerary.map((day, index) => (
+                    <div
+                      key={`${day.day}-${day.title}`}
+                      className="flex gap-5 pb-8 relative"
+                    >
                       <div className="flex flex-col items-center">
                         <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-                          <span className="text-xs font-bold text-primary">{String(day.day).padStart(2, '0')}</span>
+                          <span className="text-xs font-bold text-primary">
+                            {String(day.day).padStart(2, '0')}
+                          </span>
                         </div>
-                        {idx < itinerary.length - 1 && <div className="w-px flex-1 bg-border mt-2" />}
+                        {index < itinerary.length - 1 && (
+                          <div aria-hidden className="w-px flex-1 bg-border mt-2" />
+                        )}
                       </div>
                       <div className="flex-1 pt-1.5">
-                        <h4 className="font-heading text-lg font-bold text-secondary">{day.title}</h4>
-                        <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{day.description}</p>
+                        <h3 className="font-heading text-lg font-bold text-secondary">{day.title}</h3>
+                        <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+                          {day.description}
+                        </p>
                       </div>
                     </div>
                   ))}
                 </div>
-              </div>
+              </section>
             )}
 
-            {/* Included */}
+            {/* Inclusões */}
             {included.length > 0 && (
-              <div>
-                <h2 className="font-heading text-2xl font-light text-secondary mb-4">Inclusões</h2>
+              <section aria-labelledby="jornada-included-title">
+                <h2
+                  id="jornada-included-title"
+                  className="font-heading text-2xl font-light text-secondary mb-4"
+                >
+                  {t('jornadas.inclusoes')}
+                </h2>
                 <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {included.map((item, idx) => (
-                    <li key={idx} className="flex items-start gap-3 text-sm text-muted-foreground">
+                  {included.map((item) => (
+                    <li key={item} className="flex items-start gap-3 text-sm text-muted-foreground">
                       <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-green-50">
-                        <Check className="h-3 w-3 text-green-600" />
+                        <Check aria-hidden className="h-3 w-3 text-green-600" />
                       </span>
                       {item}
                     </li>
                   ))}
                 </ul>
-              </div>
+              </section>
             )}
 
-            {/* Not Included */}
+            {/* Não inclusões */}
             {notIncluded.length > 0 && (
-              <div>
-                <h2 className="font-heading text-2xl font-light text-secondary mb-4">Não Inclusões</h2>
+              <section aria-labelledby="jornada-not-included-title">
+                <h2
+                  id="jornada-not-included-title"
+                  className="font-heading text-2xl font-light text-secondary mb-4"
+                >
+                  {t('jornadas.nao-inclusoes')}
+                </h2>
                 <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {notIncluded.map((item, idx) => (
-                    <li key={idx} className="flex items-start gap-3 text-sm text-muted-foreground">
+                  {notIncluded.map((item) => (
+                    <li key={item} className="flex items-start gap-3 text-sm text-muted-foreground">
                       <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-50">
-                        <X className="h-3 w-3 text-red-500" />
+                        <X aria-hidden className="h-3 w-3 text-red-500" />
                       </span>
                       {item}
                     </li>
                   ))}
                 </ul>
-              </div>
+              </section>
             )}
 
-            {/* Categories */}
-            {categories.length > 0 && (
-              <div>
-                <h2 className="font-heading text-2xl font-light text-secondary mb-6">Categorias da Caravana</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {categories.map((cat, idx) => (
-                    <div key={idx} className="bg-card border-2 border-border rounded-3xl p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="font-heading text-xl font-bold text-secondary">{cat.name}</h3>
-                        <span className="font-heading text-2xl font-bold text-primary">
-                          R$ {cat.price.toLocaleString('pt-BR')}
-                        </span>
-                      </div>
-                      <p className="text-xs text-muted-foreground leading-relaxed mb-4">{cat.description}</p>
-                      {cat.included?.length > 0 && (
-                        <ul className="space-y-2">
-                          {cat.included.map((item, i) => (
-                            <li key={i} className="flex items-start gap-2 text-[11px] text-muted-foreground">
-                              <Check className="h-3.5 w-3.5 text-accent shrink-0 mt-0.5" />
-                              {item}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Gallery */}
+            {/* Galeria */}
             {allImages.length > 1 && (
-              <div>
-                <h2 className="font-heading text-2xl font-light text-secondary mb-4">Galeria</h2>
+              <section aria-labelledby="jornada-gallery-title">
+                <h2
+                  id="jornada-gallery-title"
+                  className="font-heading text-2xl font-light text-secondary mb-4"
+                >
+                  {t('jornadas.galeria')}
+                </h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  {allImages.slice(0, 6).map((img, idx) => (
+                  {allImages.slice(0, 6).map((image, index) => (
                     <div
-                      key={idx}
-                      className={`relative overflow-hidden rounded-xl ${idx === 0 ? 'col-span-2 row-span-2' : ''}`}
+                      key={image}
+                      className={`relative overflow-hidden rounded-xl ${index === 0 ? 'col-span-2 row-span-2' : ''}`}
                     >
-                      <div className={`relative ${idx === 0 ? 'aspect-[4/3]' : 'aspect-square'}`}>
-                        <Image
-                          src={img}
-                          alt={`${journey.title} - Imagem ${idx + 1}`}
+                      <div className={`relative ${index === 0 ? 'aspect-[4/3]' : 'aspect-square'}`}>
+                        <SmartImage
+                          src={image}
+                          alt={fill(t('detalhe.booking.galleryImageAlt'), { item: title })}
                           fill
-                          unoptimized
                           className="object-cover hover:scale-105 transition-transform duration-500"
+                          sizes={index === 0 ? '(min-width: 768px) 66vw, 100vw' : '(min-width: 768px) 33vw, 50vw'}
+                          quality={75}
+                          placeholderLabel={title}
                         />
                       </div>
                     </div>
                   ))}
                 </div>
-              </div>
+              </section>
             )}
 
-            {/* Video */}
-            <div>
-              <h2 className="font-heading text-2xl font-light text-secondary mb-4">Vídeo</h2>
-              {journey.videoUrl ? (
+            {/* Vídeo */}
+            <section aria-labelledby="jornada-video-title">
+              <h2
+                id="jornada-video-title"
+                className="font-heading text-2xl font-light text-secondary mb-4"
+              >
+                {t('jornadas.video')}
+              </h2>
+              {videoEmbed ? (
                 <div className="relative aspect-video rounded-2xl overflow-hidden bg-black">
                   <iframe
-                    src={journey.videoUrl.replace('watch?v=', 'embed/')}
-                    title="Jornada em vídeo"
+                    src={videoEmbed}
+                    title={t('jornadas.jornada-em-video')}
                     className="absolute inset-0 w-full h-full"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
@@ -331,23 +648,25 @@ export default async function JornadaDetailPage({ params }: { params: Promise<{ 
               ) : (
                 <div className="relative aspect-video rounded-2xl overflow-hidden bg-muted flex flex-col items-center justify-center gap-4 border border-dashed border-border">
                   <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                    <svg className="h-7 w-7 text-primary ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                    <svg aria-hidden className="h-7 w-7 text-primary ml-0.5" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M8 5v14l11-7z" />
                     </svg>
                   </div>
-                  <p className="text-xs text-muted-foreground font-medium">Em breve: vídeo exclusivo desta jornada</p>
+                  <p className="text-xs text-muted-foreground font-medium">
+                    {t('jornadas.detail.videoComingSoon')}
+                  </p>
                 </div>
               )}
-            </div>
+            </section>
           </div>
 
           {/* RIGHT SIDEBAR — Booking Widget (client) */}
           <div className="lg:col-span-1">
             <JornadaBookingWidget
-              journeyTitle={journey.title}
+              journeyTitle={title}
               journeySlug={journey.slug}
               pricePerPerson={journey.pricePerPerson}
-              categories={categories}
+              priceCurrency={journey.priceCurrency}
               nextAvailableDeparture={nextAvailableDeparture}
             />
           </div>
@@ -355,6 +674,26 @@ export default async function JornadaDetailPage({ params }: { params: Promise<{ 
       </main>
 
       <Footer />
+
+      {/* Resumo em texto para leitores de tela / sem JS do bloco de reservas. */}
+      <p className="sr-only">
+        {formatCurrency(journey.pricePerPerson, journey.priceCurrency)}
+        {t('coreia.landing.perPerson')} —{' '}
+        {nextAvailableDeparture
+          ? formatDate(nextAvailableDeparture.startDate, {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
+            })
+          : t('coreia.jornadas.departuresEmptyTitle')}
+        {nextAvailableDeparture && (
+          <>
+            {' · '}
+            {formatNumber(nextAvailableDeparture.availableSpots)}{' '}
+            {t('jornadas.vagas-disponiveis')}
+          </>
+        )}
+      </p>
     </div>
   );
 }

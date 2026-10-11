@@ -1,385 +1,644 @@
-'use client';
-
-import React from 'react';
-import Image from 'next/image';
+import type { Metadata } from 'next';
 import Link from 'next/link';
-import { 
-  ArrowRight, Map, Camera, Leaf, Utensils, ShoppingBag, Star, 
-  Heart, Compass, ShieldCheck, Headphones, Calendar, Award, Building,
-  Waves, TreePine, Coffee, Landmark, Moon
+import {
+  ArrowRight,
+  Map,
+  Camera,
+  Leaf,
+  Utensils,
+  ShoppingBag,
+  Star,
+  Heart,
+  Compass,
+  ShieldCheck,
+  Headphones,
+  Calendar,
+  Award,
+  Waves,
+  TreePine,
+  Coffee,
+  Landmark,
+  Moon,
+  Users,
+  type LucideIcon,
 } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { useMedia } from '@/contexts/SiteContentContext';
+import SmartImage from '@/components/SmartImage';
+import JsonLd from '@/components/seo/JsonLd';
+import Breadcrumbs from '@/components/seo/Breadcrumbs';
+import { prisma } from '@/lib/prisma';
+import { getMediaMap } from '@/lib/cmsData';
+import { getServerI18n } from '@/lib/serverI18n';
+import { buildMetadata, localizedUrl, siteUrl, truncateMeta } from '@/lib/seo';
 
-const DESTINATIONS = [
+/* ────────────────────────────────────────────────────────────────────────────
+ * SEO
+ * ────────────────────────────────────────────────────────────────────────── */
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { locale, t } = await getServerI18n();
+  return buildMetadata({
+    title: truncateMeta(t('destinos.seo.title'), 60),
+    description: t('destinos.seo.description'),
+    path: '/destinos',
+    locale,
+    image: '/images/agencia-viagens-coreia-do-sul-maeum-global-destinos.webp',
+    imageAlt: t('destinos.heroImage.desktop'),
+  });
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Perfis de cidade
+ *
+ * O mapa e os cards da página são desenhados em torno de quatro cidades
+ * clássicas (Seul, Daegu, Busan, Jeju). Cada perfil guarda apenas a CHAVE
+ * canônica do i18n e a posição no mapa — nenhum texto editorial hardcoded.
+ * Quando o `Destination` existe no banco, nome/descrição/imagem vêm dele; o
+ * perfil só completa o que o schema não tem (ícones de destaque e âncora do
+ * mapa). Destinos sem perfil continuam aparecendo na lista, só não ganham um
+ * ponto no esquema.
+ * ────────────────────────────────────────────────────────────────────────── */
+
+interface CityProfile {
+  id: string;
+  nameKey: string;
+  descriptionKey: string;
+  slot: string;
+  pinKeys: [string, string];
+  point: { top: string; left: string };
+  features: { Icon: LucideIcon; labelKey: string }[];
+}
+
+const CITY_PROFILES: readonly CityProfile[] = [
   {
     id: 'seoul',
-    name: 'SEOUL',
-    desc: 'Tradição e modernidade lado a lado. Palácios históricos, bairros vibrantes, compras, cafés e a energia de uma metrópole que nunca para.',
+    nameKey: 'destinos.city.seoul',
+    descriptionKey: 'destinos.cards.seoul',
+    slot: 'destinos_card_seoul',
+    pinKeys: ['destinos.intro.pillars.1title', 'destinos.intro.pillars.1suffix'],
+    point: { top: '20%', left: '40%' },
     features: [
-      { icon: Landmark, label: 'Cultura' },
-      { icon: ShoppingBag, label: 'Compras' },
-      { icon: Utensils, label: 'Gastronomia' },
-      { icon: Moon, label: 'Vida Noturna' },
-    ]
+      { Icon: Landmark, labelKey: 'destinos.cultura' },
+      { Icon: ShoppingBag, labelKey: 'destinos.compras' },
+      { Icon: Utensils, labelKey: 'destinos.gastronomia' },
+      { Icon: Moon, labelKey: 'destinos.vida-noturna' },
+    ],
   },
   {
     id: 'busan',
-    name: 'BUSAN',
-    desc: 'O mar, as montanhas e uma atmosfera descontraída. Praias, templos à beira-mar, passeios únicos e uma gastronomia que é de dar água na boca.',
+    nameKey: 'destinos.city.busan',
+    descriptionKey: 'destinos.cards.busan',
+    slot: 'destinos_card_busan',
+    pinKeys: ['destinos.intro.pillars.3title', 'destinos.intro.pillars.3suffix'],
+    point: { top: '65%', left: '60%' },
     features: [
-      { icon: Waves, label: 'Praias' },
-      { icon: Landmark, label: 'Templos' },
-      { icon: ShoppingBag, label: 'Mercados' },
-      { icon: Utensils, label: 'Gastronomia' },
-    ]
+      { Icon: Waves, labelKey: 'destinos.praias' },
+      { Icon: Landmark, labelKey: 'destinos.templos' },
+      { Icon: ShoppingBag, labelKey: 'destinos.mercados' },
+      { Icon: Utensils, labelKey: 'destinos.gastronomia' },
+    ],
   },
   {
     id: 'daegu',
-    name: 'DAEGU',
-    desc: 'A Coreia que muitos ainda não conhecem. Cidades acolhedora, rica em cultura local, ruas históricas e cafés encantadores.',
+    nameKey: 'destinos.city.daegu',
+    descriptionKey: 'destinos.cards.daegu',
+    slot: 'destinos_card_daegu',
+    pinKeys: ['destinos.intro.pillars.2title', 'destinos.intro.pillars.2suffix'],
+    point: { top: '50%', left: '55%' },
     features: [
-      { icon: Users, label: 'Cultura Local' },
-      { icon: Coffee, label: 'Cafés' },
-      { icon: Landmark, label: 'História' },
-      { icon: Leaf, label: 'Natureza' },
-    ]
+      { Icon: Users, labelKey: 'destinos.intro.pillars.2title-x' },
+      { Icon: Coffee, labelKey: 'destinos.filters.cafes' },
+      { Icon: Landmark, labelKey: 'destinos.historia' },
+      { Icon: Leaf, labelKey: 'destinos.natureza' },
+    ],
   },
   {
     id: 'jeju',
-    name: 'JEJU',
-    desc: 'A ilha mais amada da Coreia. Natureza exuberante, trilhas, cachoeiras, campos de flores e paisagens que parecem ter saído de um sonho.',
+    nameKey: 'destinos.city.jeju',
+    descriptionKey: 'destinos.cards.jeju',
+    slot: 'destinos_card_jeju',
+    pinKeys: ['destinos.intro.pillars.4title', 'destinos.intro.pillars.4suffix'],
+    point: { top: '85%', left: '30%' },
     features: [
-      { icon: TreePine, label: 'Natureza' },
-      { icon: Map, label: 'Trilhas' },
-      { icon: Waves, label: 'Cachoeiras' },
-      { icon: Coffee, label: 'Relaxamento' },
-    ]
-  }
+      { Icon: TreePine, labelKey: 'destinos.natureza' },
+      { Icon: Map, labelKey: 'destinos.trilhas' },
+      { Icon: Waves, labelKey: 'destinos.cachoeiras' },
+      { Icon: Coffee, labelKey: 'destinos.relaxamento' },
+    ],
+  },
 ];
 
-// Helper icon component for 'Users' alternative
-function Users(props: any) {
+const normalize = (value: string): string =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-');
+
+const matchProfile = (name: string, slug: string): CityProfile | null => {
+  const haystack = `${normalize(name)} ${normalize(slug)}`;
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-    </svg>
+    CITY_PROFILES.find((profile) => haystack.includes(profile.id)) ??
+    // variation comum em português: "seul" / "seoul"
+    CITY_PROFILES.find((profile) => haystack.includes(`${profile.id}e`)) ??
+    null
   );
+};
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Página
+ * ────────────────────────────────────────────────────────────────────────── */
+
+interface DestinationRow {
+  id: string;
+  slug: string;
+  name: string;
+  country: string;
+  subtitle: string | null;
+  description: string | null;
+  mainImage: string | null;
+  profile: CityProfile | null;
+  fromDb: boolean;
 }
 
-export default function DestinosPage() {
-  const { t, locale } = useLanguage();
-  const heroDesktop = useMedia('destinos_hero_desktop');
-  const heroMobile = useMedia('destinos_hero_mobile');
-  const ctaBanner = useMedia('destinos_cta_banner');
-  const destSeoul = useMedia('destinos_card_seoul');
-  const destBusan = useMedia('destinos_card_busan');
-  const destDaegu = useMedia('destinos_card_daegu');
-  const destJeju = useMedia('destinos_card_jeju');
-  const destImages = [destSeoul, destBusan, destDaegu, destJeju];
-  const lp = (path: string) => (locale === 'pt' || path === '/' ? path : `/${locale}${path}`);
+export default async function DestinosPage() {
+  const { t, locale, lp, fill, localizedField } = await getServerI18n();
+
+  const [destinations, media] = await Promise.all([
+    prisma.destination.findMany({
+      where: { isFeatured: true },
+      orderBy: { sortOrder: 'asc' },
+      take: 24,
+      select: {
+        id: true,
+        slug: true,
+        name: true,
+        country: true,
+        subtitle: true,
+        description: true,
+        descriptionEn: true,
+        descriptionEs: true,
+        mainImage: true,
+      },
+    }),
+    getMediaMap().catch(() => ({}) as Record<string, string>),
+  ]);
+
+  /**
+   * Degradação: sem `Destination` no banco, a página continua mostrando os
+   * quatro destinos do catálogo (nome/descrição via i18n, imagem do slot de
+   * mídia). Nunca fica vazia nem quebra.
+   */
+  const rows: DestinationRow[] =
+    destinations.length > 0
+      ? destinations.map((destination) => ({
+          id: destination.id,
+          slug: destination.slug,
+          name: destination.name,
+          country: destination.country,
+          subtitle: destination.subtitle,
+          description:
+            localizedField({
+              pt: destination.description,
+              en: destination.descriptionEn,
+              es: destination.descriptionEs,
+            }) ?? destination.subtitle,
+          mainImage: destination.mainImage,
+          profile: matchProfile(destination.name, destination.slug),
+          fromDb: true,
+        }))
+      : CITY_PROFILES.map((profile) => ({
+          id: profile.id,
+          slug: profile.id,
+          name: t(profile.nameKey),
+          country: t('destinos.hero.line2'),
+          subtitle: null,
+          description: t(profile.descriptionKey),
+          mainImage: null,
+          profile,
+          fromDb: false,
+        }));
+
+  /**
+   * O mapa é geografia, não conteúdo: se o banco não trouxe nenhuma das
+   * cidades clássicas, mostramos as quatro âncoras para o desenho não quebrar.
+   */
+  const pinnedProfiles = CITY_PROFILES.filter((profile) =>
+    rows.some((row) => row.profile?.id === profile.id),
+  );
+  const mapProfiles = (pinnedProfiles.length > 0 ? pinnedProfiles : [...CITY_PROFILES]).slice(0, 6);
+
+  const heroDesktop = media.destinos_hero_desktop ?? '';
+  const heroMobile = media.destinos_hero_mobile ?? '';
+  const ctaBanner = media.destinos_cta_banner ?? '';
+
+  const itemListJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: t('destinos.cards.kicker'),
+    numberOfItems: rows.length,
+    itemListElement: rows.map((row, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      item: {
+        '@type': 'TouristDestination',
+        name: row.name,
+        description: row.description ?? undefined,
+        url: localizedUrl(
+          row.fromDb ? `/destinos/${row.slug}` : `/coreia-do-sul/experiencias?cidade=${row.slug}`,
+          locale,
+        ),
+        ...(row.mainImage ? { image: siteUrl(row.mainImage) } : {}),
+      },
+    })),
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-[#0F0A08] text-[#EFEBE4] font-sans selection:bg-[#C8A27C] selection:text-[#0F0A08]">
+      <JsonLd id="destinos-itemlist-jsonld" data={itemListJsonLd} />
+
       <Header />
 
-      {/* 1. Hero Section */}
-      <section className="relative min-h-[100dvh] flex flex-col justify-center overflow-hidden border-b border-[#3D2620]">
+      {/* 1. Hero Section (LCP) */}
+      <section
+        aria-labelledby="destinos-hero-title"
+        className="relative min-h-[100dvh] flex flex-col justify-center overflow-hidden border-b border-[#3D2620]"
+      >
         <div className="absolute inset-0 z-0">
-          <Image 
-            src={heroDesktop} 
-            alt={t('Destinos na Coreia')} 
-            fill 
-            className="object-cover object-center hidden md:block" 
+          <SmartImage
+            src={heroDesktop}
+            alt={t('destinos.heroImage.desktop')}
+            fill
+            className="object-cover object-center hidden md:block"
+            sizes="100vw"
             priority
-            quality={100}
-            unoptimized
+            quality={90}
+            fallbackSrc={heroMobile}
+            placeholderLabel={t('destinos.heroImage.desktop')}
           />
-          <Image 
-            src={heroMobile} 
-            alt={t('Destinos na Coreia Mobile')} 
-            fill 
-            className="object-cover object-center block md:hidden" 
+          <SmartImage
+            src={heroMobile}
+            alt={t('destinos.heroImage.mobile')}
+            fill
+            className="object-cover object-center block md:hidden"
+            sizes="100vw"
             priority
-            quality={100}
-            unoptimized
+            quality={90}
+            fallbackSrc={heroDesktop}
+            placeholderLabel={t('destinos.heroImage.mobile')}
           />
         </div>
 
         <div className="relative z-10 px-6 sm:px-12 max-w-[1400px] mx-auto w-full flex flex-col items-start gap-6 pt-20">
           <span className="text-[10px] uppercase tracking-[0.2em] text-[#C8A27C] font-semibold">
-            {t('DESTINOS')}
+            {t('destinos.hero.kicker')}
           </span>
-          <h1 className="font-heading text-5xl sm:text-7xl font-light tracking-wide leading-tight text-white">
-            {t('Descubra a')} <br />
-            {t('Coreia do Sul')}
+          <h1
+            id="destinos-hero-title"
+            className="font-heading text-5xl sm:text-7xl font-light tracking-wide leading-tight text-white"
+          >
+            {t('destinos.hero.line1')} <br />
+            {t('destinos.hero.line2')}
           </h1>
           <p className="text-[13px] text-gray-300 max-w-[400px] font-light leading-relaxed mt-2 opacity-90">
-            {t('Quatro destinos, infinitas possibilidades. Da modernidade vibrante à natureza intocada, cada cidade oferece experiências únicas que vão transformar a sua viagem em memórias inesquecíveis.')}
+            {t('destinos.hero.description')}
           </p>
-          <Link href={lp('/jornadas')} className="flex items-center justify-center gap-3 bg-transparent border border-[#3D2620] hover:border-[#C8A27C] text-[#C8A27C] font-bold text-[10px] py-4 px-8 mt-4 rounded-none transition-all group uppercase tracking-widest">
-            {t('PLANEJE SUA JORNADA')}
-            <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+          <Link
+            href={lp('/jornadas')}
+            className="flex items-center justify-center gap-3 bg-transparent border border-[#3D2620] hover:border-[#C8A27C] text-[#C8A27C] font-bold text-[10px] py-4 px-8 mt-4 rounded-none transition-all group uppercase tracking-widest"
+          >
+            {t('destinos.cta.planJourney')}
+            <ArrowRight aria-hidden className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
       </section>
 
-      {/* 2. Main Content (Map & Destinations list) */}
-      <section className="py-20 px-6 sm:px-12 max-w-[1400px] mx-auto w-full">
+      {/* Trilha visível + BreadcrumbList JSON-LD (evita o 404 do crawler) */}
+      <div className="px-6 sm:px-12 max-w-[1400px] mx-auto w-full pt-8">
+        <Breadcrumbs
+          locale={locale}
+          items={[{ name: t('destinos.detail.breadcrumb'), path: '/destinos' }]}
+          className="text-gray-500"
+        />
+      </div>
+
+      {/* 2. Mapa + lista de destinos */}
+      <section aria-labelledby="destinos-list-title" className="py-20 px-6 sm:px-12 max-w-[1400px] mx-auto w-full">
         <div className="flex flex-col lg:flex-row gap-16">
-          
-          {/* Left Col - Map */}
           <div className="lg:w-1/3 flex flex-col relative">
             <span className="text-[10px] uppercase tracking-[0.2em] text-[#C8A27C] font-bold mb-6">
-              {t('A COREIA DO SUL')}
+              {t('destinos.intro.kicker')}
             </span>
             <p className="text-[12px] text-gray-400 font-light leading-relaxed max-w-[280px] mb-12">
-              {t('Um país que combina tradição e inovação como poucos. Explore o melhor de cada região com roteiros feitos para você viver o que a Coreia tem de mais especial.')}
+              {t('destinos.intro.description')}
             </p>
 
-            {/* Stylized Map Area */}
             <div className="relative w-full h-[500px] opacity-80">
-              {/* Abstract Map Shape (Using an image or SVG would be better, but we simulate it with positioning) */}
-              <div className="absolute inset-0 bg-[url('https://upload.wikimedia.org/wikipedia/commons/e/e4/South_Korea_location_map.svg')] bg-contain bg-no-repeat bg-left-top opacity-10 filter invert sepia hue-rotate-[340deg] saturate-[300%]" />
-              
-              {/* Map Points */}
-              <div className="absolute top-[20%] left-[40%] flex items-center gap-3">
-                <div className="relative">
-                  <div className="w-3 h-3 rounded-full border border-[#C8A27C] flex items-center justify-center">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#C8A27C]" />
-                  </div>
-                  <div className="absolute -inset-2 rounded-full border border-[#C8A27C]/20 animate-ping" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-bold text-[#C8A27C] tracking-widest">SEOUL</span>
-                  <span className="text-[9px] text-gray-500">{t('Capital e coração')}<br/>{t('da Coreia.')}</span>
-                </div>
-              </div>
+              <div
+                aria-hidden
+                className="absolute inset-0 bg-[url('https://upload.wikimedia.org/wikipedia/commons/e/e4/South_Korea_location_map.svg')] bg-contain bg-no-repeat bg-left-top opacity-10 filter invert sepia hue-rotate-[340deg] saturate-[300%]"
+              />
 
-              <div className="absolute top-[50%] left-[55%] flex items-center gap-3">
-                <div className="relative">
-                  <div className="w-3 h-3 rounded-full border border-[#C8A27C] flex items-center justify-center">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#C8A27C]/50" />
-                  </div>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-bold text-[#C8A27C] tracking-widest">DAEGU</span>
-                  <span className="text-[9px] text-gray-500">{t('Cultura local')}<br/>{t('e história viva.')}</span>
-                </div>
-              </div>
+              <ul aria-label={t('destinos.intro.kicker')}>
+                {mapProfiles.map((profile, index) => {
+                  const isPrimary = index === 0;
+                  return (
+                    <li
+                      key={profile.id}
+                      className="absolute flex items-center gap-3"
+                      style={{ top: profile.point.top, left: profile.point.left }}
+                    >
+                      <span className="relative">
+                        <span className="w-3 h-3 rounded-full border border-[#C8A27C] flex items-center justify-center">
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${isPrimary ? 'bg-[#C8A27C]' : 'bg-[#C8A27C]/50'}`}
+                          />
+                        </span>
+                        {isPrimary ? (
+                          <span className="absolute -inset-2 rounded-full border border-[#C8A27C]/20 animate-ping" />
+                        ) : null}
+                      </span>
+                      <span className="flex flex-col">
+                        <span className="text-[10px] font-bold text-[#C8A27C] tracking-widest">
+                          {t(profile.nameKey)}
+                        </span>
+                        <span className="text-[9px] text-gray-500">
+                          {t(profile.pinKeys[0])}
+                          <br />
+                          {t(profile.pinKeys[1])}
+                        </span>
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
 
-              <div className="absolute top-[65%] left-[60%] flex items-center gap-3">
-                <div className="relative">
-                  <div className="w-3 h-3 rounded-full border border-[#C8A27C] flex items-center justify-center">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#C8A27C]/50" />
-                  </div>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-bold text-[#C8A27C] tracking-widest">BUSAN</span>
-                  <span className="text-[9px] text-gray-500">{t('Praias, mar')}<br/>{t('e energia única.')}</span>
-                </div>
-              </div>
-
-              <div className="absolute top-[85%] left-[30%] flex items-center gap-3">
-                <div className="relative">
-                  <div className="w-3 h-3 rounded-full border border-[#C8A27C] flex items-center justify-center">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#C8A27C]/50" />
-                  </div>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-bold text-[#C8A27C] tracking-widest">JEJU</span>
-                  <span className="text-[9px] text-gray-500">{t('Natureza paradisíaca')}<br/>{t('e tranquilidade.')}</span>
-                </div>
-              </div>
-
-              {/* Dotted lines connecting them */}
-              <svg className="absolute inset-0 w-full h-full" style={{ zIndex: -1 }}>
-                <path d="M 120 100 L 165 250 L 180 325" fill="none" stroke="#3D2620" strokeWidth="1" strokeDasharray="4 4" />
+              <svg aria-hidden className="absolute inset-0 w-full h-full" style={{ zIndex: -1 }}>
+                <path
+                  d="M 120 100 L 165 250 L 180 325"
+                  fill="none"
+                  stroke="#3D2620"
+                  strokeWidth="1"
+                  strokeDasharray="4 4"
+                />
               </svg>
 
-              {/* Compass */}
               <div className="absolute bottom-0 left-0">
-                <Compass className="w-16 h-16 text-[#3D2620]" strokeWidth={1} />
-                <span className="absolute top-[-10px] left-1/2 -translate-x-1/2 text-[8px] text-gray-600">N</span>
-                <span className="absolute bottom-[-10px] left-1/2 -translate-x-1/2 text-[8px] text-gray-600">S</span>
-                <span className="absolute right-[-10px] top-1/2 -translate-y-1/2 text-[8px] text-gray-600">E</span>
-                <span className="absolute left-[-10px] top-1/2 -translate-y-1/2 text-[8px] text-gray-600">W</span>
+                <Compass aria-hidden className="w-16 h-16 text-[#3D2620]" strokeWidth={1} />
+                <span className="absolute top-[-10px] left-1/2 -translate-x-1/2 text-[8px] text-gray-600">
+                  {t('destinos.compass.north')}
+                </span>
+                <span className="absolute bottom-[-10px] left-1/2 -translate-x-1/2 text-[8px] text-gray-600">
+                  {t('destinos.compass.south')}
+                </span>
+                <span className="absolute right-[-10px] top-1/2 -translate-y-1/2 text-[8px] text-gray-600">
+                  {t('destinos.compass.east')}
+                </span>
+                <span className="absolute left-[-10px] top-1/2 -translate-y-1/2 text-[8px] text-gray-600">
+                  {t('destinos.compass.west')}
+                </span>
               </div>
             </div>
           </div>
 
-          {/* Right Col - Destinations */}
           <div className="lg:w-2/3 flex flex-col gap-6">
-            <span className="text-[10px] uppercase tracking-[0.2em] text-[#C8A27C] font-bold mb-2">
-              {t('CONHEÇA NOSSOS DESTINOS')}
-            </span>
+            <h2
+              id="destinos-list-title"
+              className="text-[10px] uppercase tracking-[0.2em] text-[#C8A27C] font-bold mb-2"
+            >
+              {t('destinos.cards.kicker')}
+            </h2>
 
-            {DESTINATIONS.map((dest, idx) => (
-              <Link key={dest.id} href={`/coreia-do-sul/experiencias?cidade=${dest.id}`} className="group bg-[#150E0C] border border-[#3D2620] rounded-sm overflow-hidden flex flex-col md:flex-row hover:border-[#C8A27C]/50 transition-colors min-h-[220px]">
-                <div className="relative md:w-[40%] h-[200px] md:h-auto overflow-hidden">
-                  <Image src={destImages[idx]} alt={dest.name} fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
-                </div>
-                <div className="p-8 md:w-[60%] flex flex-col relative">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-heading text-2xl text-white font-light uppercase tracking-wide group-hover:text-[#C8A27C] transition-colors">{dest.name}</h3>
-                    <div className="w-8 h-8 rounded-full border border-[#3D2620] group-hover:border-[#C8A27C] flex items-center justify-center transition-colors">
-                      <ArrowRight className="w-3 h-3 text-gray-500 group-hover:text-[#C8A27C]" />
-                    </div>
-                  </div>
-                  <p className="text-[12px] text-gray-400 font-light leading-relaxed mb-6 flex-1">
-                    {t(dest.desc)}
-                  </p>
-                  <div className="grid grid-cols-4 gap-2 pt-4 border-t border-[#3D2620]">
-                    {dest.features.map((feat, fidx) => {
-                      const Icon = feat.icon;
-                      return (
-                        <div key={fidx} className="flex flex-col items-center gap-2">
-                          <Icon className="w-5 h-5 text-[#C8A27C]" strokeWidth={1.5} />
-                          <span className="text-[8px] text-gray-500 font-bold uppercase tracking-widest text-center">{t(feat.label)}</span>
+            {rows.length === 0 ? (
+              <p className="text-[12px] text-gray-400 font-light">{t('destinos.cards.empty')}</p>
+            ) : (
+              <ul className="flex flex-col gap-6">
+                {rows.map((row) => {
+                  const imageAlt = fill(t('destinos.card.imageAlt'), { city: row.name });
+                  const href = row.fromDb
+                    ? lp(`/destinos/${row.slug}`)
+                    : lp(`/coreia-do-sul/experiencias?cidade=${row.slug}`);
+                  return (
+                    <li key={row.id}>
+                      <Link
+                        href={href}
+                        className="group bg-[#150E0C] border border-[#3D2620] rounded-sm overflow-hidden flex flex-col md:flex-row hover:border-[#C8A27C]/50 transition-colors min-h-[220px]"
+                      >
+                        <div className="relative md:w-[40%] h-[200px] md:h-auto overflow-hidden">
+                          <SmartImage
+                            src={row.mainImage}
+                            alt={imageAlt}
+                            fill
+                            sizes="(min-width: 768px) 27vw, 100vw"
+                            quality={75}
+                            className="object-cover group-hover:scale-105 transition-transform duration-700"
+                            fallbackSrc={row.profile ? media[row.profile.slot] : media.destinos_card_fallback}
+                            placeholderLabel={row.name}
+                          />
                         </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </Link>
-            ))}
-
+                        <div className="p-8 md:w-[60%] flex flex-col relative">
+                          <div className="flex items-center justify-between mb-4">
+                            <h3 className="font-heading text-2xl text-white font-light uppercase tracking-wide group-hover:text-[#C8A27C] transition-colors">
+                              {row.name}
+                            </h3>
+                            <span
+                              aria-hidden
+                              className="w-8 h-8 rounded-full border border-[#3D2620] group-hover:border-[#C8A27C] flex items-center justify-center transition-colors"
+                            >
+                              <ArrowRight className="w-3 h-3 text-gray-500 group-hover:text-[#C8A27C]" />
+                            </span>
+                          </div>
+                          {row.subtitle ? (
+                            <p className="text-[11px] text-[#C8A27C] font-medium mb-3">{row.subtitle}</p>
+                          ) : null}
+                          <p className="text-[12px] text-gray-400 font-light leading-relaxed mb-6 flex-1">
+                            {row.description}
+                          </p>
+                          {row.profile && row.profile.features.length > 0 ? (
+                            <ul className="grid grid-cols-4 gap-2 pt-4 border-t border-[#3D2620]">
+                              {row.profile.features.map((feature) => (
+                                <li key={feature.labelKey} className="flex flex-col items-center gap-2">
+                                  <feature.Icon aria-hidden className="w-5 h-5 text-[#C8A27C]" strokeWidth={1.5} />
+                                  <span className="text-[8px] text-gray-500 font-bold uppercase tracking-widest text-center">
+                                    {t(feature.labelKey)}
+                                  </span>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <span className="inline-flex items-center gap-2 pt-4 border-t border-[#3D2620] text-[9px] font-bold uppercase tracking-widest text-[#C8A27C]">
+                              {row.fromDb ? t('destinos.card.cta') : t('destinos.card.fallbackCta')}
+                              <ArrowRight aria-hidden className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                            </span>
+                          )}
+                        </div>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </div>
-
         </div>
       </section>
 
-      {/* 3. Features Section */}
-      <section className="py-16 px-6 sm:px-12 max-w-[1400px] mx-auto w-full border-t border-[#3D2620]">
+      {/* 3. Por que a Coreia do Sul */}
+      <section
+        aria-labelledby="destinos-why-title"
+        className="py-16 px-6 sm:px-12 max-w-[1400px] mx-auto w-full border-t border-[#3D2620]"
+      >
         <div className="text-center mb-12">
-          <span className="text-[10px] uppercase tracking-[0.2em] text-[#C8A27C] font-bold">
-            {t('O QUE TORNA A COREIA DO SUL ESPECIAL')}
+          <span
+            id="destinos-why-title"
+            className="text-[10px] uppercase tracking-[0.2em] text-[#C8A27C] font-bold"
+          >
+            {t('destinos.why.kicker')}
           </span>
         </div>
-        
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 text-center">
-          <div className="flex flex-col items-center gap-4">
-            <Heart className="w-8 h-8 text-[#C8A27C]" strokeWidth={1} />
-            <div className="flex flex-col">
-              <span className="text-[11px] text-white font-bold mb-2">{t('Hospitalidade')}</span>
-              <span className="text-[10px] text-gray-400 font-light leading-relaxed">{t('Um povo acolhedor')}<br/>{t('e experiências')}<br/>{t('autênticas.')}</span>
-            </div>
-          </div>
-          <div className="flex flex-col items-center gap-4">
-            <Camera className="w-8 h-8 text-[#C8A27C]" strokeWidth={1} />
-            <div className="flex flex-col">
-              <span className="text-[11px] text-white font-bold mb-2">{t('Cultura Vibrante')}</span>
-              <span className="text-[10px] text-gray-400 font-light leading-relaxed">{t('Tradições milenares')}<br/>{t('e a influência pop')}<br/>{t('que conquista o mundo.')}</span>
-            </div>
-          </div>
-          <div className="flex flex-col items-center gap-4">
-            <Leaf className="w-8 h-8 text-[#C8A27C]" strokeWidth={1} />
-            <div className="flex flex-col">
-              <span className="text-[11px] text-white font-bold mb-2">{t('Natureza Diversa')}</span>
-              <span className="text-[10px] text-gray-400 font-light leading-relaxed">{t('Montanhas, ilhas, praias')}<br/>{t('e paisagens para todos')}<br/>{t('os estilos de viajantes.')}</span>
-            </div>
-          </div>
-          <div className="flex flex-col items-center gap-4">
-            <Utensils className="w-8 h-8 text-[#C8A27C]" strokeWidth={1} />
-            <div className="flex flex-col">
-              <span className="text-[11px] text-white font-bold mb-2">{t('Gastronomia Única')}</span>
-              <span className="text-[10px] text-gray-400 font-light leading-relaxed">{t('Sabores marcantes')}<br/>{t('e pratos que são uma')}<br/>{t('experiência à parte.')}</span>
-            </div>
-          </div>
-          <div className="flex flex-col items-center gap-4">
-            <ShoppingBag className="w-8 h-8 text-[#C8A27C]" strokeWidth={1} />
-            <div className="flex flex-col">
-              <span className="text-[11px] text-white font-bold mb-2">{t('Compras e Beleza')}</span>
-              <span className="text-[10px] text-gray-400 font-light leading-relaxed">{t('Do K-beauty à moda,')}<br/>{t('tudo que você precisa')}<br/>{t('em um só lugar.')}</span>
-            </div>
-          </div>
-          <div className="flex flex-col items-center gap-4">
-            <Star className="w-8 h-8 text-[#C8A27C]" strokeWidth={1} />
-            <div className="flex flex-col">
-              <span className="text-[11px] text-white font-bold mb-2">{t('Experiências Exclusivas')}</span>
-              <span className="text-[10px] text-gray-400 font-light leading-relaxed">{t('Roteiros personalizados')}<br/>{t('que vão além do óbvio e')}<br/>{t('dos pontos turísticos.')}</span>
-            </div>
-          </div>
-        </div>
+
+        <ul className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 text-center">
+          {[
+            {
+              Icon: Heart,
+              title: t('destinos.why.items.1title'),
+              lines: [t('destinos.why.items.1line1'), t('destinos.why.items.1line2'), t('destinos.why.items.1line3')],
+            },
+            {
+              Icon: Camera,
+              title: t('destinos.why.items.2title'),
+              lines: [t('destinos.why.items.2line1'), t('destinos.why.items.2line2'), t('destinos.why.items.2line3')],
+            },
+            {
+              Icon: Leaf,
+              title: t('destinos.why.items.3title'),
+              lines: [t('destinos.why.items.3line1'), t('destinos.why.items.3line2'), t('destinos.why.items.3line3')],
+            },
+            {
+              Icon: Utensils,
+              title: t('destinos.why.items.4title'),
+              lines: [t('destinos.why.items.4line1'), t('destinos.why.items.4line2'), t('destinos.why.items.4line3')],
+            },
+            {
+              Icon: ShoppingBag,
+              title: t('destinos.why.items.5title'),
+              lines: [t('destinos.why.items.5line1'), t('destinos.why.items.5line2'), t('destinos.why.items.5line3')],
+            },
+            {
+              Icon: Star,
+              title: t('destinos.why.items.6title'),
+              lines: [t('destinos.why.items.6line1'), t('destinos.why.items.6line2'), t('destinos.why.items.6line3')],
+            },
+          ].map((item) => (
+            <li key={item.title} className="flex flex-col items-center gap-4">
+              <item.Icon aria-hidden className="w-8 h-8 text-[#C8A27C]" strokeWidth={1} />
+              <span className="flex flex-col">
+                <span className="text-[11px] text-white font-bold mb-2">{item.title}</span>
+                <span className="text-[10px] text-gray-400 font-light leading-relaxed">
+                  {item.lines.map((line) => (
+                    <span key={line} className="block">
+                      {line}
+                    </span>
+                  ))}
+                </span>
+              </span>
+            </li>
+          ))}
+        </ul>
       </section>
 
-      {/* 4. Bottom CTA Section */}
-      <section className="py-12 px-6 sm:px-12 max-w-[1400px] mx-auto w-full">
+      {/* 4. CTA final */}
+      <section aria-labelledby="destinos-cta-title" className="py-12 px-6 sm:px-12 max-w-[1400px] mx-auto w-full">
         <div className="relative w-full border border-[#3D2620] overflow-hidden rounded-sm flex flex-col md:flex-row bg-[#150E0C]">
-          
           <div className="absolute inset-0 z-0">
-            <Image 
-              src={ctaBanner} 
-              alt={t('Palácio Gyeongbokgung ao pôr do sol')} 
-              fill 
-              className="object-cover object-center" 
+            <SmartImage
+              src={ctaBanner}
+              alt={t('destinos.why.items.6example')}
+              fill
+              sizes="100vw"
+              quality={75}
+              className="object-cover object-center"
+              placeholderLabel={t('destinos.why.items.6example')}
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#0F0A08] via-[#0F0A08]/90 to-transparent w-full md:w-2/3" />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0F0A08]/20 to-[#0F0A08]/80" />
+            <div aria-hidden className="absolute inset-0 bg-gradient-to-r from-[#0F0A08] via-[#0F0A08]/90 to-transparent w-full md:w-2/3" />
+            <div aria-hidden className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0F0A08]/20 to-[#0F0A08]/80" />
           </div>
 
-          {/* Left side content */}
           <div className="w-full md:w-[60%] flex flex-col items-start justify-center text-left p-10 md:p-16 gap-6 relative z-10">
-            <h2 className="font-heading text-4xl sm:text-5xl font-light text-white leading-[1.1]">
-              {t('Mais do que destinos,')} <br />
-              <span className="italic text-[#C8A27C]">{t('criamos jornadas.')}</span>
+            <h2 id="destinos-cta-title" className="font-heading text-4xl sm:text-5xl font-light text-white leading-[1.1]">
+              {t('destinos.cta.line1')} <br />
+              <span className="italic text-[#C8A27C]">{t('destinos.cta.line2')}</span>
             </h2>
             <p className="text-[13px] text-gray-300 font-light max-w-md leading-relaxed">
-              {t('Conte com especialistas que vivem a Coreia para planejar cada detalhe da sua viagem e transformar sonhos em realidade.')}
+              {t('destinos.cta.description')}
             </p>
             <div className="flex flex-col sm:flex-row items-center gap-6 mt-4 w-full sm:w-auto">
-              <Link href={lp('/contato')} className="flex items-center justify-center gap-3 bg-[#C8A27C] hover:bg-[#B8906C] text-[#0F0A08] font-bold text-[10px] py-4 px-8 rounded-none transition-all group uppercase tracking-widest w-full sm:w-auto">
-                {t('SOLICITAR PLANEJAMENTO')}
-                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              <Link
+                href={lp('/contato')}
+                className="flex items-center justify-center gap-3 bg-[#C8A27C] hover:bg-[#B8906C] text-[#0F0A08] font-bold text-[10px] py-4 px-8 rounded-none transition-all group uppercase tracking-widest w-full sm:w-auto"
+              >
+                {t('destinos.cta.requestPlanning')}
+                <ArrowRight aria-hidden className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </Link>
-              <Link href={lp('/jornadas')} className="flex items-center justify-center bg-transparent border border-[#3D2620] hover:border-[#C8A27C] text-[#C8A27C] font-bold text-[10px] py-4 px-8 rounded-none transition-all uppercase tracking-widest w-full sm:w-auto">
-                {t('CONHECER JORNADAS')}
+              <Link
+                href={lp('/jornadas')}
+                className="flex items-center justify-center bg-transparent border border-[#3D2620] hover:border-[#C8A27C] text-[#C8A27C] font-bold text-[10px] py-4 px-8 rounded-none transition-all uppercase tracking-widest w-full sm:w-auto"
+              >
+                {t('destinos.cta.discoverJourneys')}
               </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Support Info Footer */}
-      <section className="bg-[#150E0C] border-t border-b border-[#3D2620] py-8 px-6">
-        <div className="max-w-[1400px] mx-auto grid grid-cols-2 md:grid-cols-5 gap-6 opacity-80">
-          <div className="flex items-start gap-4">
-            <ShieldCheck className="w-6 h-6 text-[#C8A27C] shrink-0" strokeWidth={1.5} />
-            <div className="flex flex-col">
-              <span className="text-[10px] text-white font-bold mb-1">{t('Segurança')}</span>
-              <span className="text-[9px] text-gray-400">{t('Suporte completo')}<br/>{t('antes e durante')}<br/>{t('sua viagem.')}</span>
-            </div>
-          </div>
-          <div className="flex items-start gap-4">
-            <Headphones className="w-6 h-6 text-[#C8A27C] shrink-0" strokeWidth={1.5} />
-            <div className="flex flex-col">
-              <span className="text-[10px] text-white font-bold mb-1">{t('Consultoria')}<br/>{t('Especializada')}</span>
-              <span className="text-[9px] text-gray-400">{t('Atendimento humanizado')}<br/>{t('e em português.')}</span>
-            </div>
-          </div>
-          <div className="flex items-start gap-4">
-            <Calendar className="w-6 h-6 text-[#C8A27C] shrink-0" strokeWidth={1.5} />
-            <div className="flex flex-col">
-              <span className="text-[10px] text-white font-bold mb-1">{t('Roteiros')}<br/>{t('Personalizados')}</span>
-              <span className="text-[9px] text-gray-400">{t('Cada detalhe pensado')}<br/>{t('para você.')}</span>
-            </div>
-          </div>
-          <div className="flex items-start gap-4">
-            <Heart className="w-6 h-6 text-[#C8A27C] shrink-0" strokeWidth={1.5} />
-            <div className="flex flex-col">
-              <span className="text-[10px] text-white font-bold mb-1">{t('Parcerias')}<br/>{t('Confiáveis')}</span>
-              <span className="text-[9px] text-gray-400">{t('Os melhores parceiros')}<br/>{t('na Coreia do Sul.')}</span>
-            </div>
-          </div>
-          <div className="flex items-start gap-4">
-            <Award className="w-6 h-6 text-[#C8A27C] shrink-0" strokeWidth={1.5} />
-            <div className="flex flex-col">
-              <span className="text-[10px] text-white font-bold mb-1">{t('Experiências')}<br/>{t('Autênticas')}</span>
-              <span className="text-[9px] text-gray-400">{t('Vivencie o que a maioria')}<br/>{t('dos turistas não vê.')}</span>
-            </div>
-          </div>
-        </div>
+      {/* 5. Information strip */}
+      <section
+        aria-label={t('destinos.features.support.title')}
+        className="bg-[#150E0C] border-t border-b border-[#3D2620] py-8 px-6"
+      >
+        <ul className="max-w-[1400px] mx-auto grid grid-cols-2 md:grid-cols-5 gap-6 opacity-80">
+          {[
+            {
+              Icon: ShieldCheck,
+              title: t('destinos.seguranca'),
+              lines: [t('destinos.features.support.line1'), t('destinos.features.support.line2')],
+            },
+            {
+              Icon: Headphones,
+              title: `${t('destinos.features.consulting.title')} ${t('destinos.features.consulting.subtitle')}`,
+              lines: [t('destinos.features.consulting.line1'), t('destinos.features.consulting.line2')],
+            },
+            {
+              Icon: Calendar,
+              title: `${t('destinos.features.itineraries.title')} ${t('destinos.features.itineraries.subtitle')}`,
+              lines: [t('destinos.features.itineraries.line1'), t('destinos.features.itineraries.line2')],
+            },
+            {
+              Icon: Heart,
+              title: `${t('destinos.features.partners.title')} ${t('destinos.features.partners.subtitle')}`,
+              lines: [t('destinos.features.partners.line1'), t('destinos.features.partners.line2')],
+            },
+            {
+              Icon: Award,
+              title: `${t('destinos.features.cta.title')} ${t('destinos.why.items.1line3-x')}`,
+              lines: [t('destinos.features.cta.line1'), t('destinos.features.cta.line2')],
+            },
+          ].map((item) => (
+            <li key={item.title} className="flex items-start gap-4">
+              <item.Icon aria-hidden className="w-6 h-6 text-[#C8A27C] shrink-0" strokeWidth={1.5} />
+              <span className="flex flex-col">
+                <span className="text-[10px] text-white font-bold mb-1">{item.title}</span>
+                <span className="text-[9px] text-gray-400">
+                  {item.lines.map((line) => (
+                    <span key={line} className="block">
+                      {line}
+                    </span>
+                  ))}
+                </span>
+              </span>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <Footer />

@@ -1,50 +1,68 @@
-'use client';
+import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
+import type { ReactNode } from 'react';
+import { getAuth } from '@/lib/auth';
+import { buildNoIndexMetadata } from '@/lib/seo';
+import type { Role } from '@/lib/session';
+import DashboardShell from './DashboardShell';
 
-import React, { useEffect, useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
+/**
+ * Layout do portal (`/dashboard/*`).
+ *
+ * ## Autorização — o que é feito ONDE
+ *
+ * | camada                              | o que garante                                              |
+ * |-------------------------------------|------------------------------------------------------------|
+ * | `src/proxy.ts` (edge)               | assinatura do cookie + redireciona por papel (307)          |
+ * | **este arquivo (servidor)**         | `getAuth()` (revalida `isActive`/`sessionVersion` no banco) |
+ * | `DashboardShell` + `AdminGuard`     | não renderiza `children` enquanto o papel não bater        |
+ * | server actions                      | `requireStaff()`/`requireUser()` com escopo no WHERE        |
+ *
+ * ## O bug que este layout corrigia
+ *
+ * A versão anterior era `'use client'` e o guard de papel era curto-circuited:
+ * quando `pathname` era uma das três rotas conhecidas a condição inteira
+ * virava `false` e `setChecked(true)` acontecia — um `customer` logado
+ * renderizava o painel admin de 12 abas inteiro. Além disso o layout não tinha
+ * `noindex`.
+ *
+ * ## Por que o redirect de papel é dividido
+ *
+ * Um layout do App Router NÃO recebe o pathname da rota filha (`/dashboard` não
+ * tem segmento dinâmico, então `params` é `{}`), logo o servidor não consegue
+ * comparar "path atual × papel" aqui. O que o servidor consegue — e faz — é:
+ * validar a sessão no banco e mandar para `/login` quem não tem. O
+ * cruzamento papel × rota é feito pelo `RoleGate`/`AdminGuard` no cliente, que
+ * não renderiza o conteúdo protegido enquanto não confirma. A checagem
+ * autoritativa de dado continua sendo das server actions.
+ */
+export const metadata: Metadata = buildNoIndexMetadata('Portal | Maeum Global', '/dashboard');
 
-const ROLE_ROUTES: Record<string, string> = {
+/** `getAuth()`/`redirect()` exigem render por request: nunca cachear. */
+export const dynamic = 'force-dynamic';
+
+/** Casa de cada papel. Espelha `homeForRole` de `@/components/AdminGuard`. */
+const ROLE_HOME: Record<Role, string> = {
   super_admin: '/dashboard/admin',
   admin: '/dashboard/admin',
-  manager: '/dashboard/admin',
-  editor: '/dashboard/admin',
   consultora: '/dashboard/consultora',
-  customer: '/dashboard/cliente'
+  customer: '/dashboard/cliente',
 };
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { user, loading, isAuthenticated } = useAuth();
-  const router = useRouter();
-  const pathname = usePathname();
-  const [checked, setChecked] = useState(false);
+export default async function DashboardLayout({ children }: { children: ReactNode }) {
+  const auth = await getAuth();
 
-  useEffect(() => {
-    if (loading) return;
-    if (!isAuthenticated) {
-      router.push('/login');
-      return;
-    }
-
-    const allowedRoute = ROLE_ROUTES[user?.role || ''];
-    if (allowedRoute && pathname !== allowedRoute && (pathname === '/dashboard' || !Object.values(ROLE_ROUTES).includes(pathname))) {
-      router.push(allowedRoute);
-      return;
-    }
-
-    setChecked(true);
-  }, [user, loading, isAuthenticated, router, pathname]);
-
-  if (loading || !checked) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-3" />
-          <p className="text-xs text-muted-foreground font-semibold tracking-wider uppercase">Carregando...</p>
-        </div>
-      </div>
-    );
+  // Sem sessão válida (cookie ausente, expirado, usuário desativado ou
+  // `sessionVersion` divergente) o portal não renderiza nada.
+  if (!auth) {
+    redirect(`/login?next=${encodeURIComponent('/dashboard')}`);
   }
 
-  return <>{children}</>;
+  const home = ROLE_HOME[auth.user.role] ?? ROLE_HOME.customer;
+
+  return (
+    <DashboardShell home={home}>
+      {children}
+    </DashboardShell>
+  );
 }

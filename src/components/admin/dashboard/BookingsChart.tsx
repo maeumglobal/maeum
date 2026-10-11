@@ -1,90 +1,128 @@
 'use client';
 
-import React from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { ChevronDown } from 'lucide-react';
+/**
+ * Reservas por PACOTE — dados REAIS.
+ *
+ * Substitui a rosca com cinco journeys inventadas ("Always Destination" 10,
+ * "Horizon of Seven" 7, …) que nunca saíram do arquivo. Agora os valores vêm de
+ * `getBookingsByPackage()` (`Booking.packageId` agregado no banco).
+ */
+import { useCallback, useState } from 'react';
+import dynamic from 'next/dynamic';
+import { RefreshCw, TriangleAlert } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { getBookingsByPackage } from '@/actions/adminActions';
+import { AdminErrorState } from '@/components/admin/ui/States';
+import { useMountedLoad } from '@/components/admin/ui/useMountedLoad';
 
-const data = [
-  { name: 'Always Destination', value: 10, color: 'var(--admin-chart-purple)' },
-  { name: 'Horizon of Seven', value: 7, color: 'var(--admin-chart-orange)' },
-  { name: 'Bom Sarang', value: 4, color: 'var(--admin-chart-yellow)' },
-  { name: 'Caravana de Verão', value: 4, color: 'var(--admin-chart-cyan)' },
-  { name: 'Founding ARMY', value: 3, color: 'var(--admin-chart-pink)' },
-];
+const BookingsPieChart = dynamic(
+  () =>
+    import('./BookingsPieChart').then((mod) => ({
+      default: mod.default,
+    })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-full w-full animate-pulse rounded-full bg-[var(--admin-border)]/25" aria-hidden="true" />
+    ),
+  },
+);
+
+interface Slice {
+  title: string;
+  count: number;
+}
 
 export default function BookingsChart() {
-  const total = data.reduce((acc, curr) => acc + curr.value, 0);
+  const { t, formatNumber } = useLanguage();
+  const [rows, setRows] = useState<Slice[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    const res = await getBookingsByPackage(6);
+    if (res.success && res.data) {
+      setRows(res.data);
+    } else {
+      setRows([]);
+      setError(res.error ?? t('state.errorTitle'));
+    }
+    setLoading(false);
+  }, [t]);
+
+  useMountedLoad(load);
+
+  const total = rows.reduce((acc, row) => acc + row.count, 0);
 
   return (
-    <div className="bg-[var(--admin-card)] border border-[var(--admin-border)] rounded-xl p-6 h-[280px] flex flex-col">
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-[var(--admin-text-main)] text-sm font-medium">Reservas por Pacote</h3>
-        <div className="relative">
-          <select className="appearance-none bg-transparent border border-[var(--admin-border)] text-[var(--admin-text-main)] text-xs rounded-lg px-3 py-1.5 pr-8 focus:outline-none focus:border-[var(--admin-primary)] cursor-pointer">
-            <option value="todos">Todos os pacotes</option>
-            <option value="individuais">Individuais</option>
-          </select>
-          <ChevronDown className="w-3.5 h-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--admin-text-muted)] pointer-events-none" />
-        </div>
-      </div>
+    <section className="flex h-[280px] flex-col rounded-xl border border-[var(--admin-border)] bg-[var(--admin-card)] p-6">
+      <header className="mb-2 flex items-center justify-between gap-2">
+        <h3 className="truncate text-sm font-medium text-[var(--admin-text-main)]">
+          {t('admin.chart.bookingsTitle')}
+        </h3>
+        <button
+          type="button"
+          onClick={load}
+          aria-label={t('state.retry')}
+          className="flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--admin-border)] text-[var(--admin-text-muted)] transition-colors hover:text-[var(--admin-text-main)]"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+        </button>
+      </header>
 
-      <div className="flex-1 flex items-center justify-between mt-2">
-        <div className="relative w-1/2 h-[180px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={data}
-                cx="50%"
-                cy="50%"
-                innerRadius={55}
-                outerRadius={80}
-                paddingAngle={2}
-                dataKey="value"
-                stroke="none"
-              >
-                {data.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip 
-                content={({ active, payload }) => {
-                  if (active && payload && payload.length) {
-                    const data = payload[0].payload;
-                    return (
-                      <div className="bg-[var(--admin-border)] border border-[var(--admin-border)] rounded-lg p-2 shadow-lg text-xs">
-                        <span className="text-[var(--admin-text-main)] font-medium">{data.name}</span>
-                        <div className="mt-1 font-bold" style={{ color: data.color }}>{data.value} reservas</div>
-                      </div>
-                    );
-                  }
-                  return null;
-                }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-          {/* Center text for donut */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            <span className="text-[var(--admin-text-muted)] text-[10px] uppercase font-bold tracking-wider">Total</span>
-            <span className="text-[var(--admin-text-main)] text-lg font-bold leading-tight">{total} reservas</span>
-          </div>
-        </div>
-
-        {/* Legend */}
-        <div className="w-1/2 flex flex-col justify-center gap-3 pl-2">
-          {data.map((item, idx) => (
-            <div key={idx} className="flex items-center justify-between text-[11px]">
-              <div className="flex items-center gap-2 overflow-hidden">
-                <div className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: item.color }} />
-                <span className="text-[var(--admin-text-muted)] truncate" title={item.name}>{item.name}</span>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <span className="text-[var(--admin-text-main)] font-medium">{Math.round((item.value / total) * 100)}%</span>
-                <span className="text-[var(--admin-text-muted)] w-6 text-right">({item.value})</span>
+      <div className="mt-2 flex min-h-0 flex-1 flex-col items-center gap-3">
+        {error ? (
+          <AdminErrorState message={error} onRetry={load} />
+        ) : loading ? (
+          <div className="h-[180px] w-full animate-pulse rounded-full bg-[var(--admin-border)]/25" aria-hidden="true" />
+        ) : total === 0 ? (
+          <p className="flex flex-1 items-center justify-center gap-2 text-center text-xs text-[var(--admin-text-muted)]">
+            <TriangleAlert className="w-3.5 h-3.5" />
+            {t('admin.chart.bookingsEmpty')}
+          </p>
+        ) : (
+          <>
+            <div className="relative h-[150px] w-[150px] shrink-0">
+              <BookingsPieChart data={rows} label={t('admin.chart.bookingsLegend')} />
+              <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--admin-text-muted)]">
+                  {t('admin.chart.bookingsLegend')}
+                </span>
+                <span className="text-lg font-bold leading-tight text-[var(--admin-text-main)]">
+                  {formatNumber(total)}
+                </span>
               </div>
             </div>
-          ))}
-        </div>
+            <ul className="flex w-full min-w-0 flex-1 flex-col justify-center gap-1.5 overflow-y-auto">
+              {rows.map((row, index) => (
+                <li
+                  key={`${row.title}-${row.count}-${index}`}
+                  className="flex items-center justify-between gap-2 text-[11px]"
+                >
+                  <span className="flex min-w-0 items-center gap-2">
+                    <span
+                      aria-hidden="true"
+                      className="h-2.5 w-2.5 shrink-0 rounded-sm"
+                      style={{ backgroundColor: `var(--admin-chart-${['purple', 'orange', 'yellow', 'cyan', 'pink'][index % 5]})` }}
+                    />
+                    <span className="truncate text-[var(--admin-text-muted)]" title={row.title}>
+                      {row.title}
+                    </span>
+                  </span>
+                  <span className="shrink-0 font-medium text-[var(--admin-text-main)]">
+                    {Math.round((row.count / total) * 100)}%
+                    <span className="ml-1 w-6 text-right text-[var(--admin-text-muted)]">
+                      ({formatNumber(row.count)})
+                    </span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
       </div>
-    </div>
+    </section>
   );
 }

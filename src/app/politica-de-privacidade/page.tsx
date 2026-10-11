@@ -1,232 +1,305 @@
-'use client';
-
-import React from 'react';
+import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Shield, Cookie, User, Mail, Phone, MapPin, ChevronRight, Check } from 'lucide-react';
+import { Building2, Cookie, Mail, PhoneCall, Shield, User } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { useLanguage } from '@/contexts/LanguageContext';
+import JsonLd from '@/components/seo/JsonLd';
+import Breadcrumbs from '@/components/seo/Breadcrumbs';
+import { prisma } from '@/lib/prisma';
+import { getPublicSiteConfig } from '@/actions/siteConfigActions';
+import { getServerI18n } from '@/lib/serverI18n';
+import { CONTACT, SITE_NAME, buildMetadata, localizedUrl, truncateMeta } from '@/lib/seo';
 
-export default function PoliticaPrivacidadePage() {
-  const { t, locale } = useLanguage();
-  const lp = (path: string) => (locale === 'pt' || path === '/' ? path : `/${locale}${path}`);
-  const sections = [
-    {
-      title: t('1. Informações que Coletamos'),
-      content: t(`Coletamos informações que você nos fornece diretamente ao utilizar nossos serviços:
-      
-      • Informações de identificação pessoal: nome, e-mail, telefone, CPF, data de nascimento
-      • Informações de viagem: destinos de interesse, datas preferidas, orçamento
-      • Informações de pagamento: dados de cartão de crédito (processados de forma segura por terceiros)
-      • Preferências de comunicação: como deseja ser contatado
-      • Dados de navegação: IP, tipo de navegador, páginas visitadas (via cookies)`)
-    },
-    {
-      title: t('2. Como Usamos Suas Informações'),
-      content: t(`Utilizamos suas informações para:
-      
-      • Personalizar roteiros e experiências de viagem
-      • Processar reservas e pagamentos
-      • Enviar confirmações e atualizações sobre sua viagem
-      • Fornecer suporte antes, durante e após sua experiência
-      • Enviar materiais promocionais (apenas com seu consentimento)
-      • Melhorar continuamente nossos serviços
-      • Cumprir obrigações legais e regulatórias`)
-    },
-    {
-      title: t('3. Compartilhamento de Dados'),
-      content: t(`Seus dados podem ser compartilhados apenas nas seguintes situações:
-      
-      • Fornecedores de serviços: hotéis, companhias aéreas, operadoras de turismo na Ásia
-      • Processadores de pagamento: para processamento seguro de transações
-      • Autoridades governamentais: quando exigido por lei (imigração, alfândega)
-      • Parceiros de intercâmbio: escolas e instituições educacionais
-      • Prestadores de experiências: guias, restaurantes, atrações turísticas
-      
-      Não vendemos, alugamos ou comercializamos seus dados pessoais.`)
-    },
-    {
-      title: t('4. Cookies e Tecnologias de Rastreamento'),
-      content: t(`Utilizamos diferentes tipos de cookies:
-      
-      • Cookies essenciais: necessários para o funcionamento do site
-      • Cookies analíticos: Google Analytics para entender o uso do site
-      • Cookies de funcionalidade: memorizar preferências e configurações
-      • Cookies de marketing: exibir anúncios relevantes (com seu consentimento)
-      
-      Você pode gerenciar suas preferências de cookies a qualquer momento.`)
-    },
-    {
-      title: t('5. Seus Direitos'),
-      content: t(`Como titular dos dados, você tem direito a:
-      
-      • Acessar suas informações pessoais que mantemos
-      • Corrigir dados incompletos, inexatos ou desatualizados
-      • Solicitar a exclusão de seus dados (quando aplicável)
-      • Revogar consentimento para processamento de dados
-      • Portabilidade dos dados para outro fornecedor de serviço
-      • Opor-se ao processamento em determinadas circunstâncias
-      
-      Para exercer seus direitos, entre em contato: privacidade@maeumglobal.com.br`)
-    },
-    {
-      title: t('6. Segurança de Dados'),
-      content: t(`Implementamos medidas de segurança técnicas e organizacionais:
-      
-      • Criptografia SSL/TLS para todas as transmissões de dados
-      • Armazenamento seguro com acesso restrito
-      • Sistemas de pagamento PCI DSS compliant
-      • Monitoramento contínuo contra acessos não autorizados
-      • Treinamento regular da equipe em proteção de dados
-      • Backups seguros e planos de recuperação de desastres`)
-    },
-    {
-      title: t('7. Retenção de Dados'),
-      content: t(`Mantemos seus dados pelo tempo necessário para:
-      
-      • Cumprir a finalidade para a qual foram coletados
-      • Cumprir obrigações contratuais e legais
-      • Resolver disputas e fazer valer nossos acordos
-      
-      Após esse período, os dados são excluídos ou anonimizados de forma segura.`)
-    },
-    {
-      title: t('8. Transferências Internacionais'),
-      content: t(`Como operamos viagens para a Ásia, seus dados podem ser transferidos para:
-      
-      • Coreia do Sul e outros países asiáticos
-      • Fornecedores e parceiros internacionais de turismo
-      
-      Garantimos que todas as transferências sigam padrões adequados de proteção, 
-      conforme exigido pela LGPD.`)
-    },
-    {
-      title: t('9. Menores de Idade'),
-      content: t(`Nossos serviços são direcionados a maiores de 18 anos. Para menores:
-      
-      • Requeremos consentimento dos pais ou responsáveis legais
-      • Coletamos apenas dados necessários para a viagem
-      • Tratamos os dados com proteção reforçada
-      • Não direcionamos marketing diretamente a menores`)
-    },
-    {
-      title: t('10. Alterações nesta Política'),
-      content: t(`Esta política pode ser atualizada periodicamente. Mudanças significativas 
-      serão comunicadas através do site ou por e-mail. A versão mais recente estará 
-      sempre disponível em maeumglobal.com.br/politica-de-privacidade.`)
-    },
-    {
-      title: t('11. Contato do Encarregado de Dados'),
-      content: t(`Dúvidas ou solicitações sobre privacidade:
-      
-      E-mail: privacidade@maeumglobal.com.br
-      Telefone: +55 (41) 98709-4799
-      Endereço: Curitiba, PR, Brasil
-      
-      Tempo de resposta: até 15 dias úteis`)
-    }
-  ];
+/* ────────────────────────────────────────────────────────────────────────────
+ * SEO
+ * ────────────────────────────────────────────────────────────────────────── */
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { locale, t } = await getServerI18n();
+  return buildMetadata({
+    title: truncateMeta(t('legal.privacy.seoTitle'), 60),
+    description: t('legal.privacy.seoDescription'),
+    path: '/politica-de-privacidade',
+    locale,
+    image: '/images/agencia-viagens-coreia-do-sul-maeum-global-oficial.webp',
+    imageAlt: t('legal.privacidade-protecao-de-dados'),
+  });
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Helpers
+ * ────────────────────────────────────────────────────────────────────────── */
+
+/**
+ * Os blocos longos do dicionário são template literals com indentação de
+ * código-fonte (`\n      • item`). Para exibição, cada quebra de linha vira
+ * uma quebra de verdade e a indentação some.
+ */
+const cleanBlock = (value: string): string =>
+  value
+    .replace(/\r\n?/g, '\n')
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+
+const SECTIONS: readonly { titleKey: string; contentKey: string }[] = [
+  { titleKey: 'legal.privacy.section1', contentKey: 'legal.privacy.collectionIntro' },
+  { titleKey: 'legal.privacy.section2', contentKey: 'legal.privacy.usageIntro' },
+  { titleKey: 'legal.privacy.section3', contentKey: 'legal.privacy.sharingIntro' },
+  { titleKey: 'legal.privacy.section4', contentKey: 'legal.privacy.cookiesIntro' },
+  { titleKey: 'legal.privacy.section5', contentKey: 'legal.privacy.rightsIntro' },
+  { titleKey: 'legal.privacy.section6', contentKey: 'legal.privacy.securityIntro' },
+  { titleKey: 'legal.privacy.section7', contentKey: 'legal.privacy.retentionIntro' },
+  { titleKey: 'legal.privacy.section8', contentKey: 'legal.privacy.transfersIntro' },
+  { titleKey: 'legal.privacy.section9', contentKey: 'legal.privacy.minorsIntro' },
+  { titleKey: 'legal.privacy.section10', contentKey: 'legal.privacy.updatesNotice' },
+];
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Página
+ * ────────────────────────────────────────────────────────────────────────── */
+
+export default async function PoliticaPrivacidadePage() {
+  const { t, locale, lp, formatDate } = await getServerI18n();
+
+  const [siteConfig, lastTouched] = await Promise.all([
+    getPublicSiteConfig().catch(() => null),
+    // "Última atualização" = última edição real da config legal no painel
+    // (determinístico; `new Date()` mudaria o HTML a cada request).
+    prisma.siteConfig
+      .findFirst({
+        where: { section: { in: ['legal', 'contact', 'brand'] } },
+        orderBy: { updatedAt: 'desc' },
+        select: { updatedAt: true },
+      })
+      .catch(() => null),
+  ]);
+
+  /* ── Identificação legal: SEMPRE do SiteConfig (editável no painel) ────── */
+
+  const companyName = siteConfig?.legal.companyName || siteConfig?.brand.name || SITE_NAME;
+  const cnpj = siteConfig?.legal.cnpj ?? '';
+  // O e-mail do encarregado é o de atendimento configurado no painel; o
+  // dedicaco de privacidade continua documentado no texto da seção 11.
+  const dpoEmail = siteConfig?.contact.email || CONTACT.email;
+  const dpoPhone = siteConfig?.contact.phone || CONTACT.phone;
+  const dpoAddress =
+    siteConfig?.contact.address || `${CONTACT.city} — ${CONTACT.region}, ${CONTACT.countryName}`;
+
+  const webPageJsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebPage',
+        '@id': `${localizedUrl('/politica-de-privacidade', locale)}#webpage`,
+        name: t('legal.politica-de-privacidade'),
+        description: t('legal.privacy.seoDescription'),
+        url: localizedUrl('/politica-de-privacidade', locale),
+        inLanguage: locale,
+        isPartOf: { '@id': `${localizedUrl('/', locale)}#website` },
+        about: { '@id': `${localizedUrl('/', locale)}#organization` },
+      },
+      {
+        '@type': 'Organization',
+        '@id': `${localizedUrl('/', locale)}#organization`,
+        name: companyName,
+        url: localizedUrl('/', locale),
+        ...(cnpj ? { taxID: cnpj } : {}),
+        contactPoint: [
+          {
+            '@type': 'ContactPoint',
+            contactType: 'privacy',
+            email: dpoEmail,
+            telephone: dpoPhone,
+            availableLanguage: ['Portuguese', 'English', 'Spanish'],
+          },
+        ],
+      },
+    ],
+  };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-background text-foreground">
+      <JsonLd id="privacy-webpage-jsonld" data={webPageJsonLd} />
+
       <Header />
 
-      {/* Hero Section */}
-      <section className="relative py-20 px-4 bg-secondary overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-transparent" />
-        </div>
-        
-        <div className="relative z-10 max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 bg-primary/20 backdrop-blur border border-primary/45 rounded-full px-4 py-2 mb-6">
-            <Shield className="h-4 w-4 text-accent" />
-            <span className="text-xs uppercase tracking-widest text-primary font-bold">
-              {t('Privacidade & Proteção de Dados')}
-            </span>
+      <main className="flex-1">
+        {/* ── Hero ─────────────────────────────────────────────────────────── */}
+        <section
+          aria-labelledby="privacy-hero-title"
+          className="relative py-20 px-4 bg-secondary overflow-hidden"
+        >
+          <div aria-hidden className="absolute inset-0 opacity-10">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-transparent" />
           </div>
-          
-          <h1 className="font-heading text-4xl md:text-5xl font-light text-primary mb-4">
-            {t('Política de Privacidade')}
-          </h1>
-          
-          <p className="text-sm text-gray-400 max-w-2xl mx-auto">
-            {t('Transparência e segurança no tratamento dos seus dados pessoais. Sua privacidade é nossa prioridade.')}
-          </p>
-        </div>
-      </section>
-
-      {/* Content */}
-      <section className="py-16 px-4 md:px-8 bg-background flex-1">
-        <div className="max-w-4xl mx-auto">
-          {/* Info Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
-            <div className="bg-card border border-border/60 rounded-xl p-5 flex flex-col items-center text-center">
-              <div className="p-3 bg-primary/10 rounded-full mb-3">
-                <User className="h-5 w-5 text-accent" />
-              </div>
-              <h3 className="text-xs font-semibold text-secondary mb-1">{t('Seus Dados')}</h3>
-              <p className="text-[10px] text-muted-foreground">{t('Protegidos e utilizados apenas para melhorar sua experiência')}</p>
-            </div>
-            
-            <div className="bg-card border border-border/60 rounded-xl p-5 flex flex-col items-center text-center">
-              <div className="p-3 bg-primary/10 rounded-full mb-3">
-                <Cookie className="h-5 w-5 text-accent" />
-              </div>
-              <h3 className="text-xs font-semibold text-secondary mb-1">{t('Cookies')}</h3>
-              <p className="text-[10px] text-muted-foreground">{t('Você tem controle total sobre suas preferências')}</p>
-            </div>
-            
-            <div className="bg-card border border-border/60 rounded-xl p-5 flex flex-col items-center text-center">
-              <div className="p-3 bg-primary/10 rounded-full mb-3">
-                <Mail className="h-5 w-5 text-accent" />
-              </div>
-              <h3 className="text-xs font-semibold text-secondary mb-1">{t('Contato')}</h3>
-              <p className="text-[10px] text-muted-foreground">{t('Dúvidas? privacidade@maeumglobal.com.br')}</p>
-            </div>
-          </div>
-
-          {/* Sections */}
-          <div className="space-y-8">
-            {sections.map((section, idx) => (
-              <div
-                key={idx}
-                className="bg-card border border-border/60 rounded-2xl p-6 md:p-8 shadow-sm hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="p-2 bg-primary/10 rounded-lg shrink-0">
-                    <Check className="h-4 w-4 text-accent" />
-                  </div>
-                  <div className="flex-1">
-                    <h2 className="font-heading text-xl font-semibold text-secondary mb-4">
-                      {section.title}
-                    </h2>
-                    <div className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
-                      {section.content}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Navigation */}
-          <div className="mt-12 pt-8 border-t border-border/60 flex items-center justify-between">
-            <Link
-              href={lp('/')}
-              className="text-xs font-medium text-primary hover:text-accent-hover transition-colors flex items-center gap-2"
-            >
-              ← {t('Voltar ao início')}
-            </Link>
-            
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span>{t('Última atualização:')}</span>
-              <span className="font-semibold text-secondary">
-                {new Date().toLocaleDateString(locale === 'en' ? 'en-US' : locale === 'es' ? 'es-ES' : 'pt-BR', { year: 'numeric', month: 'long', day: 'numeric' })}
+          <div className="relative z-10 max-w-4xl mx-auto text-center">
+            <div className="inline-flex items-center gap-2 bg-primary/20 backdrop-blur border border-primary/45 rounded-full px-4 py-2 mb-6">
+              <Shield aria-hidden className="h-4 w-4 text-accent" />
+              <span className="text-xs uppercase tracking-widest text-primary font-bold">
+                {t('legal.privacidade-protecao-de-dados')}
               </span>
             </div>
+            <h1
+              id="privacy-hero-title"
+              className="font-heading text-4xl md:text-5xl font-light text-primary mb-4"
+            >
+              {t('legal.politica-de-privacidade')}
+            </h1>
+            <p className="text-sm text-gray-400 max-w-2xl mx-auto">
+              {t('legal.privacy.transparencyNote')}
+            </p>
           </div>
+        </section>
+
+        <div className="px-4 md:px-8 max-w-4xl mx-auto w-full pt-8">
+          <Breadcrumbs
+            locale={locale}
+            items={[{ name: t('legal.legal.breadcrumb'), path: '/politica-de-privacidade' }]}
+          />
         </div>
-      </section>
+
+        {/* ── Conteúdo ─────────────────────────────────────────────────────── */}
+        <section className="py-16 px-4 md:px-8 bg-background flex-1">
+          <div className="max-w-4xl mx-auto">
+            <ul className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
+              <li className="bg-card border border-border/60 rounded-xl p-5 flex flex-col items-center text-center">
+                <span className="p-3 bg-primary/10 rounded-full mb-3">
+                  <User aria-hidden className="h-5 w-5 text-accent" />
+                </span>
+                <h2 className="text-xs font-semibold text-secondary mb-1">{t('legal.seus-dados')}</h2>
+                <p className="text-[10px] text-muted-foreground">
+                  {t('legal.privacy.protectedNote')}
+                </p>
+              </li>
+              <li className="bg-card border border-border/60 rounded-xl p-5 flex flex-col items-center text-center">
+                <span className="p-3 bg-primary/10 rounded-full mb-3">
+                  <Cookie aria-hidden className="h-5 w-5 text-accent" />
+                </span>
+                <h2 className="text-xs font-semibold text-secondary mb-1">{t('legal.cookies')}</h2>
+                <p className="text-[10px] text-muted-foreground">{t('legal.privacy.fullControl')}</p>
+              </li>
+              <li className="bg-card border border-border/60 rounded-xl p-5 flex flex-col items-center text-center">
+                <span className="p-3 bg-primary/10 rounded-full mb-3">
+                  <Mail aria-hidden className="h-5 w-5 text-accent" />
+                </span>
+                <h2 className="text-xs font-semibold text-secondary mb-1">{t('legal.contato')}</h2>
+                <a
+                  href={`mailto:${dpoEmail}`}
+                  className="text-[10px] text-primary hover:text-accent-hover transition-colors break-all"
+                >
+                  {dpoEmail}
+                </a>
+              </li>
+            </ul>
+
+            <div className="space-y-8">
+              {SECTIONS.map((section) => (
+                <article
+                  key={section.titleKey}
+                  className="bg-card border border-border/60 rounded-2xl p-6 md:p-8 shadow-sm"
+                >
+                  <h2 className="font-heading text-xl font-semibold text-secondary mb-4">
+                    {t(section.titleKey)}
+                  </h2>
+                  <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
+                    {cleanBlock(t(section.contentKey))}
+                  </p>
+                </article>
+              ))}
+
+              {/* Seção 11: identificação completa, montada do SiteConfig. */}
+              <article className="bg-card border border-border/60 rounded-2xl p-6 md:p-8 shadow-sm">
+                <h2 className="font-heading text-xl font-semibold text-secondary mb-4">
+                  {t('legal.privacy.section11')}
+                </h2>
+                <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                  <div className="flex flex-col gap-1">
+                    <dt className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold flex items-center gap-1.5">
+                      <Building2 aria-hidden className="h-3 w-3" />
+                      {t('legal.company.legalNameLabel')}
+                    </dt>
+                    <dd className="text-secondary">{companyName}</dd>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <dt className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">
+                      {t('legal.company.cnpjLabel')}
+                    </dt>
+                    <dd className="text-secondary">{cnpj || t('legal.dpo.notConfigured')}</dd>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <dt className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold flex items-center gap-1.5">
+                      <Mail aria-hidden className="h-3 w-3" />
+                      {t('legal.dpo.emailLabel')}
+                    </dt>
+                    <dd>
+                      <a
+                        href={`mailto:${dpoEmail}`}
+                        className="text-primary hover:text-accent-hover transition-colors break-all"
+                      >
+                        {dpoEmail}
+                      </a>
+                    </dd>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <dt className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold flex items-center gap-1.5">
+                      <PhoneCall aria-hidden className="h-3 w-3" />
+                      {t('legal.dpo.phoneLabel')}
+                    </dt>
+                    <dd>
+                      <a
+                        href={`tel:${dpoPhone.replace(/[^\d+]/g, '')}`}
+                        className="text-primary hover:text-accent-hover transition-colors"
+                      >
+                        {dpoPhone}
+                      </a>
+                    </dd>
+                  </div>
+                  <div className="flex flex-col gap-1 sm:col-span-2">
+                    <dt className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">
+                      {t('legal.dpo.addressLabel')}
+                    </dt>
+                    <dd className="text-secondary">{dpoAddress}</dd>
+                  </div>
+                </dl>
+                <p className="text-sm text-muted-foreground leading-relaxed mt-4">
+                  {t('legal.dpo.responseTime')}
+                </p>
+              </article>
+            </div>
+
+            {/* Navegação */}
+            <div className="mt-12 pt-8 border-t border-border/60 flex flex-wrap items-center justify-between gap-4">
+              <Link
+                href={lp('/')}
+                className="text-xs font-medium text-primary hover:text-accent-hover transition-colors flex items-center gap-2"
+              >
+                ← {t('legal.voltar-ao-inicio')}
+              </Link>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <span>{t('legal.ultima-atualizacao')}</span>
+                <span className="font-semibold text-secondary">
+                  {formatDate(lastTouched?.updatedAt ?? null, {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })}
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+              <Link href={lp('/termos-de-uso')} className="hover:text-primary transition-colors">
+                {t('legal.termos-de-uso')}
+              </Link>
+              <span aria-hidden>•</span>
+              <Link href={lp('/reembolso')} className="hover:text-primary transition-colors">
+                {t('legal.politica-de-reembolso')}
+              </Link>
+            </div>
+          </div>
+        </section>
+      </main>
 
       <Footer />
     </div>

@@ -1,67 +1,128 @@
-/* eslint-disable @next/next/no-img-element */
 'use client';
 
-import React from 'react';
+/**
+ * Pagamentos recentes com nome do cliente e título do pacote REAIS.
+ *
+ * Bugs corrigidos aqui:
+ *  - `'Cliente ' + p.clientId?.substring(0,5) || 'Cliente'` — precedência
+ *    errada: `||` tem menor precedência que `+`, então o fallback nunca era
+ *    usado e a tela mostrava literalmente "Cliente undefined";
+ *  - o "pacote" exibido era `booking.packageId` (um UUID) ou o texto fixo
+ *    "Pacote Padrão";
+ *  - o avatar vinha de `ui-avatars?name=C` para TODO MUNDO (a letra só
+ *    dependia de haver id), vazando um terceiro externo desnecessário.
+ */
 import { ArrowRight } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
-export default function RecentPayments({ payments: apiPayments }: { payments?: any[] }) {
-  // Map API payments or fallback to mock if empty
-  const payments = apiPayments && apiPayments.length > 0 ? apiPayments.map(p => ({
-    id: p.id,
-    name: 'Cliente ' + p.clientId?.substring(0, 5) || 'Cliente', // Ideally would join with User table for name
-    pkg: p.booking?.packageId || 'Pacote Padrão',
-    amount: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(p.amount),
-    status: p.status === 'paid' ? 'Pago' : 'Pendente',
-    date: new Date(p.createdAt).toLocaleDateString('pt-BR'),
-    avatar: `https://ui-avatars.com/api/?name=${p.clientId ? 'C' : 'U'}&background=random`
-  })) : [
-    { id: 'mock1', name: 'Nenhum pagamento', pkg: '-', amount: 'R$ 0,00', status: 'Pendente', date: '-', avatar: 'https://ui-avatars.com/api/?name=Vazio' }
-  ];
+export interface RecentPaymentItem {
+  id: string;
+  amount: number;
+  status: string;
+  paidAt: string | Date | null;
+  createdAt: string | Date;
+  clientName: string;
+  packageTitle: string | null;
+}
+
+function initials(name: string): string {
+  const clean = name.trim();
+  if (!clean) return '—';
+  const parts = clean.split(/\s+/).slice(0, 2);
+  return parts.map((part) => part.charAt(0).toUpperCase()).join('') || '—';
+}
+
+export default function RecentPayments({
+  payments,
+  loading = false,
+}: {
+  payments?: RecentPaymentItem[];
+  loading?: boolean;
+}) {
+  const { t, formatCurrency, formatDate } = useLanguage();
+  const rows = payments ?? [];
 
   return (
-    <div className="bg-[var(--admin-card)] border border-[var(--admin-border)] rounded-xl p-6 flex flex-col h-[300px]">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-[var(--admin-text-main)] text-sm font-medium">Pagamentos Recentes</h3>
-        <button className="text-[var(--admin-primary)] hover:text-[var(--admin-primary-hover)] text-xs font-medium flex items-center gap-1 transition-colors">
-          Ver todos <ArrowRight className="w-3.5 h-3.5" />
-        </button>
-      </div>
+    <section className="flex h-[300px] flex-col rounded-xl border border-[var(--admin-border)] bg-[var(--admin-card)] p-6">
+      <header className="mb-4 flex items-center justify-between gap-2">
+        <h3 className="truncate text-sm font-medium text-[var(--admin-text-main)]">
+          {t('admin.list.recentPayments')}
+        </h3>
+        <span className="text-[10px] text-[var(--admin-text-muted)]">
+          <ArrowRight className="w-3 h-3" aria-hidden="true" />
+        </span>
+      </header>
 
-      <div className="flex-1 overflow-y-auto no-scrollbar pr-2 -mr-2">
-        <div className="flex flex-col gap-3">
-          {payments.map((item) => (
-            <div key={item.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-[var(--admin-border)]/30 transition-colors cursor-pointer group">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full overflow-hidden bg-[var(--admin-border)] shrink-0">
-                  <img src={item.avatar} alt={item.name} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[var(--admin-text-main)] text-xs font-medium">{item.name}</span>
-                  <span className="text-[var(--admin-text-muted)] text-[10px] truncate max-w-[120px]">{item.pkg}</span>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-4 shrink-0">
-                <span className="text-[var(--admin-text-main)] text-xs font-bold w-[80px] text-right">{item.amount}</span>
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded border w-[65px] text-center ${
-                  item.status === 'Pago' 
-                    ? 'bg-[#10B981]/10 text-[#10B981] border-[#10B981]/20' 
-                    : 'bg-[#F59E0B]/10 text-[#F59E0B] border-[#F59E0B]/20'
-                }`}>
-                  {item.status}
-                </span>
-                <span className="text-[var(--admin-text-muted)] text-[10px] w-[60px] text-right">{item.date}</span>
-              </div>
-            </div>
-          ))}
-        </div>
+      <div className="min-h-0 flex-1 overflow-y-auto pr-2 -mr-2">
+        {loading ? (
+          <ul className="flex flex-col gap-3" aria-busy="true">
+            {Array.from({ length: 4 }, (_, index) => (
+              <li
+                key={`payment-skeleton-${index}`}
+                className="flex items-center gap-3 rounded-lg border border-[var(--admin-border)] p-3"
+              >
+                <span className="h-9 w-9 shrink-0 animate-pulse rounded-full bg-[var(--admin-border)]/50" />
+                <span className="h-3 flex-1 animate-pulse rounded bg-[var(--admin-border)]/50" />
+              </li>
+            ))}
+          </ul>
+        ) : rows.length === 0 ? (
+          <p className="flex h-full items-center justify-center text-center text-xs text-[var(--admin-text-muted)]">
+            {t('admin.list.emptyPayments')}
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-3">
+            {rows.map((item) => {
+              const paid = item.status === 'paid';
+              return (
+                <li
+                  key={item.id}
+                  className="flex items-center justify-between gap-3 rounded-lg p-3 transition-colors hover:bg-[var(--admin-border)]/30"
+                >
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span
+                      aria-hidden="true"
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--admin-border)] text-[11px] font-bold text-[var(--admin-primary)]"
+                    >
+                      {initials(item.clientName)}
+                    </span>
+                    <div className="flex min-w-0 flex-col">
+                      <span className="truncate text-xs font-medium text-[var(--admin-text-main)]">
+                        {item.clientName || '—'}
+                      </span>
+                      <span className="truncate text-[10px] text-[var(--admin-text-muted)]">
+                        {item.packageTitle ?? t('admin.list.noPackage')}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex shrink-0 items-center gap-2">
+                    <span className="text-xs font-bold text-[var(--admin-text-main)]">
+                      {formatCurrency(item.amount)}
+                    </span>
+                    <span
+                      className={`w-[68px] rounded border px-2 py-0.5 text-center text-[10px] font-bold ${
+                        paid
+                          ? 'border-[var(--admin-accent-green)]/30 bg-[var(--admin-accent-green)]/10 text-[var(--admin-accent-green)]'
+                          : 'border-yellow-800 bg-yellow-900/30 text-yellow-400'
+                      }`}
+                    >
+                      {paid ? t('admin.list.statusPaid') : t('admin.list.statusPending')}
+                    </span>
+                    <span className="hidden w-[72px] text-right text-[10px] text-[var(--admin-text-muted)] sm:block">
+                      {formatDate(item.paidAt ?? item.createdAt, {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: '2-digit',
+                      })}
+                    </span>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </div>
-      
-      <div className="mt-4 pt-4 text-center border-t border-[var(--admin-border)]/50">
-        <button className="text-[var(--admin-primary)] hover:text-[var(--admin-primary-hover)] text-xs font-medium flex items-center justify-center w-full gap-1 transition-colors">
-          Ver todos os pagamentos <ArrowRight className="w-3.5 h-3.5" />
-        </button>
-      </div>
-    </div>
+    </section>
   );
 }

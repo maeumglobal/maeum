@@ -1,20 +1,40 @@
 import React from 'react';
+import type { Metadata } from 'next';
+import AdminGuard from '@/components/AdminGuard';
+import { buildNoIndexMetadata } from '@/lib/seo';
 import ConversasClient from './ConversasClient';
 
-export const metadata = {
-  title: 'Conversas | Maeum Global',
-};
+/**
+ * Inbox de conversas — rota interna.
+ *
+ * - Server Component: a proteção real está em `src/proxy.ts` (edge) e nas
+ *   server actions (`requireStaff`); o `AdminGuard` evita o flash de conteúdo
+ *   protegido para quem não tem o papel.
+ * - `force-dynamic`: a lista depende de cookie de sessão e nunca deve ser
+ *   cacheada nem indexada.
+ * - `?chat=<id>` vem do `linkUrl` das notificações (`notifyUser`) para abrir
+ *   direto na conversa.
+ */
+export const dynamic = 'force-dynamic';
 
-export default function AdminConversasPage() {
+export function generateMetadata(): Metadata {
+  return buildNoIndexMetadata('Conversas | Maeum Global', '/admin/conversas');
+}
+
+export default async function AdminConversasPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ chat?: string | string[] }>;
+}) {
+  const params = await searchParams;
+  const raw = Array.isArray(params?.chat) ? params?.chat[0] : params?.chat;
+  const initialChatId = typeof raw === 'string' && raw.length >= 8 && raw.length <= 64 ? raw : undefined;
+
   return (
-    <div className="flex flex-col h-full w-full p-4 sm:p-8">
-       <div className="mb-6">
-         <h1 className="text-2xl font-heading text-white">Mensagens</h1>
-         <p className="text-[11px] text-gray-400 font-light mt-1">Atenda seus clientes em tempo real.</p>
-       </div>
-       <div className="flex-1 overflow-hidden">
-         <ConversasClient />
-       </div>
-    </div>
+    <AdminGuard requireRole="staff">
+      <div className="flex h-full min-h-0 w-full flex-col p-4 sm:p-8">
+        <ConversasClient initialChatId={initialChatId} />
+      </div>
+    </AdminGuard>
   );
 }

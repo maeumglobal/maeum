@@ -1,16 +1,50 @@
-'use client';
+﻿'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Menu, X, User, LogOut, LayoutDashboard, Check } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { FlagES, FlagPT, FlagEN } from '@/components/Flags';
-import { Button } from '@/components/ui/button';
-import Image from 'next/image';
-import AuthModal from '@/components/AuthModal';
-import { useMedia } from '@/contexts/SiteContentContext';
+import AuthModal, { type AuthMode } from '@/components/AuthModal';
+import { useMedia, useNavigation } from '@/contexts/SiteContentContext';
+import { navLabel, isExternalNav, topLevelItems } from '@/lib/cmsData';
+import SmartImage from '@/components/SmartImage';
+import { localizedPath } from '@/i18n/config';
+
+/**
+ * Menu de fallback.
+ *
+ * Usado apenas enquanto o painel "Configurações > Navegação" não tiver nenhum
+ * item ativo em `main` (banco vazio, site recém-instalado ou banco fora do ar).
+ * Assim o site nunca fica sem menu e o que o administrador configura tem
+ * prioridade sobre a lista embutida.
+ */
+const FALLBACK_MAIN = [
+  { key: 'COREIA DO SUL', href: '/' },
+  { key: 'Destinos', href: '/destinos' },
+  { key: 'Experiências', href: '/experiencias' },
+  { key: 'Intercâmbio', href: '/coreia-do-sul/intercambio' },
+  { key: 'Pacotes', href: '/pacotes' },
+  { key: 'Jornadas', href: '/jornadas' },
+  { key: 'Sobre Nós', href: '/sobre' },
+  { key: 'Contato', href: '/contato' },
+];
+
+const ROLE_HOME: Record<string, string> = {
+  super_admin: '/dashboard/admin',
+  admin: '/dashboard/admin',
+  consultora: '/dashboard/consultora',
+  customer: '/dashboard/cliente',
+};
+
+interface NavLink {
+  key: string;
+  label: string;
+  href: string;
+  external: boolean;
+}
 
 export default function Header() {
   const pathname = usePathname();
@@ -18,307 +52,418 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
-  const { user: currentUser, logout } = useAuth();
+  const [authMode, setAuthMode] = useState<AuthMode>('login');
+  const [scrolled, setScrolled] = useState(false);
+  const { user, logout } = useAuth();
   const { locale, setLocale, t, isModalOpen, setIsModalOpen } = useLanguage();
   const siteLogo = useMedia('site_logo');
+  const navFromDb = useNavigation('main');
 
-  const lp = (path: string) => {
-    if (locale === 'pt' || path === '/') return path;
-    return `/${locale}${path}`;
-  };
+  /*
+   * Menu vem do painel (tabela `NavigationItem`) e já traz `labelEn`/`labelEs`.
+   * Só caímos no fallback estático quando não há nenhum item ativo.
+   */
+  const navItems = useMemo<NavLink[]>(() => {
+    const fromDb = topLevelItems(navFromDb);
+    if (fromDb.length > 0) {
+      return fromDb.map((item) => {
+        const external = isExternalNav(item.url);
+        return {
+          key: item.id,
+          label: navLabel(item, locale),
+          href: external ? item.url : localizedPath(item.url, locale),
+          external,
+        };
+      });
+    }
+    return FALLBACK_MAIN.map((item) => ({
+      key: item.key,
+      label: t(item.key),
+      href: localizedPath(item.href, locale),
+      external: false,
+    }));
+  }, [navFromDb, locale, t]);
 
-  // Close modals when clicking outside
+  const closeAll = useCallback(() => {
+    setMobileMenuOpen(false);
+    setIsUserMenuOpen(false);
+    setIsModalOpen(false);
+  }, [setIsModalOpen]);
+
+  /*
+   * Fecha os menus ao navegar. Em vez de copiar `pathname` para o estado dentro
+   * de um efeito (render em cascata), ajustamos o estado durante o render — o
+   * padrão oficial do React para "derivar de props".
+   */
+  const [lastPathname, setLastPathname] = useState(pathname);
+  if (lastPathname !== pathname) {
+    setLastPathname(pathname);
+    if (mobileMenuOpen) setMobileMenuOpen(false);
+    if (isUserMenuOpen) setIsUserMenuOpen(false);
+    if (isModalOpen) setIsModalOpen(false);
+  }
+
+  // ESC fecha o que estiver aberto.
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as Element;
-      if (isModalOpen && !target.closest('[data-language-selector]')) {
-        setIsModalOpen(false);
-      }
-      if (isUserMenuOpen && !target.closest('[data-user-selector]')) {
-        setIsUserMenuOpen(false);
-      }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      closeAll();
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [closeAll]);
+
+  // Clique fora dos popovers.
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      if (isModalOpen && !target.closest('[data-language-selector]')) setIsModalOpen(false);
+      if (isUserMenuOpen && !target.closest('[data-user-selector]')) setIsUserMenuOpen(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isModalOpen, setIsModalOpen, isUserMenuOpen]);
 
-  const handleLogout = () => {
-    logout();
+  // Sombra da barra ao rolar (listener passivo, um único registro).
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  const userMenuRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!isUserMenuOpen) return;
+    const first = userMenuRef.current?.querySelector<HTMLElement>('a, button');
+    first?.focus();
+  }, [isUserMenuOpen]);
+
+  const openAuth = (mode: AuthMode) => {
+    setAuthMode(mode);
+    setShowAuthModal(true);
+    setMobileMenuOpen(false);
+  };
+
+  const handleLogout = async () => {
+    closeAll();
+    await logout();
+    // Rotas internas nunca recebem prefixo de locale (ver SKIP_PREFIXES).
     router.push('/');
   };
 
-  const getDashboardLink = () => {
-    if (!currentUser) return '/login';
-    if (currentUser.role === 'super_admin' || currentUser.role === 'admin') return '/dashboard/admin';
-    if (currentUser.role === 'consultora') return '/dashboard/consultora';
-    return '/dashboard/cliente';
-  };
-
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const navItems = [
-    { label: t('COREIA DO SUL'), href: '/' },
-    { label: t('Destinos'), href: '/destinos' },
-    { label: t('Experiências'), href: '/experiencias' },
-    { label: t('Intercâmbio'), href: '/coreia-do-sul/intercambio' },
-    { label: t('Pacotes'), href: '/pacotes' },
-    { label: t('Jornadas'), href: '/jornadas' },
-    { label: t('Sobre Nós'), href: '/sobre' },
-    { label: t('Contato'), href: '/contato' }
-  ].map((item) => ({ ...item, href: lp(item.href) }));
+  const dashboardHref = user ? (ROLE_HOME[user.role] ?? '/dashboard') : '/login';
+  const navLinkClass = (active: boolean) =>
+    `whitespace-nowrap text-[10px] font-bold uppercase tracking-widest transition-colors hover:text-[#C8A27C] xl:text-[11px] ${
+      active ? 'text-[#C8A27C]' : 'text-foreground/80'
+    }`;
+  const navLinkMobileClass = (active: boolean) =>
+    `text-xs font-bold uppercase tracking-widest hover:text-[#C8A27C] ${
+      active ? 'text-[#C8A27C]' : 'text-foreground'
+    }`;
 
   return (
     <>
-      <header className={`fixed top-0 inset-x-0 z-50 w-full px-6 md:px-12 transition-all duration-300 ${scrolled ? 'border-b border-border/40 py-3 bg-background/95 backdrop-blur' : 'border-b border-transparent py-5 bg-transparent'}`}>
-        {scrolled && <div className="absolute inset-0 -z-10 bg-background/95 backdrop-blur" />}
-      <div className="mx-auto flex max-w-7xl items-center justify-between relative z-10">
-        {/* Logo */}
-        <Link href="/" className="flex items-center shrink-0 py-1">
-          <Image
-            src={siteLogo || '/images/logo.png'}
-            alt="MAEUM Logo"
-            width={170}
-            height={55}
-            className="h-10 sm:h-12 w-auto object-contain"
-            priority
-          />
-        </Link>
+      <header
+        className={`fixed inset-x-0 top-0 z-50 w-full px-6 transition-all duration-300 md:px-12 ${
+          scrolled
+            ? 'border-b border-border/40 bg-background/95 py-3 backdrop-blur'
+            : 'border-b border-transparent bg-transparent py-5'
+        }`}
+      >
+        <div className="relative z-10 mx-auto flex max-w-7xl items-center justify-between">
+          <Link href={localizedPath('/', locale)} className="flex shrink-0 items-center py-1">
+            <SmartImage
+              src={siteLogo || '/images/logo.png'}
+              alt={t('Logotipo da Maeum Global')}
+              width={170}
+              height={55}
+              className="h-10 w-auto object-contain sm:h-12"
+              priority
+            />
+          </Link>
 
-        {/* Desktop Nav */}
-        <nav className="hidden lg:flex items-center gap-3 xl:gap-6 2xl:gap-8 flex-nowrap">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`text-[10px] xl:text-[11px] font-bold uppercase tracking-widest whitespace-nowrap transition-colors hover:text-[#C8A27C] ${
-                pathname === item.href ? 'text-[#C8A27C]' : 'text-foreground/80'
-              }`}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-
-        {/* Action Buttons */}
-        <div className="hidden lg:flex items-center gap-3 xl:gap-4 shrink-0">
-          
-          {/* Language Selector */}
-          <div className="relative">
-            <button 
-              onClick={() => setIsModalOpen(!isModalOpen)}
-              className="flex items-center gap-1.5 text-foreground/80 hover:text-primary transition-colors px-2 py-1.5 border border-transparent hover:border-border rounded-full"
-              data-language-selector
-            >
-              {locale === 'es' ? <FlagES /> : locale === 'pt' ? <FlagPT /> : <FlagEN />}
-              <span className="text-xs font-bold">{locale === 'es' ? 'ES' : locale === 'pt' ? 'PT' : 'EN'}</span>
-            </button>
-            
-            {/* Language Modal */}
-            {isModalOpen && (
-              <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-border bg-card p-2 shadow-lg z-50 animate-in fade-in slide-in-from-top-2 duration-150" data-language-selector>
-                <div className="flex flex-col gap-1">
-                  <button
-                    onClick={() => setLocale('pt')}
-                    className={`flex items-center gap-2.5 w-full px-3 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-colors ${locale === 'pt' ? 'bg-accent/15 text-accent' : 'text-foreground/80 hover:text-foreground hover:bg-white/5'}`}
-                  >
-                    <FlagPT />
-                    <span>{t('Português')}</span>
-                    {locale === 'pt' && <Check className="h-3.5 w-3.5 ml-auto" />}
-                  </button>
-                  <button
-                    onClick={() => setLocale('es')}
-                    className={`flex items-center gap-2.5 w-full px-3 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-colors ${locale === 'es' ? 'bg-accent/15 text-accent' : 'text-foreground/80 hover:text-foreground hover:bg-white/5'}`}
-                  >
-                    <FlagES />
-                    <span>{t('Espanhol')}</span>
-                    {locale === 'es' && <Check className="h-3.5 w-3.5 ml-auto" />}
-                  </button>
-                  <button
-                    onClick={() => setLocale('en')}
-                    className={`flex items-center gap-2.5 w-full px-3 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-colors ${locale === 'en' ? 'bg-accent/15 text-accent' : 'text-foreground/80 hover:text-foreground hover:bg-white/5'}`}
-                  >
-                    <FlagEN />
-                    <span>{t('Inglês')}</span>
-                    {locale === 'en' && <Check className="h-3.5 w-3.5 ml-auto" />}
-                  </button>
-                </div>
-              </div>
+          <nav
+            aria-label={t('Menu')}
+            className="hidden flex-nowrap items-center gap-3 lg:flex xl:gap-6 2xl:gap-8"
+          >
+            {navItems.map((item) =>
+              item.external ? (
+                <a
+                  key={item.key}
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={navLinkClass(false)}
+                >
+                  {item.label}
+                </a>
+              ) : (
+                <Link
+                  key={item.key}
+                  href={item.href}
+                  aria-current={pathname === item.href ? 'page' : undefined}
+                  className={navLinkClass(pathname === item.href)}
+                >
+                  {item.label}
+                </Link>
+              ),
             )}
-          </div>
+          </nav>
 
-          {/* User profile dropdown or Login Actions */}
-          {currentUser ? (
-            <div className="relative" data-user-selector>
-              <button 
-                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className={`flex items-center gap-1.5 px-4 py-1.5 border rounded-full text-xs transition-all ${isUserMenuOpen ? 'bg-accent/15 border-accent/30' : 'border-border hover:bg-white/5'}`}
+          <div className="hidden shrink-0 items-center gap-3 lg:flex xl:gap-4">
+            <div className="relative" data-language-selector>
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(!isModalOpen)}
+                aria-haspopup="menu"
+                aria-expanded={isModalOpen}
+                aria-label={t('Escolher idioma')}
+                className="flex items-center gap-1.5 rounded-full border border-transparent px-2 py-1.5 text-foreground/80 transition-colors hover:border-border hover:text-primary"
               >
-                <User className="h-3.5 w-3.5 text-accent" />
-                <span className="max-w-[100px] truncate text-foreground">{currentUser.name}</span>
+                {locale === 'es' ? (
+                  <FlagES title={t('Español')} />
+                ) : locale === 'pt' ? (
+                  <FlagPT title={t('Português')} />
+                ) : (
+                  <FlagEN title={t('English')} />
+                )}
+                <span className="text-xs font-bold">{locale.toUpperCase()}</span>
               </button>
-              
-              {isUserMenuOpen && (
-                <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-border bg-card p-2 shadow-lg z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+              {isModalOpen && (
+                <div
+                  role="menu"
+                  aria-label={t('Escolher idioma')}
+                  className="absolute right-0 top-full z-50 mt-2 w-48 animate-in fade-in slide-in-from-top-2 rounded-xl border border-border bg-card p-2 shadow-lg duration-150"
+                >
                   <div className="flex flex-col gap-1">
-                    <Link
-                      href={
-                        currentUser.role === 'super_admin' || currentUser.role === 'admin'
-                          ? '/dashboard/admin'
-                          : currentUser.role === 'consultora'
-                          ? '/dashboard/consultora'
-                          : '/dashboard/cliente'
-                      }
-                      onClick={() => setIsUserMenuOpen(false)}
-                      className="w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-accent/15 hover:text-accent transition-colors flex items-center gap-2 text-foreground/80"
-                    >
-                      <LayoutDashboard className="h-4 w-4 text-accent" />
-                      <span>{t('Meu Painel')}</span>
-                    </Link>
-                    <button
-                      onClick={handleLogout}
-                      className="w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-red-500/10 hover:text-red-500 transition-colors flex items-center gap-2 text-red-500/80 border-t border-border mt-1"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      <span>{t('Sair da Conta')}</span>
-                    </button>
+                    {(
+                      [
+                        { code: 'pt', label: t('Português'), Flag: FlagPT },
+                        { code: 'es', label: t('Espanhol'), Flag: FlagES },
+                        { code: 'en', label: t('Inglês'), Flag: FlagEN },
+                      ] as const
+                    ).map(({ code, label, Flag }) => (
+                      <button
+                        key={code}
+                        type="button"
+                        role="menuitemradio"
+                        aria-checked={locale === code}
+                        onClick={() => setLocale(code)}
+                        className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
+                          locale === code
+                            ? 'bg-accent/15 text-accent'
+                            : 'text-foreground/80 hover:bg-white/5 hover:text-foreground'
+                        }`}
+                      >
+                        <Flag title={label} />
+                        <span>{label}</span>
+                        {locale === code && (
+                          <Check className="ml-auto h-3.5 w-3.5" aria-hidden="true" />
+                        )}
+                      </button>
+                    ))}
                   </div>
                 </div>
               )}
             </div>
-          ) : (
-            <div className="flex items-center gap-2.5">
-              <button
-                onClick={() => { setAuthMode('login'); setShowAuthModal(true); }}
-                className="text-xs font-semibold text-foreground/80 hover:text-primary px-3 py-1.5 transition-colors"
-              >
-                {t('Entrar')}
-              </button>
-              <button
-                onClick={() => { setAuthMode('register'); setShowAuthModal(true); }}
-                className="bg-primary hover:bg-accent-hover text-white text-xs font-semibold px-4 py-2 rounded-full shadow-sm transition-transform hover:scale-105"
-              >
-                {t('Cadastrar')}
-              </button>
-            </div>
-          )}
 
+            {user ? (
+              <div className="relative" data-user-selector>
+                <button
+                  type="button"
+                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  aria-haspopup="menu"
+                  aria-expanded={isUserMenuOpen}
+                  aria-label={t('Opções da conta')}
+                  className={`flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-xs transition-all ${
+                    isUserMenuOpen ? 'border-accent/30 bg-accent/15' : 'border-border hover:bg-white/5'
+                  }`}
+                >
+                  <User className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
+                  <span className="max-w-[100px] truncate text-foreground">{user.name}</span>
+                </button>
+                {isUserMenuOpen && (
+                  <div
+                    ref={userMenuRef}
+                    role="menu"
+                    aria-label={t('Minha conta')}
+                    className="absolute right-0 top-full z-50 mt-2 w-48 animate-in fade-in slide-in-from-top-2 rounded-xl border border-border bg-card p-2 shadow-lg duration-150"
+                  >
+                    <div className="flex flex-col gap-1">
+                      <Link
+                        href={dashboardHref}
+                        onClick={() => setIsUserMenuOpen(false)}
+                        role="menuitem"
+                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-foreground/80 transition-colors hover:bg-accent/15 hover:text-accent"
+                      >
+                        <LayoutDashboard className="h-4 w-4 text-accent" aria-hidden="true" />
+                        <span>{t('Meu Painel')}</span>
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={handleLogout}
+                        role="menuitem"
+                        className="mt-1 flex w-full items-center gap-2 rounded-lg border-t border-border px-3 py-2 text-left text-xs text-red-500/80 transition-colors hover:bg-red-500/10 hover:text-red-500"
+                      >
+                        <LogOut className="h-4 w-4" aria-hidden="true" />
+                        <span>{t('Sair da Conta')}</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => openAuth('login')}
+                  className="px-3 py-1.5 text-xs font-semibold text-foreground/80 transition-colors hover:text-primary"
+                >
+                  {t('Entrar')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openAuth('register')}
+                  className="rounded-full bg-primary px-4 py-2 text-xs font-semibold text-white shadow-sm transition-transform hover:scale-105 hover:bg-accent-hover"
+                >
+                  {t('Cadastrar')}
+                </button>
+              </div>
+            )}
+          </div>
+
+          <button
+            type="button"
+            className="p-2 text-foreground/80 hover:text-primary lg:hidden"
+            onClick={() => setMobileMenuOpen((open) => !open)}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-menu"
+            aria-label={mobileMenuOpen ? t('Fechar menu') : t('Abrir menu')}
+          >
+            {mobileMenuOpen ? (
+              <X className="h-6 w-6" aria-hidden="true" />
+            ) : (
+              <Menu className="h-6 w-6" aria-hidden="true" />
+            )}
+          </button>
         </div>
 
-        {/* Mobile menu trigger */}
-        <button
-          className="lg:hidden text-foreground/80 hover:text-primary p-2"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          aria-label="Toggle menu"
+        <div
+          id="mobile-menu"
+          hidden={!mobileMenuOpen}
+          className="fixed inset-x-0 top-[60px] flex animate-in fade-in slide-in-from-top-5 flex-col gap-6 border-b border-border bg-background p-6 shadow-lg duration-200 lg:hidden"
         >
-          {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
-      </div>
+          <nav aria-label={t('Menu')} className="flex flex-col gap-4">
+            {navItems.map((item) =>
+              item.external ? (
+                <a
+                  key={item.key}
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={navLinkMobileClass(false)}
+                >
+                  {item.label}
+                </a>
+              ) : (
+                <Link
+                  key={item.key}
+                  href={item.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  aria-current={pathname === item.href ? 'page' : undefined}
+                  className={navLinkMobileClass(pathname === item.href)}
+                >
+                  {item.label}
+                </Link>
+              ),
+            )}
+          </nav>
 
-      {/* Mobile Menu */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden fixed inset-x-0 top-[60px] bg-background border-b border-border shadow-lg p-6 flex flex-col gap-6 animate-in fade-in slide-in-from-top-5 duration-200">
-          <div className="flex flex-col gap-4">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`text-xs font-bold uppercase tracking-widest hover:text-[#C8A27C] ${
-                  pathname === item.href ? 'text-[#C8A27C]' : 'text-foreground'
+          <div className="h-px bg-border/50" />
+
+          <div
+            className="flex justify-center gap-4 py-2"
+            role="group"
+            aria-label={t('Escolher idioma')}
+          >
+            {(
+              [
+                { code: 'pt', label: 'PT', Flag: FlagPT },
+                { code: 'es', label: 'ES', Flag: FlagES },
+                { code: 'en', label: 'EN', Flag: FlagEN },
+              ] as const
+            ).map(({ code, label, Flag }) => (
+              <button
+                key={code}
+                type="button"
+                onClick={() => setLocale(code)}
+                aria-pressed={locale === code}
+                aria-label={t(code === 'pt' ? 'Português' : code === 'es' ? 'Español' : 'English')}
+                className={`flex items-center gap-2 rounded-full px-3 py-1.5 transition-colors ${
+                  locale === code
+                    ? 'border border-accent/20 bg-accent/15 text-accent'
+                    : 'border border-transparent text-foreground/60'
                 }`}
               >
-                {item.label}
-              </Link>
+                <Flag title={label} />
+                <span className="text-xs font-bold">{label}</span>
+              </button>
             ))}
           </div>
 
           <div className="h-px bg-border/50" />
 
-          {/* Mobile Language Selector */}
-          <div className="flex justify-center gap-4 py-2">
-            <button
-              onClick={() => setLocale('pt')}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-colors ${locale === 'pt' ? 'bg-accent/15 text-accent border border-accent/20' : 'text-foreground/60 border border-transparent'}`}
-            >
-              <FlagPT />
-              <span className="text-xs font-bold">PT</span>
-            </button>
-            <button
-              onClick={() => setLocale('es')}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-colors ${locale === 'es' ? 'bg-accent/15 text-accent border border-accent/20' : 'text-foreground/60 border border-transparent'}`}
-            >
-              <FlagES />
-              <span className="text-xs font-bold">ES</span>
-            </button>
-            <button
-              onClick={() => setLocale('en')}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-colors ${locale === 'en' ? 'bg-accent/15 text-accent border border-accent/20' : 'text-foreground/60 border border-transparent'}`}
-            >
-              <FlagEN />
-              <span className="text-xs font-bold">EN</span>
-            </button>
-          </div>
-          
-          <div className="h-px bg-border/50" />
-
-          {/* User actions on Mobile */}
-          {currentUser ? (
+          {user ? (
             <div className="flex flex-col gap-3">
-              <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                {t('Sessão:')} {currentUser.name} ({currentUser.role})
-              </div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                {t('Sessão: {nome}').replace('{nome}', user.name)}
+              </p>
               <Link
-                href={getDashboardLink()}
+                href={dashboardHref}
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2 text-sm text-foreground/80 py-1"
+                className="flex items-center gap-2 py-1 text-sm text-foreground/80"
               >
-                <LayoutDashboard className="h-4 w-4 text-accent" />
+                <LayoutDashboard className="h-4 w-4 text-accent" aria-hidden="true" />
                 {t('Meu Painel')}
               </Link>
               <button
+                type="button"
                 onClick={handleLogout}
-                className="flex items-center gap-2 text-sm text-red-500 py-1 text-left"
+                className="flex items-center gap-2 py-1 text-left text-sm text-red-500"
               >
-                <LogOut className="h-4 w-4" />
+                <LogOut className="h-4 w-4" aria-hidden="true" />
                 {t('Sair da Conta')}
               </button>
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3">
               <button
-                onClick={() => { setAuthMode('login'); setShowAuthModal(true); setMobileMenuOpen(false); }}
-                className="text-center border border-border hover:bg-muted text-secondary font-bold text-xs py-2.5 rounded-xl transition-all"
+                type="button"
+                onClick={() => openAuth('login')}
+                className="rounded-xl border border-border py-2.5 text-center text-xs font-bold text-secondary transition-all hover:bg-muted"
               >
                 {t('Entrar')}
               </button>
               <button
-                onClick={() => { setAuthMode('register'); setShowAuthModal(true); setMobileMenuOpen(false); }}
-                className="text-center bg-primary hover:bg-accent-hover text-white font-bold text-xs py-2.5 rounded-xl transition-all"
+                type="button"
+                onClick={() => openAuth('register')}
+                className="rounded-xl bg-primary py-2.5 text-center text-xs font-bold text-white transition-all hover:bg-accent-hover"
               >
                 {t('Cadastrar')}
               </button>
             </div>
           )}
-
         </div>
-      )}
+      </header>
 
-    </header>
-      
-      <AuthModal 
-        isOpen={showAuthModal} 
-        onClose={() => setShowAuthModal(false)} 
-        onSuccess={() => setShowAuthModal(false)} 
-        defaultMode={authMode} 
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={() => setShowAuthModal(false)}
+        defaultMode={authMode}
       />
     </>
   );

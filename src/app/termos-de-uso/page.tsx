@@ -1,263 +1,290 @@
-'use client';
-
-import React from 'react';
+import type { Metadata } from 'next';
 import Link from 'next/link';
-import { FileText, CheckCircle, AlertCircle, Shield, CreditCard, Calendar, ChevronRight } from 'lucide-react';
+import {
+  AlertCircle,
+  Building2,
+  Calendar,
+  ChevronRight,
+  CreditCard,
+  FileText,
+  Mail,
+  Shield,
+  type LucideIcon,
+} from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { useLanguage } from '@/contexts/LanguageContext';
+import JsonLd from '@/components/seo/JsonLd';
+import Breadcrumbs from '@/components/seo/Breadcrumbs';
+import { prisma } from '@/lib/prisma';
+import { getPublicSiteConfig } from '@/actions/siteConfigActions';
+import { getServerI18n } from '@/lib/serverI18n';
+import { CONTACT, SITE_NAME, buildMetadata, localizedUrl, truncateMeta } from '@/lib/seo';
 
-export default function TermosUsoPage() {
-  const { t, locale } = useLanguage();
-  const lp = (path: string) => (locale === 'pt' || path === '/' ? path : `/${locale}${path}`);
-  const sections = [
-    {
-      icon: FileText,
-      title: t('1. Aceitação dos Termos'),
-      content: t(`Ao acessar e utilizar o site maeumglobal.com.br, você concorda com estes Termos de Uso. 
-      Se não concordar com qualquer parte destes termos, não utilize nossos serviços.
-      
-      Estes termos podem ser modificados a qualquer momento. O uso continuado do site após alterações 
-      constitui aceitação dos novos termos.`)
-    },
-    {
-      icon: Shield,
-      title: t('2. Nossos Serviços'),
-      content: t(`A MaeumGlobal oferece:
-      
-      • Planejamento e organização de viagens personalizadas para a Ásia
-      • Roteiros turísticos customizados
-      • Reservas de hospedagem, transporte e experiências
-      • Programas de intercâmbio cultural e educacional
-      • Acompanhamento de grupos em viagens
-      • Consultoria especializada em destinos asiáticos
-      
-      Os serviços exatos serão definidos em contrato específico para cada cliente.`)
-    },
-    {
-icon: CreditCard,
-      title: t('3. Pagamentos e Valores'),
-      content: t(`• Todos os valores estão em Reais (BRL) salvo indicação contrária
-      • Pagamentos podem ser realizados via cartão de crédito, transferência ou PIX
-      • Parcelamento disponível conforme condições contratuais
-      • Valores podem sofrer alteração até confirmação final da reserva
-      • Taxas cambiais podem impactar valores de serviços internacionais
-      • Pagamentos devem ser realizados nas datas estipuladas em contrato
-      
-      O não pagamento nas datas acordadas pode resultar em cancelamento da reserva.`)
-    },
-    {
-      icon: Calendar,
-      title: t('4. Reservas e Cancelamentos'),
-      content: t(`Política de cancelamento:
-      
-      • Cancelamento com mais de 60 dias da viagem: reembolso integral (exceto taxa administrativa de 5%)
-      • Cancelamento entre 30-60 dias: 50% de reembolso
-      • Cancelamento entre 15-30 dias: 25% de reembolso
-      • Cancelamento com menos de 15 dias: sem reembolso
-      
-      Casos de força maior (doença, problemas documentais, eventos climáticos) serão analisados 
-      individualmente e podem ter condições especiais.`)
-    },
-    {
-      icon: AlertCircle,
-      title: t('5. Responsabilidades do Cliente'),
-      content: t(`O cliente é responsável por:
-      
-      • Fornecer informações verdadeiras e completas
-      • Possuir documentação necessária (passaporte, vistos, vacinas)
-      • Respeitar leis e costumes dos países visitados
-      • Comparecer em horários e locais estabelecidos
-      • Comunicar necessidades especiais ou restrições
-      • Contratar seguro viagem (obrigatório para intercâmbios)
-      
-      A MaeumGlobal não se responsabiliza por problemas decorrentes do descumprimento.`)
-    },
-    {
-      icon: Shield,
-      title: t('6. Limitação de Responsabilidade'),
-      content: t(`A MaeumGlobal atua como intermediária entre cliente e fornecedores (hotéis, companhias aéreas, 
-      prestadores de serviços). Não nos responsabilizamos por:
-      
-      • Alterações unilaterais feitas por fornecedores
-      • Atrasos ou cancelamentos de voos
-      • Condições climáticas que impactem a viagem
-      • Problemas de saúde ou acidentes pessoais
-      • Perda ou extravio de bagagem
-      • Situações de força maior ou caso fortuito
-      
-      Faremos o melhor para auxiliar na resolução de quaisquer problemas.`)
-    },
-    {
-      icon: FileText,
-      title: t('7. Propriedade Intelectual'),
-      content: t(`Todo o conteúdo do site (textos, imagens, logotipos, vídeos, roteiros) é de propriedade 
-      da MaeumGlobal e protegido por leis de direitos autorais.
-      
-      É proibida a reprodução, distribuição ou uso comercial sem autorização prévia por escrito.
-      
-      O uso é permitido apenas para fins pessoais e não comerciais.`)
-    },
-    {
-      icon: AlertCircle,
-      title: t('8. Conduta do Usuário'),
-      content: t(`Ao utilizar nosso site e serviços, você concorda em:
-      
-      • Não usar o site para fins ilegais ou não autorizados
-      • Não tentar acessar sistemas ou dados restritos
-      • Não interferir no funcionamento adequado do site
-      • Não copiar, modificar ou distribuir conteúdo sem permissão
-      • Não se passar por outra pessoa ou entidade
-      • Fornecer informações de contato válidas e atualizadas`)
-    },
-    {
-      icon: FileText,
-      title: t('9. Intercâmbios e Programas Educacionais'),
-      content: t(`Para programas de intercâmbio:
-      
-      • Matrículas são pessoais e intransferíveis
-      • Visto de estudante é responsabilidade do aluno (com nossa orientação)
-      • Frequência mínima exigida conforme regulamentação do país
-      • Desempenho acadêmico é responsabilidade do aluno
-      • Hospedagem está sujeita aos termos do fornecedor parceiro
-      • Seguro saúde é obrigatório durante todo o período
-      
-      Consulte condições específicas de cada programa.`)
-    },
-    {
-      icon: Shield,
-      title: t('10. Lei Aplicável e Foro'),
-      content: t(`Estes termos são regidos pelas leis da República Federativa do Brasil.
-      
-      Fica eleito o foro da Comarca de Curitiba/PR para resolução de quaisquer 
-      questões decorrentes destes termos, com renúncia a qualquer outro, 
-      por mais privilegiado que seja.
-      
-      Em caso de dúvidas, entre em contato: juridico@maeumglobal.com.br`)
-    }
-  ];
+/* ────────────────────────────────────────────────────────────────────────────
+ * SEO
+ * ────────────────────────────────────────────────────────────────────────── */
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { locale, t } = await getServerI18n();
+  return buildMetadata({
+    title: truncateMeta(t('legal.terms.seoTitle'), 60),
+    description: t('legal.terms.seoDescription'),
+    path: '/termos-de-uso',
+    locale,
+    image: '/images/agencia-viagens-coreia-do-sul-maeum-global-oficial.webp',
+    imageAlt: t('legal.termos-e-condicoes'),
+  });
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Helpers
+ * ────────────────────────────────────────────────────────────────────────── */
+
+/** Template literal do dicionário → texto com quebras de linha reais. */
+const cleanBlock = (value: string): string =>
+  value
+    .replace(/\r\n?/g, '\n')
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+
+const SECTIONS: readonly { id: string; Icon: LucideIcon; titleKey: string; contentKey: string }[] = [
+  { id: '1', Icon: FileText, titleKey: 'legal.terms.section1', contentKey: 'legal.terms.accessAndUse' },
+  { id: '2', Icon: Shield, titleKey: 'legal.terms.section2', contentKey: 'legal.terms.servicesOffered' },
+  { id: '3', Icon: CreditCard, titleKey: 'legal.terms.section3', contentKey: 'legal.terms.paymentsPolicy' },
+  { id: '4', Icon: Calendar, titleKey: 'legal.terms.section4', contentKey: 'legal.terms.cancellationPolicy' },
+  { id: '5', Icon: AlertCircle, titleKey: 'legal.terms.section5', contentKey: 'legal.terms.clientResponsibilities' },
+  { id: '6', Icon: Shield, titleKey: 'legal.terms.section6', contentKey: 'legal.terms.intermediaryNotice' },
+  { id: '7', Icon: FileText, titleKey: 'legal.terms.section7', contentKey: 'legal.terms.ipNotice' },
+  { id: '8', Icon: AlertCircle, titleKey: 'legal.terms.section8', contentKey: 'legal.terms.userAgreement' },
+  { id: '9', Icon: FileText, titleKey: 'legal.terms.section9', contentKey: 'legal.terms.exchangePolicy' },
+  { id: '10', Icon: Shield, titleKey: 'legal.terms.section10', contentKey: 'legal.terms.governingLaw' },
+];
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Página
+ * ────────────────────────────────────────────────────────────────────────── */
+
+export default async function TermosUsoPage() {
+  const { t, locale, lp, formatDate } = await getServerI18n();
+
+  const [siteConfig, lastTouched] = await Promise.all([
+    getPublicSiteConfig().catch(() => null),
+    prisma.siteConfig
+      .findFirst({
+        where: { section: { in: ['legal', 'contact', 'brand'] } },
+        orderBy: { updatedAt: 'desc' },
+        select: { updatedAt: true },
+      })
+      .catch(() => null),
+  ]);
+
+  const companyName = siteConfig?.legal.companyName || siteConfig?.brand.name || SITE_NAME;
+  const cnpj = siteConfig?.legal.cnpj ?? '';
+  const contactEmail = siteConfig?.contact.email || siteConfig?.contact.salesEmail || CONTACT.email;
+  const contactPhone = siteConfig?.contact.phone || CONTACT.phone;
+
+  const webPageJsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebPage',
+        '@id': `${localizedUrl('/termos-de-uso', locale)}#webpage`,
+        name: t('legal.termos-de-uso'),
+        description: t('legal.terms.seoDescription'),
+        url: localizedUrl('/termos-de-uso', locale),
+        inLanguage: locale,
+        isPartOf: { '@id': `${localizedUrl('/', locale)}#website` },
+        about: { '@id': `${localizedUrl('/', locale)}#organization` },
+      },
+      {
+        '@type': 'Organization',
+        '@id': `${localizedUrl('/', locale)}#organization`,
+        name: companyName,
+        url: localizedUrl('/', locale),
+        ...(cnpj ? { taxID: cnpj } : {}),
+        contactPoint: [
+          {
+            '@type': 'ContactPoint',
+            contactType: 'legal',
+            email: contactEmail,
+            telephone: contactPhone,
+            availableLanguage: ['Portuguese', 'English', 'Spanish'],
+          },
+        ],
+      },
+    ],
+  };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-background text-foreground">
+      <JsonLd id="terms-webpage-jsonld" data={webPageJsonLd} />
+
       <Header />
 
-      {/* Hero Section */}
-      <section className="relative py-20 px-4 bg-secondary overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-transparent" />
-        </div>
-        
-        <div className="relative z-10 max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 bg-primary/20 backdrop-blur border border-primary/45 rounded-full px-4 py-2 mb-6">
-            <FileText className="h-4 w-4 text-accent" />
-            <span className="text-xs uppercase tracking-widest text-primary font-bold">
-              {t('Termos e Condições')}
-            </span>
+      <main className="flex-1">
+        {/* ── Hero ─────────────────────────────────────────────────────────── */}
+        <section aria-labelledby="terms-hero-title" className="relative py-20 px-4 bg-secondary overflow-hidden">
+          <div aria-hidden className="absolute inset-0 opacity-10">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-transparent" />
           </div>
-          
-          <h1 className="font-heading text-4xl md:text-5xl font-light text-primary mb-4">
-            {t('Termos de Uso')}
-          </h1>
-          
-          <p className="text-sm text-gray-400 max-w-2xl mx-auto">
-            {t('Condições gerais de contratação e utilização dos nossos serviços. Leia atentamente antes de prosseguir.')}
-          </p>
-        </div>
-      </section>
-
-      {/* Info Banner */}
-      <section className="py-8 px-4 bg-background border-b border-border/60">
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-muted/30 border border-border/60 rounded-xl p-6 flex flex-col md:flex-row items-center gap-6">
-            <div className="p-3 bg-primary/10 rounded-full">
-              <AlertCircle className="h-6 w-6 text-accent" />
+          <div className="relative z-10 max-w-4xl mx-auto text-center">
+            <div className="inline-flex items-center gap-2 bg-primary/20 backdrop-blur border border-primary/45 rounded-full px-4 py-2 mb-6">
+              <FileText aria-hidden className="h-4 w-4 text-accent" />
+              <span className="text-xs uppercase tracking-widest text-primary font-bold">
+                {t('legal.termos-e-condicoes')}
+              </span>
             </div>
-            <div className="flex-1 text-center md:text-left">
-              <h3 className="text-sm font-semibold text-secondary mb-1">
-                {t('Importante')}
-              </h3>
-              <p className="text-xs text-muted-foreground">
-                {t('Ao contratar nossos serviços, você declara ter lido, compreendido e aceito integralmente estes Termos de Uso.')}
-              </p>
-            </div>
-            <Link
-              href={lp('/contato')}
-              className="text-xs font-semibold text-primary hover:text-accent-hover transition-colors flex items-center gap-1.5"
+            <h1
+              id="terms-hero-title"
+              className="font-heading text-4xl md:text-5xl font-light text-primary mb-4"
             >
-              {t('Fale Conosco')} <ChevronRight className="h-3.5 w-3.5" />
-            </Link>
+              {t('legal.termos-de-uso')}
+            </h1>
+            <p className="text-sm text-gray-400 max-w-2xl mx-auto">{t('legal.terms.intro')}</p>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Content */}
-      <section className="py-16 px-4 md:px-8 bg-background flex-1">
-        <div className="max-w-4xl mx-auto">
-          {/* Sections */}
-          <div className="space-y-6">
-            {sections.map((section, idx) => {
-              const Icon = section.icon;
-              return (
-                <div
-                  key={idx}
+        <div className="px-4 md:px-8 max-w-4xl mx-auto w-full pt-8">
+          <Breadcrumbs
+            locale={locale}
+            items={[{ name: t('legal.legal.breadcrumb'), path: '/termos-de-uso' }]}
+          />
+        </div>
+
+        {/* ── Banner de aceite ─────────────────────────────────────────────── */}
+        <section className="py-8 px-4 bg-background border-b border-border/60">
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-muted/30 border border-border/60 rounded-xl p-6 flex flex-col md:flex-row items-center gap-6">
+              <span className="p-3 bg-primary/10 rounded-full shrink-0">
+                <AlertCircle aria-hidden className="h-6 w-6 text-accent" />
+              </span>
+              <div className="flex-1 text-center md:text-left">
+                <h2 className="text-sm font-semibold text-secondary mb-1">{t('legal.importante')}</h2>
+                <p className="text-xs text-muted-foreground">{t('legal.terms.declaration')}</p>
+              </div>
+              <Link
+                href={lp('/contato')}
+                className="text-xs font-semibold text-primary hover:text-accent-hover transition-colors flex items-center gap-1.5 shrink-0"
+              >
+                {t('legal.fale-conosco')}
+                <ChevronRight aria-hidden className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Seções ───────────────────────────────────────────────────────── */}
+        <section className="py-16 px-4 md:px-8 bg-background flex-1">
+          <div className="max-w-4xl mx-auto">
+            <div className="space-y-6">
+              {SECTIONS.map(({ id, Icon, titleKey, contentKey }) => (
+                <article
+                  key={id}
                   className="bg-card border border-border/60 rounded-2xl p-6 md:p-8 shadow-sm hover:shadow-md transition-shadow"
                 >
                   <div className="flex items-start gap-4">
-                    <div className="p-2.5 bg-primary/10 rounded-xl shrink-0">
-                      <Icon className="h-5 w-5 text-accent" />
-                    </div>
+                    <span className="p-2.5 bg-primary/10 rounded-xl shrink-0">
+                      <Icon aria-hidden className="h-5 w-5 text-accent" />
+                    </span>
                     <div className="flex-1">
                       <h2 className="font-heading text-xl font-semibold text-secondary mb-4">
-                        {section.title}
+                        {t(titleKey)}
                       </h2>
-                      <div className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
-                        {section.content}
-                      </div>
+                      <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
+                        {cleanBlock(t(contentKey))}
+                      </p>
                     </div>
                   </div>
+                </article>
+              ))}
+            </div>
+
+            {/* Identificação legal — editável no painel (SiteConfig › legal). */}
+            <section
+              aria-labelledby="terms-identification-title"
+              className="mt-8 bg-card border border-border/60 rounded-2xl p-6 md:p-8"
+            >
+              <h2 id="terms-identification-title" className="font-heading text-lg font-semibold text-secondary mb-4">
+                {t('legal.dpo.title')}
+              </h2>
+              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                <div className="flex flex-col gap-1">
+                  <dt className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold flex items-center gap-1.5">
+                    <Building2 aria-hidden className="h-3 w-3" />
+                    {t('legal.company.legalNameLabel')}
+                  </dt>
+                  <dd className="text-secondary">{companyName}</dd>
                 </div>
-              );
-            })}
-          </div>
+                <div className="flex flex-col gap-1">
+                  <dt className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">
+                    {t('legal.company.cnpjLabel')}
+                  </dt>
+                  <dd className="text-secondary">{cnpj || t('legal.dpo.notConfigured')}</dd>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <dt className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold flex items-center gap-1.5">
+                    <Mail aria-hidden className="h-3 w-3" />
+                    {t('legal.dpo.emailLabel')}
+                  </dt>
+                  <dd>
+                    <a
+                      href={`mailto:${contactEmail}`}
+                      className="text-primary hover:text-accent-hover transition-colors break-all"
+                    >
+                      {contactEmail}
+                    </a>
+                  </dd>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <dt className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">
+                    {t('legal.company.courtLabel')}
+                  </dt>
+                  <dd className="text-secondary">{t('legal.company.courtValue')}</dd>
+                </div>
+              </dl>
+            </section>
 
-          {/* CTA */}
-          <div className="mt-12 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 rounded-2xl p-8 text-center">
-            <h3 className="font-heading text-2xl font-light text-secondary mb-3">
-              {t('Pronto para planejar sua viagem dos sonhos?')}
-            </h3>
-            <p className="text-sm text-muted-foreground mb-6 max-w-xl mx-auto">
-              {t('Entre em contato com nossa equipe e descubra como podemos transformar sua experiência na Ásia em realidade.')}
-            </p>
-            <Link
-              href={lp('/contato')}
-              className="inline-flex items-center gap-2 bg-primary hover:bg-accent-hover text-white text-xs font-semibold px-6 py-3 rounded-full shadow-md transition-all hover:scale-105"
-            >
-              {t('Solicitar Orçamento')}
-              <ChevronRight className="h-3.5 w-3.5" />
-            </Link>
-          </div>
-
-          {/* Navigation */}
-          <div className="mt-12 pt-8 border-t border-border/60 flex items-center justify-between">
-            <Link
-              href={lp('/')}
-              className="text-xs font-medium text-primary hover:text-accent-hover transition-colors flex items-center gap-2"
-            >
-              ← {t('Voltar ao início')}
-            </Link>
-            
-            <div className="flex items-center gap-4 text-xs text-muted-foreground">
-              <Link href={lp('/politica-de-privacidade')} className="hover:text-primary transition-colors">
-                {t('Política de Privacidade')}
-              </Link>
-              <span>•</span>
-              <Link href={lp('/reembolso')} className="hover:text-primary transition-colors">
-                {t('Política de Reembolso')}
+            {/* CTA */}
+            <div className="mt-12 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 rounded-2xl p-8 text-center">
+              <h2 className="font-heading text-2xl font-light text-secondary mb-3">
+                {t('legal.footer.cta')}
+              </h2>
+              <p className="text-sm text-muted-foreground mb-6 max-w-xl mx-auto">
+                {t('legal.refund.contactUs')}
+              </p>
+              <Link
+                href={lp('/contato')}
+                className="inline-flex items-center gap-2 bg-primary hover:bg-accent-hover text-white text-xs font-semibold px-6 py-3 rounded-full shadow-md transition-all hover:scale-105"
+              >
+                {t('legal.refund.requestQuote')}
+                <ChevronRight aria-hidden className="h-3.5 w-3.5" />
               </Link>
             </div>
+
+            {/* Navegação */}
+            <div className="mt-12 pt-8 border-t border-border/60 flex flex-wrap items-center justify-between gap-4">
+              <Link
+                href={lp('/')}
+                className="text-xs font-medium text-primary hover:text-accent-hover transition-colors flex items-center gap-2"
+              >
+                ← {t('legal.voltar-ao-inicio')}
+              </Link>
+              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                <Link href={lp('/politica-de-privacidade')} className="hover:text-primary transition-colors">
+                  {t('legal.politica-de-privacidade')}
+                </Link>
+                <span aria-hidden>•</span>
+                <Link href={lp('/reembolso')} className="hover:text-primary transition-colors">
+                  {t('legal.politica-de-reembolso')}
+                </Link>
+                <span aria-hidden>•</span>
+                <span>{formatDate(lastTouched?.updatedAt ?? null, { year: 'numeric', month: 'long' })}</span>
+              </div>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </main>
 
       <Footer />
     </div>
