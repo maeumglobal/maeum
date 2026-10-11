@@ -66,15 +66,24 @@ export default function Header() {
   const navItems = useMemo<NavLink[]>(() => {
     const fromDb = topLevelItems(navFromDb);
     if (fromDb.length > 0) {
-      return fromDb.map((item) => {
-        const external = isExternalNav(item.url);
-        return {
-          key: item.id,
-          label: navLabel(item, locale),
-          href: external ? item.url : localizedPath(item.url, locale),
-          external,
-        };
-      });
+      // Deduplica por label normalizado (evita itens repetidos no banco/painel)
+      const seen = new Set<string>();
+      return fromDb
+        .map((item) => {
+          const external = isExternalNav(item.url);
+          return {
+            key: item.id,
+            label: navLabel(item, locale),
+            href: external ? item.url : localizedPath(item.url, locale),
+            external,
+          };
+        })
+        .filter((item) => {
+          const norm = item.label.trim().toLowerCase();
+          if (seen.has(norm)) return false;
+          seen.add(norm);
+          return true;
+        });
     }
     return FALLBACK_MAIN.map((item) => ({
       key: item.key,
